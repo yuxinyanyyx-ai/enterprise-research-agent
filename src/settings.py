@@ -1,0 +1,199 @@
+"""MinerU Web Demo 的集中配置
+"""
+
+from __future__ import annotations
+
+import os
+from dataclasses import dataclass, field
+from functools import lru_cache
+from pathlib import Path
+from typing import Mapping
+from urllib.parse import urlparse
+
+from dotenv import load_dotenv
+
+
+PROJECT_ROOT = Path(__file__).resolve().parent
+
+# 读取项目根目录中的.env
+load_dotenv(PROJECT_ROOT / ".env")
+
+MIB = 1024 * 1024
+
+
+class ConfigurationError(RuntimeError):
+	"""配置缺失或配置值不合法。"""
+
+
+def _get_bool(env: Mapping[str, str], name: str, default: bool) -> bool:
+	value = env.get(name)
+	if value is None:
+		return default
+	normalized = value.strip().lower()
+	if normalized in {"1", "true", "yes", "on"}:
+		return True
+	if normalized in {"0", "false", "no", "off"}:
+		return False
+	raise ConfigurationError(f"{name} 必须是 true/false 或 1/0")
+
+
+def _get_int(
+	env: Mapping[str, str], name: str, default: int, *, minimum: int = 1
+) -> int:
+	raw_value = env.get(name, str(default)).strip()
+	try:
+		value = int(raw_value)
+	except ValueError as exc:
+		raise ConfigurationError(f"{name} 必须是整数") from exc
+	if value < minimum:
+		raise ConfigurationError(f"{name} 必须大于等于 {minimum}")
+	return value
+
+
+def _get_float(
+	env: Mapping[str, str], name: str, default: float, *, minimum: float = 0.1
+) -> float:
+	raw_value = env.get(name, str(default)).strip()
+	try:
+		value = float(raw_value)
+	except ValueError as exc:
+		raise ConfigurationError(f"{name} 必须是数字") from exc
+	if value < minimum:
+		raise ConfigurationError(f"{name} 必须大于等于 {minimum}")
+	return value
+
+
+def _get_path(env: Mapping[str, str], name: str, default: Path) -> Path:
+	raw_value = env.get(name)
+	path = Path(raw_value).expanduser() if raw_value else default
+	if not path.is_absolute():
+		path = PROJECT_ROOT / path
+	return path.resolve()
+
+
+def _get_extensions(env: Mapping[str, str]) -> frozenset[str]:
+	raw_value = env.get(
+		"ALLOWED_EXTENSIONS",
+		".pdf,.doc,.docx,.ppt,.pptx,.png,.jpg,.jpeg",
+	)
+	extensions = {
+		extension.strip().lower()
+		for extension in raw_value.split(",")
+		if extension.strip()
+	}
+	extensions = {
+		extension if extension.startswith(".") else f".{extension}"
+		for extension in extensions
+	}
+	if not extensions:
+		raise ConfigurationError("ALLOWED_EXTENSIONS 不能为空")
+	return frozenset(extensions)
+
+
+@dataclass(frozen=True, slots=True)
+class Settings:
+	"""应用运行配置；Token 不参与 repr，避免意外输出到日志。"""
+
+	mineru_token: str = field(repr=False)
+	mineru_base_url: str
+	mineru_language: str
+	mineru_model_version: str
+	mineru_enable_ocr: bool
+	mineru_enable_table: bool
+	mineru_enable_formula: bool
+
+	connect_timeout_seconds: int
+	api_timeout_seconds: int
+	upload_timeout_seconds: int
+	download_timeout_seconds: int
+	poll_interval_seconds: float
+	max_wait_seconds: int
+
+	max_file_size_bytes: int
+	max_batch_size_bytes: int
+	max_batch_files: int
+	max_markdown_size_bytes: int
+	allowed_extensions: frozenset[str]
+
+	template_dir: Path
+	static_dir: Path
+	upload_dir: Path
+	result_dir: Path
+	temp_dir: Path
+	result_retention_hours: int
+	keep_uploaded_files: bool
+
+	@property
+	def authorization_headers(self) -> dict[str, str]:
+		"""返回仅用于 MinerU API 的鉴权请求头。"""
+		return {"Authorization": f"Bearer {self.mineru_token}"}
+
+	def ensure_directories(self) -> None:
+		"""创建运行时需要的目录。"""
+		for directory in (self.upload_dir, self.result_dir, self.temp_dir):
+			directory.mkdir(parents=True, exist_ok=True)
+
+
+def load_settings(
+	env: Mapping[str, str] | None = None, *, require_token: bool = True
+) -> Settings:
+	"""从环境变量加载并校验配置。
+
+	``env`` 参数用于测试时注入独立配置；生产环境默认读取 ``os.environ``。
+	"""
+	source = os.environ if env is None else env
+	token = source.get("MINERU_TOKEN", "").strip()
+	if require_token and not token:
+		raise ConfigurationError("未设置环境变量 MINERU_TOKEN")
+
+	base_url = source.get("MINERU_BASE_URL", "https://mineru.net/api/v4").rstrip("/")
+	parsed_url = urlparse(base_url)
+	if parsed_url.scheme != "https" or not parsed_url.netloc:
+		raise ConfigurationError("MINERU_BASE_URL 必须是有效的 HTTPS 地址")
+
+	max_file_mb = _get_int(source, "MAX_FILE_SIZE_MB", 200)
+	max_batch_mb = _get_int(source, "MAX_BATCH_SIZE_MB", 500)
+	if max_batch_mb < max_file_mb:
+		raise ConfigurationError("MAX_BATCH_SIZE_MB 不能小于 MAX_FILE_SIZE_MB")
+
+	language = source.get("MINERU_LANGUAGE", "ch").strip()
+	model_version = source.get("MINERU_MODEL_VERSION", "pipeline").strip()
+	if not language:
+		raise ConfigurationError("MINERU_LANGUAGE 不能为空")
+	if not model_version:
+		raise ConfigurationError("MINERU_MODEL_VERSION 不能为空")
+
+	return Settings(
+		mineru_token=token,
+		mineru_base_url=base_url,
+		mineru_language=language,
+		mineru_model_version=model_version,
+		mineru_enable_ocr=_get_bool(source, "MINERU_ENABLE_OCR", False),
+		mineru_enable_table=_get_bool(source, "MINERU_ENABLE_TABLE", True),
+		mineru_enable_formula=_get_bool(source, "MINERU_ENABLE_FORMULA", True),
+		connect_timeout_seconds=_get_int(source, "CONNECT_TIMEOUT_SECONDS", 10),
+		api_timeout_seconds=_get_int(source, "API_TIMEOUT_SECONDS", 30),
+		upload_timeout_seconds=_get_int(source, "UPLOAD_TIMEOUT_SECONDS", 600),
+		download_timeout_seconds=_get_int(source, "DOWNLOAD_TIMEOUT_SECONDS", 600),
+		poll_interval_seconds=_get_float(source, "POLL_INTERVAL_SECONDS", 3.0),
+		max_wait_seconds=_get_int(source, "MAX_WAIT_SECONDS", 1200),
+		max_file_size_bytes=max_file_mb * MIB,
+		max_batch_size_bytes=max_batch_mb * MIB,
+		max_batch_files=_get_int(source, "MAX_BATCH_FILES", 20),
+		max_markdown_size_bytes=_get_int(source, "MAX_MARKDOWN_SIZE_MB", 100) * MIB,
+		allowed_extensions=_get_extensions(source),
+		template_dir=_get_path(source, "TEMPLATE_DIR", PROJECT_ROOT / "mineru" / "templates"),
+		static_dir=_get_path(source, "STATIC_DIR", PROJECT_ROOT / "mineru" / "static"),
+		upload_dir=_get_path(source, "UPLOAD_DIR", PROJECT_ROOT / "storage" / "uploads"),
+		result_dir=_get_path(source, "RESULT_DIR", PROJECT_ROOT / "storage" / "results"),
+		temp_dir=_get_path(source, "TEMP_DIR", PROJECT_ROOT / "storage" / "temp"),
+		result_retention_hours=_get_int(source, "RESULT_RETENTION_HOURS", 24),
+		keep_uploaded_files=_get_bool(source, "KEEP_UPLOADED_FILES", False),
+	)
+
+
+@lru_cache(maxsize=1)
+def get_settings() -> Settings:
+	"""返回进程内缓存的配置对象。"""
+	return load_settings()
+
