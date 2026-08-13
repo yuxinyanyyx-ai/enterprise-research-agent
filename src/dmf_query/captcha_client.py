@@ -4,6 +4,7 @@ from pathlib import Path
 
 import requests
 
+from .constant import OUTPUT_DIR
 
 CAPTCHA_URL = "https://lmspiq.fda.gov.tw/api/auth/imageCode"
 
@@ -44,10 +45,11 @@ def get_captcha(session: requests.Session):
 
     # 创建输出目录
     output_dir = Path("outputs")
-    output_dir.mkdir(exist_ok=True)
-
     captcha_path = output_dir / "captcha.jpg"
-
+    OUTPUT_DIR.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
     # 保存验证码图片
     captcha_path.write_bytes(image_bytes)
 

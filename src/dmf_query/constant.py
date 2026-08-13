@@ -14,11 +14,16 @@ SEARCH_URL = f"{BASE_URL}/api/public/dr/piq/7000/search"
 REQUEST_TIMEOUT = 20
 
 
-# 项目根目录
-BASE_DIR = Path(__file__).resolve().parent
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
-# 验证码图片输出目录
-OUTPUT_DIR = BASE_DIR / "outputs"
+OUTPUT_DIR = (
+    PROJECT_ROOT
+    / "outputs"
+    / "dmf_query"
+)
 
-# 日志目录
-LOG_DIR = BASE_DIR / "logs"
+LOG_DIR = (
+    PROJECT_ROOT
+    / "logs"
+    / "dmf_query"
+)

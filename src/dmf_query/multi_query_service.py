@@ -1,6 +1,6 @@
 import logging
 
-from dmf_service import search_all_dmf
+from .dmf_service import search_all_dmf
 
 
 logger = logging.getLogger(__name__)

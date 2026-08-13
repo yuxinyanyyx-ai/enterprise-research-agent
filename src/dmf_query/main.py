@@ -2,21 +2,19 @@
 
 import requests
 
-from captcha_client import get_captcha
+from .captcha_client import get_captcha
 import os
-from excel_exporter import export_multi_query_result
-from dmf_errors import CaptchaError
-from logger import setup_logging
-from multi_query_service import search_multiple_ingredients
+from .excel_exporter import export_multi_query_result
+from .dmf_errors import CaptchaError
+from .logger import setup_logging
+from .multi_query_service import search_multiple_ingredients
+from .captcha_solver import MinerUCaptchaSolver
+
+
 def main():
     setup_logging()
     # 1. 创建同一个 Session
     session = requests.Session()
-    # 先访问页面，建立网站 Session / JSESSIONID
-    session.get(
-        "https://lmspiq.fda.gov.tw/web/DRPIQ/DRPIQ7000",
-        timeout=15
-    )
 
     # 2. 获取验证码
     try:
@@ -35,7 +33,8 @@ def main():
     #print("当前 Session Cookies：", session.cookies.get_dict())
     # 3.
     #solver = ManualCaptchaSolver()
-    solver = AutoCaptchaSolver(ocr)
+   # solver = AutoCaptchaSolver(ocr)
+    solver = MinerUCaptchaSolver()
     captcha_code = solver.solve(
         captcha["captcha_path"]
     )

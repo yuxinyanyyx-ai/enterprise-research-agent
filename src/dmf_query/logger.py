@@ -1,6 +1,6 @@
 import logging
 
-from config import LOG_DIR
+from .constant import LOG_DIR
 
 
 def setup_logging():

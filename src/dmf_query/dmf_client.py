@@ -2,8 +2,8 @@ import json
 
 import requests
 
-from config import SEARCH_URL, REQUEST_TIMEOUT
-from dmf_errors import DmfClientError
+from .constant import SEARCH_URL, REQUEST_TIMEOUT
+from .dmf_errors import DmfClientError
 
 
 def search_dmf(

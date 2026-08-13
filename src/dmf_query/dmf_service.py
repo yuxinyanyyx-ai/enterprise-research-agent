@@ -1,6 +1,6 @@
-from dmf_client import search_dmf
-from result_parser import parse_dmf_result
-from dmf_errors import DmfClientError
+from .dmf_client import search_dmf
+from .result_parser import parse_dmf_result
+from .dmf_errors import DmfClientError
 import logging
 
 logger = logging.getLogger(__name__)
