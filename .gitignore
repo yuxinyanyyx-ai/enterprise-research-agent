@@ -1,9 +1,9 @@
 # 环境变量
 .env
 
-*.test/
-*.output/
-dmf_query/test/
+**/tests/
+**/outputs/
+
 # 接口运行产生的临时文件、转换后的PDF、缓存目录
 PDF/
 storage/

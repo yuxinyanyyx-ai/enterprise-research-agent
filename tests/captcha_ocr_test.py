@@ -13,7 +13,7 @@ from dmf_errors import DmfClientError
 
 TEST_COUNT = 100  # 先测30，稳定后再改100
 
-TEST_DIR = Path("../../../outputs/dmf_query/captcha_auto_test")
+TEST_DIR = Path("../outputs/dmf_query/captcha_auto_test")
 RESULT_CSV = TEST_DIR / "captcha_auto_test_results.csv"
 
 
