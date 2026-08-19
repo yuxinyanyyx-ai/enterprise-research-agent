@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from langchain_core.tools import tool
 
-from .multi_query_service import search_dmf_queries
+from src.dmf_query.multi_query_service import search_dmf_queries
 
 
 @tool(

@@ -3,7 +3,7 @@ from datetime import datetime
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill
 
-from .constant import OUTPUT_DIR
+from src.dmf_query.constant import OUTPUT_DIR
 
 
 def export_multi_query_result(result: dict):

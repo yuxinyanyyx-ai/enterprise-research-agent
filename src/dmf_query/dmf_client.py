@@ -6,7 +6,7 @@ from .constant import SEARCH_URL, REQUEST_TIMEOUT
 from .dmf_errors import DmfClientError
 
 
-def search_dmf(
+def search_dmf_page(
     session: requests.Session,
     *,
     captcha_code: str,

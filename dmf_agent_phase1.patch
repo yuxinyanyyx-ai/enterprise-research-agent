@@ -1,0 +1,867 @@
+diff --git a/.gitignore b/.gitignore
+index f42cf37..caf048d 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -1,7 +1,6 @@
+ # 环境变量
+ .env
+ 
+-**/tests/
+ **/outputs/
+ 
+ # 接口运行产生的临时文件、转换后的PDF、缓存目录
+diff --git a/requirements.txt b/requirements.txt
+index e92f079..0650da5 100644
+--- a/requirements.txt
++++ b/requirements.txt
+@@ -1,3 +1,5 @@
+ fastapi==0.141.1
+ python-dotenv==1.2.2
+ Requests==2.34.2
++pydantic>=2,<3
++langchain-core>=1,<2
+diff --git a/src/dmf_query/dmf_client.py b/src/dmf_query/dmf_client.py
+index 22d2548..b645695 100644
+--- a/src/dmf_query/dmf_client.py
++++ b/src/dmf_query/dmf_client.py
+@@ -6,7 +6,7 @@ from .constant import SEARCH_URL, REQUEST_TIMEOUT
+ from .dmf_errors import DmfClientError
+ 
+ 
+-def search_dmf(
++def search_dmf_page(
+     session: requests.Session,
+     *,
+     captcha_code: str,
+diff --git a/src/dmf_query/dmf_service.py b/src/dmf_query/dmf_service.py
+index 1566983..b28235b 100644
+--- a/src/dmf_query/dmf_service.py
++++ b/src/dmf_query/dmf_service.py
+@@ -1,4 +1,4 @@
+-from .dmf_client import search_dmf
++from .dmf_client import search_dmf_page
+ from .result_parser import parse_dmf_result
+ from .dmf_errors import DmfClientError
+ import logging
+@@ -55,7 +55,7 @@ def search_all_dmf(
+     # ==========================
+ 
+     try:
+-        first_raw = search_dmf(
++        first_raw = search_dmf_page(
+             session=session,
+             captcha_code=captcha_code,
+             verify_code=verify_code,
+@@ -100,7 +100,7 @@ def search_all_dmf(
+         )
+ 
+         try:
+-            raw_result = search_dmf(
++            raw_result = search_dmf_page(
+                 session=session,
+                 captcha_code=captcha_code,
+                 verify_code=verify_code,
+diff --git a/src/dmf_query/dmf_tools.py b/src/dmf_query/dmf_tools.py
+index 01364a5..a93f396 100644
+--- a/src/dmf_query/dmf_tools.py
++++ b/src/dmf_query/dmf_tools.py
+@@ -1,56 +1,10 @@
+-"""DMF Agent Tools.
+-
+-
+-"""
++"""Agent-facing tools for DMF business capabilities."""
+ 
+ from __future__ import annotations
+ 
+-import requests
+ from langchain_core.tools import tool
+ 
+-from .captcha_client import get_captcha
+-from .captcha_solver import MinerUCaptchaSolver
+-from .dmf_errors import CaptchaError
+-from .dmf_service import search_all_dmf
+-
+-
+-def _clean_ingredients(
+-    ingredients: list[str] | None,
+-) -> list[str]:
+-    """清洗成分列表：去空值、去首尾空格、去重并保持顺序。"""
+-
+-    cleaned = [
+-        item.strip()
+-        for item in (ingredients or [])
+-        if item and item.strip()
+-    ]
+-
+-    return list(dict.fromkeys(cleaned))
+-
+-
+-def _build_error_result(
+-    *,
+-    message: str,
+-    dmf_no: str,
+-    applicant_name: str,
+-    ingredients: list[str],
+-) -> dict:
+-    """构造统一失败返回格式。"""
+-
+-    return {
+-        "success": False,
+-        "message": message,
+-        "query": {
+-            "dmf_no": dmf_no,
+-            "applicant_name": applicant_name,
+-            "ingredients": ingredients,
+-        },
+-        "query_count": 0,
+-        "success_count": 0,
+-        "failed_count": 0,
+-        "total_records": 0,
+-        "results": [],
+-    }
++from .multi_query_service import search_dmf_queries
+ 
+ 
+ @tool(
+@@ -67,149 +21,10 @@ def search_dmf(
+     applicant_name: str = "",
+     ingredients: list[str] | None = None,
+ ) -> dict:
++    """Thin Agent adapter over the DMF business service."""
+ 
+-
+-    dmf_no = (dmf_no or "").strip()
+-    applicant_name = (applicant_name or "").strip()
+-    ingredients = _clean_ingredients(ingredients)
+-
+-
+-    if not any(
+-        [
+-            dmf_no,
+-            applicant_name,
+-            ingredients,
+-        ]
+-    ):
+-        return _build_error_result(
+-            message=(
+-                "DMF 编号、申请商名称、成分至少需要提供一个查询条件"
+-            ),
+-            dmf_no=dmf_no,
+-            applicant_name=applicant_name,
+-            ingredients=ingredients,
+-        )
+-
+-    # 没有成分时，也要执行一次 DMF 编号/申请商查询。
+-    query_ingredients = ingredients if ingredients else [""]
+-
+-    session = requests.Session()
+-
+-    try:
+-
+-        try:
+-            captcha = get_captcha(session)
+-        except CaptchaError as exc:
+-            return _build_error_result(
+-                message=f"验证码获取失败：{exc}",
+-                dmf_no=dmf_no,
+-                applicant_name=applicant_name,
+-                ingredients=ingredients,
+-            )
+-        except Exception as exc:
+-            return _build_error_result(
+-                message=f"验证码获取异常：{exc}",
+-                dmf_no=dmf_no,
+-                applicant_name=applicant_name,
+-                ingredients=ingredients,
+-            )
+-
+-
+-        solver = MinerUCaptchaSolver()
+-
+-        try:
+-            captcha_code = solver.solve(
+-                captcha["captcha_path"]
+-            )
+-        except Exception as exc:
+-            return _build_error_result(
+-                message=f"验证码识别失败：{exc}",
+-                dmf_no=dmf_no,
+-                applicant_name=applicant_name,
+-                ingredients=ingredients,
+-            )
+-
+-        verify_code = captcha["verify_code"]
+-
+-
+-        results: list[dict] = []
+-        success_count = 0
+-        failed_count = 0
+-        total_records = 0
+-
+-        for ingredient in query_ingredients:
+-            try:
+-                result = search_all_dmf(
+-                    session=session,
+-                    captcha_code=captcha_code,
+-                    verify_code=verify_code,
+-                    dmf_no=dmf_no,
+-                    applicant_name=applicant_name,
+-                    ingredient=ingredient,
+-                )
+-            except Exception as exc:
+-                result = {
+-                    "success": False,
+-                    "message": f"DMF 查询异常：{exc}",
+-                    "total": 0,
+-                    "total_pages": 0,
+-                    "records": [],
+-                }
+-
+-            # 统一记录每次实际使用的查询条件
+-            result["query"] = {
+-                "dmf_no": dmf_no,
+-                "applicant_name": applicant_name,
+-                "ingredient": ingredient,
+-            }
+-
+-            results.append(result)
+-
+-            if result.get("success"):
+-                success_count += 1
+-                total_records += int(
+-                    result.get("total", 0) or 0
+-                )
+-            else:
+-                failed_count += 1
+-
+-                # 验证码错误后，继续查询其他成分没有意义。
+-                message = str(
+-                    result.get("message", "")
+-                )
+-
+-                if (
+-                    "驗證碼" in message
+-                    or "验证码" in message
+-                ):
+-                    break
+-
+-        query_count = len(results)
+-
+-        if failed_count == 0:
+-            success = True
+-            message = "全部查询完成"
+-        elif success_count > 0:
+-            success = False
+-            message = "部分查询失败"
+-        else:
+-            success = False
+-            message = "查询失败"
+-
+-        return {
+-            "success": success,
+-            "message": message,
+-            "query": {
+-                "dmf_no": dmf_no,
+-                "applicant_name": applicant_name,
+-                "ingredients": ingredients,
+-            },
+-            "query_count": query_count,
+-            "success_count": success_count,
+-            "failed_count": failed_count,
+-            "total_records": total_records,
+-            "results": results,
+-        }
+-
+-    finally:
+-        session.close()
++    return search_dmf_queries(
++        dmf_no=dmf_no,
++        applicant_name=applicant_name,
++        ingredients=ingredients,
++    )
+diff --git a/src/dmf_query/multi_query_service.py b/src/dmf_query/multi_query_service.py
+index d0d3a54..4405c5b 100644
+--- a/src/dmf_query/multi_query_service.py
++++ b/src/dmf_query/multi_query_service.py
+@@ -1,42 +1,194 @@
++"""High-level DMF search orchestration used by Agent tools and APIs."""
++
++from __future__ import annotations
++
+ import logging
+ 
+-from .dmf_service import search_all_dmf
++import requests
+ 
++from src.schemas.dmf import (
++    DMFQuery,
++    DMFQueryResult,
++    DMFSearchResult,
++    DMFSingleQuery,
++)
++
++from .captcha_client import get_captcha
++from .captcha_solver import MinerUCaptchaSolver
++from .dmf_errors import CaptchaError
++from .dmf_service import search_all_dmf
+ 
+ logger = logging.getLogger(__name__)
+ 
+ 
+-def search_multiple_ingredients(
+-    session,
++def clean_ingredients(ingredients: list[str] | None) -> list[str]:
++    """Trim, remove blanks, and deduplicate ingredients while preserving order."""
++
++    cleaned = [
++        item.strip()
++        for item in (ingredients or [])
++        if item and item.strip()
++    ]
++    return list(dict.fromkeys(cleaned))
++
++
++def _empty_search_result(
+     *,
++    message: str,
++    dmf_no: str,
++    applicant_name: str,
+     ingredients: list[str],
+-    captcha_code: str,
+-    verify_code: str,
++) -> DMFSearchResult:
++    return DMFSearchResult(
++        success=False,
++        message=message,
++        query=DMFQuery(
++            dmf_no=dmf_no,
++            applicant_name=applicant_name,
++            ingredients=ingredients,
++        ),
++    )
++
++
++def search_dmf_queries(
++    *,
++    dmf_no: str = "",
++    applicant_name: str = "",
++    ingredients: list[str] | None = None,
+ ) -> dict:
+-    """
+-    批量查询多个成分。
++    """Execute a complete DMF search task and return a stable structured result.
+ 
+-    如果验证码错误，则立即终止整个批量任务，
+-    避免后续查询全部重复失败。
++    This is the business-service boundary used by Agent/API adapters. It owns
++    captcha acquisition/recognition, session lifetime, multi-ingredient search,
++    and aggregation. The Agent tool itself should remain a thin wrapper.
+     """
+ 
+-    # ==========================
+-    # 1. 清理输入
+-    # ==========================
+-
+-    cleaned_ingredients = []
++    dmf_no = (dmf_no or "").strip()
++    applicant_name = (applicant_name or "").strip()
++    cleaned_ingredients = clean_ingredients(ingredients)
++
++    if not any([dmf_no, applicant_name, cleaned_ingredients]):
++        return _empty_search_result(
++            message="DMF 编号、申请商名称、成分至少需要提供一个查询条件",
++            dmf_no=dmf_no,
++            applicant_name=applicant_name,
++            ingredients=cleaned_ingredients,
++        ).model_dump()
++
++    # An empty ingredient still represents one valid DMF number/applicant query.
++    query_ingredients = cleaned_ingredients or [""]
++    session = requests.Session()
++
++    try:
++        try:
++            captcha = get_captcha(session)
++        except CaptchaError as exc:
++            return _empty_search_result(
++                message=f"验证码获取失败：{exc}",
++                dmf_no=dmf_no,
++                applicant_name=applicant_name,
++                ingredients=cleaned_ingredients,
++            ).model_dump()
++        except Exception as exc:
++            return _empty_search_result(
++                message=f"验证码获取异常：{exc}",
++                dmf_no=dmf_no,
++                applicant_name=applicant_name,
++                ingredients=cleaned_ingredients,
++            ).model_dump()
++
++        solver = MinerUCaptchaSolver()
++        try:
++            captcha_code = solver.solve(captcha["captcha_path"])
++        except Exception as exc:
++            return _empty_search_result(
++                message=f"验证码识别失败：{exc}",
++                dmf_no=dmf_no,
++                applicant_name=applicant_name,
++                ingredients=cleaned_ingredients,
++            ).model_dump()
++
++        verify_code = captcha["verify_code"]
++        results: list[DMFQueryResult] = []
++        success_count = 0
++        failed_count = 0
++        total_records = 0
++
++        for ingredient in query_ingredients:
++            query = DMFSingleQuery(
++                dmf_no=dmf_no,
++                applicant_name=applicant_name,
++                ingredient=ingredient,
++            )
+ 
+-    for ingredient in ingredients:
+-        ingredient = ingredient.strip()
++            try:
++                raw_result = search_all_dmf(
++                    session=session,
++                    captcha_code=captcha_code,
++                    verify_code=verify_code,
++                    dmf_no=dmf_no,
++                    applicant_name=applicant_name,
++                    ingredient=ingredient,
++                )
++            except Exception as exc:
++                raw_result = {
++                    "success": False,
++                    "message": f"DMF 查询异常：{exc}",
++                    "total": 0,
++                    "total_pages": 0,
++                    "records": [],
++                }
++
++            raw_result["query"] = query.model_dump()
++            result = DMFQueryResult.model_validate(raw_result)
++            results.append(result)
++
++            if result.success:
++                success_count += 1
++                total_records += result.total
++            else:
++                failed_count += 1
++                if "驗證碼" in result.message or "验证码" in result.message:
++                    break
++
++        if failed_count == 0:
++            success = True
++            message = "全部查询完成"
++        elif success_count > 0:
++            success = False
++            message = "部分查询失败"
++        else:
++            success = False
++            message = "查询失败"
++
++        return DMFSearchResult(
++            success=success,
++            message=message,
++            query=DMFQuery(
++                dmf_no=dmf_no,
++                applicant_name=applicant_name,
++                ingredients=cleaned_ingredients,
++            ),
++            query_count=len(results),
++            success_count=success_count,
++            failed_count=failed_count,
++            total_records=total_records,
++            results=results,
++        ).model_dump()
++    finally:
++        session.close()
+ 
+-        if ingredient:
+-            cleaned_ingredients.append(ingredient)
+ 
+-    # 去重，同时保持原来的顺序
+-    cleaned_ingredients = list(
+-        dict.fromkeys(cleaned_ingredients)
+-    )
++def search_multiple_ingredients(
++    session,
++    *,
++    ingredients: list[str],
++    captcha_code: str,
++    verify_code: str,
++) -> dict:
++    """Backward-compatible batch search with caller-managed captcha/session."""
+ 
++    cleaned_ingredients = clean_ingredients(ingredients)
+     if not cleaned_ingredients:
+         return {
+             "success": False,
+@@ -49,102 +201,40 @@ def search_multiple_ingredients(
+             "results": [],
+         }
+ 
+-    # ==========================
+-    # 2. 初始化统计
+-    # ==========================
+-
+     results = []
+-
+     success_count = 0
+     failed_count = 0
+     total_records = 0
+-
+     total_queries = len(cleaned_ingredients)
+ 
+-    # ==========================
+-    # 3. 依次查询
+-    # ==========================
+-
+-    for index, ingredient in enumerate(
+-        cleaned_ingredients,
+-        start=1,
+-    ):
+-        logger.info(
+-            "正在查询 %s/%s：%s",
+-            index,
+-            total_queries,
+-            ingredient,
+-        )
+-
++    for index, ingredient in enumerate(cleaned_ingredients, start=1):
++        logger.info("正在查询 %s/%s：%s", index, total_queries, ingredient)
+         result = search_all_dmf(
+             session=session,
+             captcha_code=captcha_code,
+             verify_code=verify_code,
+             ingredient=ingredient,
+         )
+-
+-        # --------------------------------
+-        # 无论成功还是失败，都保存查询条件
+-        # 解决“--- 未知 ---”问题
+-        # --------------------------------
+-
+         result["query"] = {
+             "dmf_no": "",
+             "applicant_name": "",
+             "ingredient": ingredient,
+         }
+-
+         results.append(result)
+ 
+-        # ==============================
+-        # 4. 查询成功
+-        # ==============================
+-
+         if result["success"]:
+             success_count += 1
+-
+-            record_count = len(
+-                result.get("records", [])
+-            )
+-
++            record_count = len(result.get("records", []))
+             total_records += record_count
+-
+-            logger.info(
+-                "%s 查询完成，共 %s 条",
+-                ingredient,
+-                record_count,
+-            )
+-
++            logger.info("%s 查询完成，共 %s 条", ingredient, record_count)
+             continue
+ 
+-        # ==============================
+-        # 5. 查询失败
+-        # ==============================
+-
+         failed_count += 1
++        error_message = result.get("message") or ""
++        logger.warning("%s 查询失败：%s", ingredient, error_message)
+ 
+-        error_message = (
+-            result.get("message") or ""
+-        )
+-
+-        logger.warning(
+-            "%s 查询失败：%s",
+-            ingredient,
+-            error_message,
+-        )
+-
+-        # ==============================
+-        # 6. 验证码错误：立即终止
+-        # ==============================
+-
+-        if (
+-            "驗證碼" in error_message
+-            or "验证码" in error_message
+-        ):
+-            logger.error(
+-                "检测到验证码错误，停止后续批量查询。"
+-            )
+-
++        if "驗證碼" in error_message or "验证码" in error_message:
++            logger.error("检测到验证码错误，停止后续批量查询。")
+             return {
+                 "success": False,
+                 "captcha_error": True,
+@@ -156,18 +246,10 @@ def search_multiple_ingredients(
+                 "results": results,
+             }
+ 
+-    # ==========================
+-    # 7. 所有查询执行完成
+-    # ==========================
+-
+     return {
+         "success": failed_count == 0,
+         "captcha_error": False,
+-        "message": (
+-            "全部查询完成"
+-            if failed_count == 0
+-            else "部分查询失败"
+-        ),
++        "message": "全部查询完成" if failed_count == 0 else "部分查询失败",
+         "query_count": total_queries,
+         "success_count": success_count,
+         "failed_count": failed_count,
+diff --git a/src/schemas/__init__.py b/src/schemas/__init__.py
+new file mode 100644
+index 0000000..c382a25
+--- /dev/null
++++ b/src/schemas/__init__.py
+@@ -0,0 +1,19 @@
++"""Structured data models shared by tools, workflows, and APIs."""
++
++from .dmf import (
++    DMFQuery,
++    DMFQueryResult,
++    DMFRecord,
++    DMFSearchResult,
++    DMFSingleQuery,
++)
++from .supplier import SupplierInfo
++
++__all__ = [
++    "DMFQuery",
++    "DMFQueryResult",
++    "DMFRecord",
++    "DMFSearchResult",
++    "DMFSingleQuery",
++    "SupplierInfo",
++]
+diff --git a/src/schemas/dmf.py b/src/schemas/dmf.py
+new file mode 100644
+index 0000000..84e157a
+--- /dev/null
++++ b/src/schemas/dmf.py
+@@ -0,0 +1,56 @@
++"""Pydantic models for DMF query data."""
++
++from __future__ import annotations
++
++from pydantic import BaseModel, Field
++
++
++class DMFRecord(BaseModel):
++    """One normalized DMF record returned by the upstream service."""
++
++    dmf_no: str | None = None
++    applicant_name: str | None = None
++    ingredient: str | None = None
++    valid_date: str | None = None
++
++
++class DMFSingleQuery(BaseModel):
++    """The concrete conditions used for one upstream DMF query."""
++
++    dmf_no: str = ""
++    applicant_name: str = ""
++    ingredient: str = ""
++
++
++class DMFQuery(BaseModel):
++    """Top-level query conditions accepted by the Agent-facing service."""
++
++    dmf_no: str = ""
++    applicant_name: str = ""
++    ingredients: list[str] = Field(default_factory=list)
++
++
++class DMFQueryResult(BaseModel):
++    """Result of one concrete DMF query, including all fetched pages."""
++
++    success: bool
++    message: str
++    query: DMFSingleQuery
++    total: int = 0
++    total_pages: int = 0
++    current_page: int | None = None
++    page_size: int | None = None
++    records: list[DMFRecord] = Field(default_factory=list)
++
++
++class DMFSearchResult(BaseModel):
++    """Stable result contract returned by the DMF business service/tool."""
++
++    success: bool
++    message: str
++    query: DMFQuery
++    query_count: int = 0
++    success_count: int = 0
++    failed_count: int = 0
++    total_records: int = 0
++    results: list[DMFQueryResult] = Field(default_factory=list)
+diff --git a/src/schemas/supplier.py b/src/schemas/supplier.py
+new file mode 100644
+index 0000000..4471143
+--- /dev/null
++++ b/src/schemas/supplier.py
+@@ -0,0 +1,19 @@
++"""Pydantic models for supplier document extraction."""
++
++from __future__ import annotations
++
++from pydantic import BaseModel, Field
++
++
++class SupplierInfo(BaseModel):
++    """Normalized supplier information extracted from one or more documents."""
++
++    source_file: str | None = None
++    company_name: str | None = None
++    product_name: str | None = None
++    manufacturer: str | None = None
++    address: str | None = None
++    certificates: list[str] = Field(default_factory=list)
++    dmf_information: list[str] = Field(default_factory=list)
++    other_information: list[str] = Field(default_factory=list)
++    missing_information: list[str] = Field(default_factory=list)
+diff --git a/tests/test_dmf_query_service.py b/tests/test_dmf_query_service.py
+new file mode 100644
+index 0000000..8d812eb
+--- /dev/null
++++ b/tests/test_dmf_query_service.py
+@@ -0,0 +1,80 @@
++from pathlib import Path
++
++from src.dmf_query import multi_query_service as service
++
++
++class FakeSession:
++    def __init__(self) -> None:
++        self.closed = False
++
++    def close(self) -> None:
++        self.closed = True
++
++
++class FakeSolver:
++    def solve(self, captcha_path: Path) -> str:
++        assert captcha_path == Path("captcha.jpg")
++        return "1234"
++
++
++def test_search_dmf_queries_rejects_empty_conditions() -> None:
++    result = service.search_dmf_queries(
++        dmf_no="  ",
++        applicant_name="",
++        ingredients=["", "  "],
++    )
++
++    assert result["success"] is False
++    assert result["query_count"] == 0
++    assert result["query"]["ingredients"] == []
++
++
++def test_search_dmf_queries_normalizes_and_aggregates(monkeypatch) -> None:
++    fake_session = FakeSession()
++
++    monkeypatch.setattr(service.requests, "Session", lambda: fake_session)
++    monkeypatch.setattr(
++        service,
++        "get_captcha",
++        lambda session: {
++            "captcha_path": Path("captcha.jpg"),
++            "verify_code": "verify-token",
++        },
++    )
++    monkeypatch.setattr(service, "MinerUCaptchaSolver", FakeSolver)
++
++    calls: list[str] = []
++
++    def fake_search_all_dmf(**kwargs):
++        ingredient = kwargs["ingredient"]
++        calls.append(ingredient)
++        return {
++            "success": True,
++            "message": "success",
++            "total": 1,
++            "total_pages": 1,
++            "records": [
++                {
++                    "dmf_no": f"DMF-{len(calls):03d}",
++                    "applicant_name": "Example Pharma",
++                    "ingredient": ingredient,
++                    "valid_date": "2026-01-01",
++                }
++            ],
++        }
++
++    monkeypatch.setattr(service, "search_all_dmf", fake_search_all_dmf)
++
++    result = service.search_dmf_queries(
++        ingredients=[" Ibuprofen ", "Ibuprofen", "Metformin"],
++    )
++
++    assert calls == ["Ibuprofen", "Metformin"]
++    assert result["success"] is True
++    assert result["query_count"] == 2
++    assert result["success_count"] == 2
++    assert result["failed_count"] == 0
++    assert result["total_records"] == 2
++    assert result["query"]["ingredients"] == ["Ibuprofen", "Metformin"]
++    assert result["results"][0]["records"][0]["ingredient"] == "Ibuprofen"
++    assert fake_session.closed is True
+diff --git a/tests/test_dmf_schemas.py b/tests/test_dmf_schemas.py
+new file mode 100644
+index 0000000..738a925
+--- /dev/null
++++ b/tests/test_dmf_schemas.py
+@@ -0,0 +1,29 @@
++from src.schemas.dmf import DMFRecord, DMFSearchResult
++from src.schemas.supplier import SupplierInfo
++
++
++def test_dmf_record_accepts_normalized_record() -> None:
++    record = DMFRecord(
++        dmf_no="DMF-001",
++        applicant_name="Example Pharma",
++        ingredient="Ibuprofen",
++        valid_date="2026-01-01",
++    )
++    assert record.ingredient == "Ibuprofen"
++
++
++def test_dmf_search_result_has_safe_list_defaults() -> None:
++    result = DMFSearchResult(
++        success=False,
++        message="no query",
++        query={"dmf_no": "", "applicant_name": "", "ingredients": []},
++    )
++    assert result.results == []
++    assert result.total_records == 0
++
++
++def test_supplier_info_has_independent_list_defaults() -> None:
++    first = SupplierInfo(company_name="A")
++    second = SupplierInfo(company_name="B")
++    first.certificates.append("GMP")
++    assert second.certificates == []

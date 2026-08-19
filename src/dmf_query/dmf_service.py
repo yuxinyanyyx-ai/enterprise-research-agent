@@ -1,4 +1,4 @@
-from .dmf_client import search_dmf
+from .dmf_client import search_dmf_page
 from .result_parser import parse_dmf_result
 from .dmf_errors import DmfClientError
 import logging
@@ -55,7 +55,7 @@ def search_all_dmf(
     # ==========================
 
     try:
-        first_raw = search_dmf(
+        first_raw = search_dmf_page(
             session=session,
             captcha_code=captcha_code,
             verify_code=verify_code,
@@ -100,7 +100,7 @@ def search_all_dmf(
         )
 
         try:
-            raw_result = search_dmf(
+            raw_result = search_dmf_page(
                 session=session,
                 captcha_code=captcha_code,
                 verify_code=verify_code,
