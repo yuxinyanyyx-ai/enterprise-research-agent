@@ -1,4 +1,5 @@
 from datetime import datetime
+from pathlib import Path
 
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill
@@ -6,9 +7,14 @@ from openpyxl.styles import Font, Alignment, PatternFill
 from src.dmf_query.constant import OUTPUT_DIR
 
 
-def export_multi_query_result(result: dict):
+def export_multi_query_result(
+    result: dict,
+    *,
+    output_dir: Path | None = None,
+    filename: str | None = None,
+) -> Path:
     """
-    将多药物 DMF 查询结果导出为 Excel。
+    将结果导出为 Excel。
 
     result:
         search_multiple_ingredients() 返回的结果
@@ -18,7 +24,8 @@ def export_multi_query_result(result: dict):
         raise ValueError("没有可导出的查询结果。")
 
     # 确保 outputs 目录存在
-    OUTPUT_DIR.mkdir(
+    target_dir = output_dir or OUTPUT_DIR
+    target_dir.mkdir(
         parents=True,
         exist_ok=True,
     )
@@ -28,10 +35,13 @@ def export_multi_query_result(result: dict):
         "%Y%m%d_%H%M%S"
     )
 
-    output_path = (
-        OUTPUT_DIR
-        / f"dmf_results_{timestamp}.xlsx"
-    )
+    target_name = filename or f"dmf_results_{timestamp}.xlsx"
+    if Path(target_name).name != target_name:
+        raise ValueError("导出文件名不能包含目录。")
+    if not target_name.lower().endswith(".xlsx"):
+        target_name = f"{target_name}.xlsx"
+
+    output_path = target_dir / target_name
 
     # ==========================
     # 创建 Excel
@@ -48,13 +58,13 @@ def export_multi_query_result(result: dict):
     # ==========================
 
     headers = [
-        "序号",
-        "查询关键词",
-        "DMF编号",
-        "申请商名称",
-        "成分",
+        "序號",
+        "查詢關鍵詞",
+        "DMF編號",
+        "申請商名",
+        "成分名稱",
         "有效日期",
-        "查询状态",
+        "查詢狀態",
     ]
 
     sheet.append(headers)

@@ -49,6 +49,102 @@ def test_dmf_query_defaults_to_result_when_outputs_missing() -> None:
     assert outputs == ["result"]
 
 
+def test_incomplete_compare_clarification_uses_fallback() -> None:
+    answer = nodes.ask_clarification(
+        {
+            "task_type": "dmf_compare",
+            "clarification_question": "您提到要查询",
+        }
+    )["final_answer"]
+
+    assert "比较的成分、DMF 或申请商" in answer
+    assert "比较的具体维度" in answer
+    assert answer.endswith("？")
+
+
+def test_incomplete_query_clarification_uses_default() -> None:
+    answer = nodes.ask_clarification(
+        {
+            "task_type": "dmf_query",
+            "clarification_question": "请提供",
+        }
+    )["final_answer"]
+
+    assert answer == nodes.DEFAULT_CLARIFICATION
+
+
+def test_valid_statement_clarification_is_preserved() -> None:
+    question = "当前会话没有可导出的 DMF 查询结果，请先执行查询。"
+
+    answer = nodes.ask_clarification(
+        {
+            "task_type": "dmf_post_process",
+            "clarification_question": question,
+        }
+    )["final_answer"]
+
+    assert answer == question
+
+
+def test_understand_request_normalizes_incomplete_clarification(monkeypatch) -> None:
+    class StructuredModel:
+        def invoke(self, messages):
+            return ResearchIntent(
+                task_type="dmf_compare",
+                needs_clarification=True,
+                clarification_question="您提到要查询",
+                ingredients=["Ibuprofen"],
+            )
+
+    class FakeLlm:
+        def with_structured_output(self, schema):
+            assert schema is ResearchIntent
+            return StructuredModel()
+
+    monkeypatch.setattr(nodes, "create_apollo_llm", FakeLlm)
+
+    result = nodes.understand_request(
+        {
+            "user_query": "我要查询 BI 相关资料，并和布洛芬做个对比",
+        }
+    )
+
+    assert result["needs_clarification"] is True
+    assert "比较的具体维度" in result["clarification_question"]
+    assert result["clarification_question"].endswith("？")
+
+
+def test_active_document_prevents_redundant_upload_clarification(monkeypatch) -> None:
+    class StructuredModel:
+        def invoke(self, messages):
+            return ResearchIntent(
+                task_type="dmf_document_compare",
+                needs_clarification=True,
+                clarification_question="请提供文档。",
+            )
+
+    class FakeLlm:
+        def with_structured_output(self, schema):
+            return StructuredModel()
+
+    monkeypatch.setattr(nodes, "create_apollo_llm", FakeLlm)
+
+    result = nodes.understand_request(
+        {
+            "user_query": "分析上传文档并查询 DMF",
+            "document_artifact": {
+                "file_name": "sample.pdf",
+                "markdown_path": "trusted/document.md",
+                "status": "parsed",
+            },
+        }
+    )
+
+    assert result["task_type"] == "dmf_document_compare"
+    assert result["needs_clarification"] is False
+    assert result["requested_outputs"] == ["result"]
+
+
 def test_build_answer_result_only_does_not_call_llm() -> None:
     answer = nodes.build_dmf_answer(
         {

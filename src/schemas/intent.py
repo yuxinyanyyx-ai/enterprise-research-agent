@@ -17,6 +17,7 @@ class ResearchIntent(BaseModel):
 
     task_type: Literal[
         "dmf_query",
+        "dmf_post_process",
         "dmf_compare",
         "document_review",
         "dmf_document_compare",

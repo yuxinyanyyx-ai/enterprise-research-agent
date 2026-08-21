@@ -13,7 +13,8 @@ from urllib.parse import urlparse
 from dotenv import load_dotenv
 
 
-PROJECT_ROOT = Path(__file__).resolve().parent
+SOURCE_ROOT = Path(__file__).resolve().parent
+PROJECT_ROOT = SOURCE_ROOT.parent
 
 # 读取项目根目录中的.env
 load_dotenv(PROJECT_ROOT / ".env")
@@ -182,11 +183,11 @@ def load_settings(
 		max_batch_files=_get_int(source, "MAX_BATCH_FILES", 20),
 		max_markdown_size_bytes=_get_int(source, "MAX_MARKDOWN_SIZE_MB", 100) * MIB,
 		allowed_extensions=_get_extensions(source),
-		template_dir=_get_path(source, "TEMPLATE_DIR", PROJECT_ROOT / "mineru" / "templates"),
-		static_dir=_get_path(source, "STATIC_DIR", PROJECT_ROOT / "mineru" / "static"),
-		upload_dir=_get_path(source, "UPLOAD_DIR", PROJECT_ROOT / "storage" / "uploads"),
-		result_dir=_get_path(source, "RESULT_DIR", PROJECT_ROOT / "storage" / "results"),
-		temp_dir=_get_path(source, "TEMP_DIR", PROJECT_ROOT / "storage" / "temp"),
+		template_dir=_get_path(source, "TEMPLATE_DIR", SOURCE_ROOT / "mineru" / "templates"),
+		static_dir=_get_path(source, "STATIC_DIR", SOURCE_ROOT / "mineru" / "static"),
+		upload_dir=_get_path(source, "UPLOAD_DIR", SOURCE_ROOT / "storage" / "uploads"),
+		result_dir=_get_path(source, "RESULT_DIR", SOURCE_ROOT / "storage" / "results"),
+		temp_dir=_get_path(source, "TEMP_DIR", SOURCE_ROOT / "storage" / "temp"),
 		result_retention_hours=_get_int(source, "RESULT_RETENTION_HOURS", 24),
 		keep_uploaded_files=_get_bool(source, "KEEP_UPLOADED_FILES", False),
 	)
