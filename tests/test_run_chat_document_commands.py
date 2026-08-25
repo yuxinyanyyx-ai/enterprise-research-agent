@@ -22,9 +22,11 @@ def test_document_confirmation_can_edit_extracted_query() -> None:
         {
             "file_name": "sample.pdf",
             "query": {
-                "dmf_no": "123",
-                "applicant_name": "",
-                "ingredients": ["Ibuprofen"],
+                "queries": [{
+                    "dmf_no": "123",
+                    "applicant_name": "",
+                    "ingredients": ["Ibuprofen"],
+                }],
             },
         },
         lambda prompt: next(answers),
@@ -33,16 +35,18 @@ def test_document_confirmation_can_edit_extracted_query() -> None:
     assert result == {
         "action": "edit",
         "query": {
-            "dmf_no": "123",
-            "applicant_name": "Example Pharma",
-            "ingredients": ["Ibuprofen", "Naproxen"],
+            "queries": [{
+                "dmf_no": "123",
+                "applicant_name": "Example Pharma",
+                "ingredients": ["Ibuprofen", "Naproxen"],
+            }],
         },
     }
 
 
 def test_document_confirmation_can_reject() -> None:
     result = _document_confirmation_response(
-        {"query": {"ingredients": ["Ibuprofen"]}},
+        {"query": {"queries": [{"ingredients": ["Ibuprofen"]}]}},
         lambda prompt: "r",
     )
 

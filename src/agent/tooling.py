@@ -7,7 +7,6 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, ToolMessage
-from langgraph.types import interrupt
 
 from src.agent.prompts import (
     DMF_POST_PROCESS_TOOL_SYSTEM_PROMPT,
@@ -96,17 +95,6 @@ def _fingerprint(call: dict[str, Any]) -> str:
     )
 
 
-def _approval_ids(
-    approval: Any,
-    calls: list[dict[str, Any]],
-) -> set[str]:
-    if approval is True:
-        return {str(call["id"]) for call in calls}
-    if not isinstance(approval, dict):
-        return set()
-    return {str(call_id) for call_id in approval.get("approved_call_ids", [])}
-
-
 def _tool_message(
     call: dict[str, Any],
     result: Any,
@@ -161,7 +149,7 @@ def _execute_one(
 
 
 def execute_tools(state: ResearchState) -> dict[str, Any]:
-    """Approve and execute the latest AI tool-call batch."""
+    """Execute the latest AI tool-call batch."""
 
     messages = state.get("messages") or []
     last_message = messages[-1] if messages else None
@@ -196,31 +184,6 @@ def execute_tools(state: ResearchState) -> dict[str, Any]:
             definition = None
         resolved.append((call, definition))
 
-    approval_calls = [
-        call
-        for call, definition in resolved
-        if definition is not None and definition.requires_approval
-    ]
-    approved_ids: set[str] = set()
-    if approval_calls:
-        approval = interrupt(
-            {
-                "type": "tool_approval",
-                "message": "以下工具会产生写入或外部变更，请确认是否执行。",
-                "calls": [
-                    {
-                        "id": call["id"],
-                        "name": call["name"],
-                        "args": call.get("args", {}),
-                        "risk": definition.risk.value,
-                    }
-                    for call, definition in resolved
-                    if definition is not None and definition.requires_approval
-                ],
-            }
-        )
-        approved_ids = _approval_ids(approval, approval_calls)
-
     immediate_messages: dict[str, ToolMessage] = {}
     immediate_artifacts: dict[str, dict[str, Any]] = {}
     executable: list[tuple[dict[str, Any], ToolDefinition]] = []
@@ -228,14 +191,6 @@ def execute_tools(state: ResearchState) -> dict[str, Any]:
         call_id = str(call["id"])
         if definition is None:
             error = {"success": False, "message": "工具未注册或不允许在当前场景使用。"}
-            immediate_messages[call_id] = _tool_message(call, error, status="error")
-            immediate_artifacts[call_id] = {
-                "tool_name": call["name"],
-                "tool_call_id": call["id"],
-                "result": error,
-            }
-        elif definition.requires_approval and call_id not in approved_ids:
-            error = {"success": False, "message": "用户拒绝执行该工具。"}
             immediate_messages[call_id] = _tool_message(call, error, status="error")
             immediate_artifacts[call_id] = {
                 "tool_name": call["name"],

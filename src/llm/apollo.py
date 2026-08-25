@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import os
+import ssl
 from pathlib import Path
 
+import httpx
 import requests
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
@@ -36,6 +38,33 @@ def _required_env(name: str) -> str:
     return value
 
 
+def _ssl_verify_setting() -> bool | str:
+    """返回 Apollo HTTPS 校验配置。"""
+
+    raw_value = (os.getenv("APOLLO_VERIFY_SSL") or "true").strip()
+    normalized = raw_value.lower()
+    if normalized in {"1", "true", "yes", "on"}:
+        return True
+    if normalized in {"0", "false", "no", "off"}:
+        return False
+
+    ca_bundle = Path(raw_value).expanduser()
+    if not ca_bundle.is_absolute():
+        ca_bundle = PROJECT_ROOT / ca_bundle
+    ca_bundle = ca_bundle.resolve()
+    if not ca_bundle.is_file():
+        raise ApolloConfigurationError(
+            f"APOLLO_VERIFY_SSL 指定的 CA 文件不存在: {ca_bundle}"
+        )
+    return str(ca_bundle)
+
+
+def _httpx_verify(verify: bool | str) -> bool | ssl.SSLContext:
+    if isinstance(verify, bool):
+        return verify
+    return ssl.create_default_context(cafile=verify)
+
+
 def get_access_token() -> str:
     """通过 OAuth2 client_credentials 获取 Apollo access token。"""
 
@@ -54,6 +83,7 @@ def get_access_token() -> str:
             "Content-Type": "application/x-www-form-urlencoded",
         },
         timeout=30,
+        verify=_ssl_verify_setting(),
     )
 
     response.raise_for_status()
@@ -87,10 +117,13 @@ def create_apollo_llm(
     token = access_token or get_access_token()
 
     base_url = _required_env("APOLLO_BASE_URL")
+    verify = _httpx_verify(_ssl_verify_setting())
 
     return ChatOpenAI(
         base_url=base_url,
         api_key=token,
         model=model_name(),
         temperature=0.1,
+        http_client=httpx.Client(verify=verify),
+        http_async_client=httpx.AsyncClient(verify=verify),
     )

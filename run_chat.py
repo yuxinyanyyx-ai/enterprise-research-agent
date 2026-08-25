@@ -25,60 +25,54 @@ def _document_confirmation_response(
     interrupt_value: dict,
     input_fn: Callable[[str], str] = input,
 ) -> dict:
-    query = dict(interrupt_value.get("query") or {})
+    query_payload = dict(interrupt_value.get("query") or {})
+    queries = [dict(query) for query in query_payload.get("queries") or [query_payload]]
     print(f"\n文档：{interrupt_value.get('file_name', '')}")
-    print(f"- DMF 编号：{query.get('dmf_no') or '未提取到'}")
-    print(f"- 申请商：{query.get('applicant_name') or '未提取到'}")
-    print(f"- 成分：{'、'.join(query.get('ingredients') or []) or '未提取到'}")
+    print(f"提取到 {len(queries)} 组查询条件：")
+    for index, query in enumerate(queries, start=1):
+        print(f"\n[{index}]")
+        print(f"- DMF 编号：{query.get('dmf_no') or '未提取到'}")
+        print(f"- 申请商：{query.get('applicant_name') or '未提取到'}")
+        print(f"- 成分：{'、'.join(query.get('ingredients') or []) or '未提取到'}")
     choice = input_fn("\n确认、修改或拒绝？[c/e/r]：").strip().lower()
     if choice in {"c", "confirm", "y", "yes"}:
-        return {"action": "confirm", "query": query}
+        return {"action": "confirm", "query": {"queries": queries}}
     if choice not in {"e", "edit"}:
         return {"action": "reject"}
 
-    dmf_no = input_fn(f"DMF 编号 [{query.get('dmf_no', '')}]：").strip()
-    applicant = input_fn(f"申请商 [{query.get('applicant_name', '')}]：").strip()
-    current_ingredients = ", ".join(query.get("ingredients") or [])
-    ingredients_text = input_fn(f"成分（逗号分隔）[{current_ingredients}]：").strip()
-    edited = {
-        "dmf_no": dmf_no or query.get("dmf_no", ""),
-        "applicant_name": applicant or query.get("applicant_name", ""),
-        "ingredients": (
-            [item.strip() for item in ingredients_text.split(",") if item.strip()]
-            if ingredients_text
-            else query.get("ingredients", [])
-        ),
-    }
-    return {"action": "edit", "query": edited}
+    edited_queries = []
+    for index, query in enumerate(queries, start=1):
+        print(f"\n修改第 {index} 组，直接回车保留原值：")
+        dmf_no = input_fn(f"DMF 编号 [{query.get('dmf_no', '')}]：").strip()
+        applicant = input_fn(f"申请商 [{query.get('applicant_name', '')}]：").strip()
+        current_ingredients = ", ".join(query.get("ingredients") or [])
+        ingredients_text = input_fn(
+            f"成分（逗号分隔）[{current_ingredients}]："
+        ).strip()
+        edited_queries.append(
+            {
+                "dmf_no": dmf_no or query.get("dmf_no", ""),
+                "applicant_name": applicant or query.get("applicant_name", ""),
+                "ingredients": (
+                    [item.strip() for item in ingredients_text.split(",") if item.strip()]
+                    if ingredients_text
+                    else query.get("ingredients", [])
+                ),
+            }
+        )
+    return {"action": "edit", "query": {"queries": edited_queries}}
 
 
-def _resume_after_approval(graph, config, result, input_fn=input):
-    """Handle one or more tool approval interrupts for the current request."""
+def _resume_after_interrupt(graph, config, result, input_fn=input):
+    """Handle document query confirmation interrupts for the current request."""
 
     while result.get("__interrupt__"):
         interrupt_value = result["__interrupt__"][0].value
-        print(f"\nAgent：{interrupt_value.get('message', '工具执行需要确认。')}")
-        if interrupt_value.get("type") == "document_query_confirmation":
-            resume_value = _document_confirmation_response(interrupt_value, input_fn)
-            result = graph.invoke(Command(resume=resume_value), config=config)
-            continue
-
-        for call in interrupt_value.get("calls", []):
-            print(
-                f"- {call['name']} | 风险：{call['risk']} | "
-                f"参数：{call.get('args', {})}"
-            )
-
-        approved = input_fn("\n是否执行以上工具？[y/N]：").strip().lower() in {"y", "yes"}
-        approved_ids = (
-            [call["id"] for call in interrupt_value.get("calls", [])]
-            if approved
-            else []
-        )
-        result = graph.invoke(
-            Command(resume={"approved_call_ids": approved_ids}),
-            config=config,
-        )
+        if interrupt_value.get("type") != "document_query_confirmation":
+            raise RuntimeError(f"不支持的中断类型：{interrupt_value.get('type', '')}")
+        print(f"\nAgent：{interrupt_value.get('message', '请确认文档查询条件。')}")
+        resume_value = _document_confirmation_response(interrupt_value, input_fn)
+        result = graph.invoke(Command(resume=resume_value), config=config)
 
     return result
 
@@ -143,7 +137,7 @@ def main():
                 },
                 config=config,
             )
-            result = _resume_after_approval(graph, config, result)
+            result = _resume_after_interrupt(graph, config, result)
 
             total_elapsed = (
                     time.perf_counter() - total_start

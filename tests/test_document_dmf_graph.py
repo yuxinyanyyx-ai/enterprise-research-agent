@@ -9,7 +9,7 @@ from langgraph.types import Command
 
 from src.agent import graph as graph_module
 from src.agent import nodes
-from src.schemas.document_dmf import ExtractedDMFQuery
+from src.schemas.document_dmf import ExtractedDMFQueryBatch
 
 
 def _artifact(tmp_path: Path) -> dict:
@@ -75,13 +75,15 @@ class FakeDocumentService:
     def __init__(self, calls: list[dict]) -> None:
         self.calls = calls
 
-    def extract_query(self, artifact) -> ExtractedDMFQuery:
+    def extract_query(self, artifact) -> ExtractedDMFQueryBatch:
         assert artifact["file_name"] == "sample.pdf"
-        return ExtractedDMFQuery(ingredients=["Ibuprofen"])
+        return ExtractedDMFQueryBatch.model_validate(
+            {"ingredients": ["Ibuprofen"]}
+        )
 
-    def execute_confirmed_query(self, query: ExtractedDMFQuery) -> dict:
+    def execute_confirmed_query(self, query: ExtractedDMFQueryBatch) -> dict:
         self.calls.append(query.model_dump())
-        return _dmf_result(query.ingredients)
+        return _dmf_result(query.queries[0].ingredients)
 
 
 def test_document_review_extracts_without_querying_dmf(tmp_path, monkeypatch) -> None:
@@ -107,12 +109,18 @@ def test_document_review_extracts_without_querying_dmf(tmp_path, monkeypatch) ->
     ("resume", "expected_ingredients", "expected_answer"),
     [
         (
-            {"action": "confirm", "query": {"ingredients": ["Ibuprofen"]}},
+            {
+                "action": "confirm",
+                "query": {"queries": [{"ingredients": ["Ibuprofen"]}]},
+            },
             ["Ibuprofen"],
             "12345",
         ),
         (
-            {"action": "edit", "query": {"ingredients": ["Naproxen"]}},
+            {
+                "action": "edit",
+                "query": {"queries": [{"ingredients": ["Naproxen"]}]},
+            },
             ["Naproxen"],
             "12345",
         ),
@@ -147,7 +155,7 @@ def test_document_query_requires_confirmation_before_single_dmf_call(
     )
 
     assert paused["__interrupt__"][0].value["type"] == "document_query_confirmation"
-    assert paused["__interrupt__"][0].value["query"]["ingredients"] == ["Ibuprofen"]
+    assert paused["__interrupt__"][0].value["query"]["queries"][0]["ingredients"] == ["Ibuprofen"]
     assert calls == []
 
     completed = graph.invoke(Command(resume=resume), config=config)
@@ -156,4 +164,55 @@ def test_document_query_requires_confirmation_before_single_dmf_call(
     if expected_ingredients is None:
         assert calls == []
     else:
-        assert [call["ingredients"] for call in calls] == [expected_ingredients]
+        assert [call["queries"][0]["ingredients"] for call in calls] == [expected_ingredients]
+
+
+def test_document_query_confirms_all_extracted_rows_as_one_batch(
+    tmp_path,
+    monkeypatch,
+) -> None:
+    calls: list[dict] = []
+
+    class BatchDocumentService(FakeDocumentService):
+        def extract_query(self, artifact) -> ExtractedDMFQueryBatch:
+            return ExtractedDMFQueryBatch.model_validate(
+                {
+                    "queries": [
+                        {"dmf_no": "234", "ingredients": ["Ibuprofen"]},
+                        {"dmf_no": "211", "ingredients": ["NOT"]},
+                        {"ingredients": ["Ibanez"]},
+                    ]
+                }
+            )
+
+    service = BatchDocumentService(calls)
+    monkeypatch.setattr(
+        graph_module,
+        "understand_request",
+        _intent("dmf_document_compare"),
+    )
+    monkeypatch.setattr(nodes, "DocumentDMFService", lambda: service)
+    graph = graph_module.build_research_graph(checkpointer=InMemorySaver())
+    config = {"configurable": {"thread_id": "document-batch"}}
+
+    paused = graph.invoke(
+        {
+            "user_query": "分析上传文档并查询 DMF",
+            "document_artifact": _artifact(tmp_path),
+            "warnings": [],
+        },
+        config=config,
+    )
+    queries = paused["__interrupt__"][0].value["query"]["queries"]
+
+    assert [query["dmf_no"] for query in queries] == ["234", "211", ""]
+    assert calls == []
+
+    completed = graph.invoke(
+        Command(resume={"action": "confirm", "query": {"queries": queries}}),
+        config=config,
+    )
+
+    assert completed["dmf_results"]["success"] is True
+    assert len(calls) == 1
+    assert len(calls[0]["queries"]) == 3

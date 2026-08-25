@@ -23,15 +23,15 @@ def test_builtin_tools_are_filtered_by_context() -> None:
 
     assert general_names == {"search_dmf", "extract_document_dmf_params"}
     assert post_process_names == {"export_dmf_excel"}
-    assert registry.get("search_dmf").requires_approval is False
-    assert registry.get("extract_document_dmf_params").requires_approval is False
+    assert registry.get("search_dmf").risk is ToolRisk.READ_ONLY
+    assert registry.get("extract_document_dmf_params").risk is ToolRisk.READ_ONLY
     assert "document_artifact" not in registry.get(
         "extract_document_dmf_params"
     ).tool.args
     assert registry.get("extract_document_dmf_params").state_arguments == (
         ("document_artifact", "document_artifact"),
     )
-    assert registry.get("export_dmf_excel").requires_approval is True
+    assert registry.get("export_dmf_excel").risk is ToolRisk.LOCAL_WRITE
     assert "dmf_results" not in registry.get("export_dmf_excel").tool.args
     assert registry.get("export_dmf_excel").state_arguments == (
         ("dmf_results", "dmf_results"),

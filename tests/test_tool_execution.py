@@ -2,9 +2,7 @@ from pathlib import Path
 
 from langchain_core.messages import AIMessage
 from langchain_core.tools import tool
-from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph import END, START, StateGraph
-from langgraph.types import Command
 
 from src.agent import tooling
 from src.agent.state import ResearchState
@@ -16,12 +14,12 @@ from src.tools.registry import (
 )
 
 
-def _approval_graph():
+def _execution_graph():
     builder = StateGraph(ResearchState)
     builder.add_node("execute", tooling.execute_tools)
     builder.add_edge(START, "execute")
     builder.add_edge("execute", END)
-    return builder.compile(checkpointer=InMemorySaver())
+    return builder.compile()
 
 
 def _state(*calls: dict) -> dict:
@@ -60,51 +58,21 @@ def _write_registry(marker: Path) -> ToolRegistry:
     return registry
 
 
-def test_write_tool_pauses_then_resumes_after_approval(tmp_path, monkeypatch) -> None:
-    marker = tmp_path / "approved.txt"
+def test_write_tool_executes_without_approval(tmp_path, monkeypatch) -> None:
+    marker = tmp_path / "written.txt"
     monkeypatch.setattr(tooling, "load_builtin_tools", lambda: _write_registry(marker))
-    graph = _approval_graph()
-    config = {"configurable": {"thread_id": "approved"}}
-
-    paused = graph.invoke(
-        _state(_call("write_marker", {"content": "ok"}, "write-1")),
-        config=config,
-    )
-
-    assert not marker.exists()
-    interrupt_value = paused["__interrupt__"][0].value
-    assert interrupt_value["calls"][0]["risk"] == ToolRisk.LOCAL_WRITE.value
+    graph = _execution_graph()
 
     completed = graph.invoke(
-        Command(resume={"approved_call_ids": ["write-1"]}),
-        config=config,
+        _state(_call("write_marker", {"content": "ok"}, "write-1")),
     )
 
     assert marker.read_text(encoding="utf-8") == "ok"
     assert completed["tool_artifacts"][0]["tool_name"] == "write_marker"
+    assert "__interrupt__" not in completed
 
 
-def test_rejected_write_tool_does_not_create_file(tmp_path, monkeypatch) -> None:
-    marker = tmp_path / "rejected.txt"
-    monkeypatch.setattr(tooling, "load_builtin_tools", lambda: _write_registry(marker))
-    graph = _approval_graph()
-    config = {"configurable": {"thread_id": "rejected"}}
-
-    graph.invoke(
-        _state(_call("write_marker", {"content": "no"}, "write-1")),
-        config=config,
-    )
-    completed = graph.invoke(
-        Command(resume={"approved_call_ids": []}),
-        config=config,
-    )
-
-    assert not marker.exists()
-    assert completed["messages"][-1].status == "error"
-    assert "拒绝" in completed["messages"][-1].content
-
-
-def test_mixed_batch_executes_nothing_before_approval(tmp_path, monkeypatch) -> None:
+def test_mixed_batch_executes_read_and_write_tools(tmp_path, monkeypatch) -> None:
     marker = tmp_path / "mixed.txt"
     read_calls: list[str] = []
 
@@ -124,17 +92,19 @@ def test_mixed_batch_executes_nothing_before_approval(tmp_path, monkeypatch) -> 
         )
     )
     monkeypatch.setattr(tooling, "load_builtin_tools", lambda: registry)
-    graph = _approval_graph()
-    config = {"configurable": {"thread_id": "mixed"}}
+    graph = _execution_graph()
 
-    paused = graph.invoke(
+    completed = graph.invoke(
         _state(
             _call("read_value", {}, "read-1"),
             _call("write_marker", {"content": "ok"}, "write-1"),
         ),
-        config=config,
     )
 
-    assert paused["__interrupt__"]
-    assert read_calls == []
-    assert not marker.exists()
+    assert "__interrupt__" not in completed
+    assert read_calls == ["called"]
+    assert marker.read_text(encoding="utf-8") == "ok"
+    assert [artifact["tool_name"] for artifact in completed["tool_artifacts"]] == [
+        "read_value",
+        "write_marker",
+    ]

@@ -1,4 +1,4 @@
-"""MinerU Web Demo 的集中配置
+"""DMF Research Agent 的集中配置
 """
 
 from __future__ import annotations
@@ -75,7 +75,7 @@ def _get_path(env: Mapping[str, str], name: str, default: Path) -> Path:
 def _get_extensions(env: Mapping[str, str]) -> frozenset[str]:
 	raw_value = env.get(
 		"ALLOWED_EXTENSIONS",
-		".pdf,.doc,.docx,.ppt,.pptx,.png,.jpg,.jpeg",
+		".pdf,.doc,.docx,.ppt,.pptx,.png,.jpg,.jpeg,.xlsx,.xls,.md,.txt",
 	)
 	extensions = {
 		extension.strip().lower()
@@ -183,8 +183,8 @@ def load_settings(
 		max_batch_files=_get_int(source, "MAX_BATCH_FILES", 20),
 		max_markdown_size_bytes=_get_int(source, "MAX_MARKDOWN_SIZE_MB", 100) * MIB,
 		allowed_extensions=_get_extensions(source),
-		template_dir=_get_path(source, "TEMPLATE_DIR", SOURCE_ROOT / "mineru" / "templates"),
-		static_dir=_get_path(source, "STATIC_DIR", SOURCE_ROOT / "mineru" / "static"),
+		template_dir=_get_path(source, "TEMPLATE_DIR", SOURCE_ROOT / "web" / "templates"),
+		static_dir=_get_path(source, "STATIC_DIR", SOURCE_ROOT / "web" / "static"),
 		upload_dir=_get_path(source, "UPLOAD_DIR", SOURCE_ROOT / "storage" / "uploads"),
 		result_dir=_get_path(source, "RESULT_DIR", SOURCE_ROOT / "storage" / "results"),
 		temp_dir=_get_path(source, "TEMP_DIR", SOURCE_ROOT / "storage" / "temp"),

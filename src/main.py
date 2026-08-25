@@ -1,4 +1,4 @@
-"""MinerU批量文档解析Web服务入口。"""
+"""DMF Research Agent Web service entry point."""
 
 from contextlib import asynccontextmanager
 from typing import AsyncIterator
@@ -8,6 +8,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from src.mineru.routes.convert import router as convert_router
 from src.settings import get_settings
+from src.web.routes.agent import router as agent_router
 
 # 读取项目配置
 settings = get_settings()
@@ -38,10 +39,10 @@ async def lifespan(
 
 
 app = FastAPI(
-    title="MinerU批量文档解析服务",
+    title="DMF Research Agent",
     description=(
-        "支持一次上传多个文档，"
-        "调用MinerU精准解析API生成Markdown。"
+        "支持 DMF 对话查询、文档提取、"
+        "条件确认和查询结果导出。"
     ),
     version="1.0.0",
     lifespan=lifespan,
@@ -60,6 +61,7 @@ app.mount(
 
 # 注册文档解析API
 app.include_router(convert_router)
+app.include_router(agent_router)
 
 
 @app.get(
@@ -84,5 +86,5 @@ def health_check() -> dict[str, str]:
 
     return {
         "status": "ok",
-        "service": "mineru-demo",
+        "service": "dmf-research-agent",
     }

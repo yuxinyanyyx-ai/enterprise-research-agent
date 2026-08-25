@@ -24,9 +24,18 @@ def test_workflow_client_posts_markdown_and_returns_structured_output(
     monkeypatch.setenv("APOLLO_STUDIO_BASE_URL", "https://studio.example.test/v1/")
     monkeypatch.setenv("APOLLO_STUDIO_WORKFLOW_API_KEY", "test-key")
     expected = {
-        "dmf_no": "",
-        "applicant_name": "",
-        "ingredients": ["Ibuprofen"],
+        "queries": [
+            {
+                "dmf_no": "234",
+                "applicant_name": "",
+                "ingredients": ["Ibuprofen"],
+            },
+            {
+                "dmf_no": "211",
+                "applicant_name": "",
+                "ingredients": ["NOT"],
+            },
+        ],
     }
 
     def fake_post(url, *, headers, json, timeout, verify):
@@ -54,7 +63,7 @@ def test_workflow_client_posts_markdown_and_returns_structured_output(
 
 
 def test_registered_workflow_tool_delegates_to_client(monkeypatch) -> None:
-    expected = {"ingredients": ["Ibuprofen"]}
+    expected = {"queries": [{"ingredients": ["Ibuprofen"]}]}
     artifact = {
         "document_id": "doc-1",
         "file_name": "sample.md",

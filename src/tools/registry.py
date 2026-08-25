@@ -27,10 +27,6 @@ class ToolDefinition:
     parallel_safe: bool = False
     state_arguments: tuple[tuple[str, str], ...] = ()
 
-    @property
-    def requires_approval(self) -> bool:
-        return self.risk is not ToolRisk.READ_ONLY
-
 
 class ToolRegistry:
     def __init__(self) -> None:

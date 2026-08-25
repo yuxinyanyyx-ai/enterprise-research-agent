@@ -45,10 +45,10 @@ register_tool(
 ## 3. 设置风险等级
 
 - `ToolRisk.READ_ONLY`：只读操作，自动执行。
-- `ToolRisk.LOCAL_WRITE`：写本地文件，执行前暂停并请求用户批准。
-- `ToolRisk.EXTERNAL_WRITE`：修改外部系统，执行前暂停并请求用户批准。
+- `ToolRisk.LOCAL_WRITE`：写本地文件。
+- `ToolRisk.EXTERNAL_WRITE`：修改外部系统。
 
-风险必须按真实副作用声明，不能为了减少确认步骤把写操作标为只读。
+风险等级用于审计和工具分类，不会触发人工批准；所有被模型选中的已注册工具都会直接执行。风险仍必须按真实副作用声明，不能把写操作标为只读。
 
 ## 4. 注入可信 State
 
@@ -103,8 +103,7 @@ register_tool(
 2. 工具参数 Schema 不暴露注入字段。
 3. 正常结果和业务空结果。
 4. 参数错误和运行异常。
-5. 写入工具在批准前不产生副作用。
-6. 用户拒绝时不执行。
-7. `parallel_safe=True` 时不存在共享可变状态或目标文件冲突。
+5. 写入工具无需人工批准即可完成预期副作用。
+6. `parallel_safe=True` 时不存在共享可变状态或目标文件冲突。
 
 测试应使用 Fake Tool/Fake LLM，避免访问真实 Apollo、DMF 或 MinerU 服务。

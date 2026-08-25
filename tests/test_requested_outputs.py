@@ -158,6 +158,116 @@ def test_build_answer_result_only_does_not_call_llm() -> None:
     assert "## 摘要" not in answer
 
 
+def test_build_answer_explains_each_successful_empty_query() -> None:
+    answer = nodes.build_dmf_answer(
+        {
+            "requested_outputs": ["result"],
+            "dmf_results": {
+                "success": True,
+                "message": "批量查询完成",
+                "results": [
+                    {
+                        "success": True,
+                        "message": "查询成功",
+                        "query": {
+                            "dmf_no": "234",
+                            "applicant_name": "",
+                            "ingredient": "Ibuprofen",
+                        },
+                        "records": [],
+                    },
+                    {
+                        "success": True,
+                        "message": "查询成功",
+                        "query": {
+                            "dmf_no": "",
+                            "applicant_name": "",
+                            "ingredient": "Ibuprofen",
+                        },
+                        "records": [],
+                    },
+                ],
+            },
+        }
+    )["final_answer"]
+
+    assert "DMF 编号=234，成分=Ibuprofen" in answer
+    assert "2. 成分=Ibuprofen：查询成功，返回 0 条记录" in answer
+
+
+def test_build_answer_explains_query_failure_without_nested_results() -> None:
+    answer = nodes.build_dmf_answer(
+        {
+            "requested_outputs": ["result"],
+            "dmf_results": {
+                "success": False,
+                "message": "验证码获取异常：连接超时",
+                "results": [],
+            },
+        }
+    )["final_answer"]
+
+    assert answer == "DMF 查询未完成：验证码获取异常：连接超时"
+
+
+def test_build_answer_lists_unmatched_queries_after_matching_records() -> None:
+    result = _fake_result()
+    result.update(
+        {
+            "query_count": 4,
+            "success_count": 3,
+            "failed_count": 1,
+            "results": [
+                result["results"][0],
+                {
+                    "success": True,
+                    "message": "查询成功",
+                    "query": {
+                        "dmf_no": "234",
+                        "applicant_name": "",
+                        "ingredient": "Ibuprofen",
+                    },
+                    "records": [],
+                },
+                {
+                    "success": True,
+                    "message": "查询成功",
+                    "query": {
+                        "dmf_no": "",
+                        "applicant_name": "",
+                        "ingredient": "Ibanez",
+                    },
+                    "records": [],
+                },
+                {
+                    "success": False,
+                    "message": "验证码错误",
+                    "query": {
+                        "dmf_no": "211",
+                        "applicant_name": "",
+                        "ingredient": "NOT",
+                    },
+                    "records": [],
+                },
+            ],
+        }
+    )
+
+    answer = nodes.build_dmf_answer(
+        {
+            "requested_outputs": ["result"],
+            "dmf_results": result,
+        }
+    )["final_answer"]
+
+    assert "12345" in answer
+    assert "未命中查询：" in answer
+    assert "1. DMF 编号=234，成分=Ibuprofen：返回 0 条记录" in answer
+    assert "2. 成分=Ibanez：返回 0 条记录" in answer
+    assert "DMF 编号=211，成分=NOT：返回 0 条记录" not in answer
+    assert "部分查询未完成：成功 3，失败 1" in answer
+
+
 def test_build_answer_combines_result_and_summary(monkeypatch) -> None:
     monkeypatch.setattr(
         nodes,

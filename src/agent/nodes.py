@@ -15,7 +15,10 @@ from src.agent.prompts import (
 from src.agent.state import ResearchState
 from src.llm.apollo import create_apollo_llm
 from src.schemas.intent import ResearchIntent
-from src.schemas.document_dmf import DocumentQueryDecision, ExtractedDMFQuery
+from src.schemas.document_dmf import (
+    DocumentQueryDecision,
+    ExtractedDMFQueryBatch,
+)
 from src.services.document_dmf_service import DocumentDMFError, DocumentDMFService
 from src.tools.dmf_tools import search_dmf
 
@@ -253,7 +256,7 @@ def extract_document_query(state: ResearchState) -> dict[str, Any]:
 def confirm_document_query(state: ResearchState) -> dict[str, Any]:
     """Pause before a real DMF query and accept confirmed or edited conditions."""
 
-    candidate = ExtractedDMFQuery.model_validate(state["extracted_dmf_query"])
+    candidate = ExtractedDMFQueryBatch.model_validate(state["extracted_dmf_query"])
     artifact = state.get("document_artifact") or {}
     resumed = interrupt(
         {
@@ -280,12 +283,16 @@ def confirm_document_query(state: ResearchState) -> dict[str, Any]:
 def query_confirmed_document_dmf(state: ResearchState) -> dict[str, Any]:
     """Run a DMF query only after document conditions were confirmed."""
 
-    query = ExtractedDMFQuery.model_validate(state["confirmed_dmf_query"])
+    query = ExtractedDMFQueryBatch.model_validate(state["confirmed_dmf_query"])
     result = DocumentDMFService().execute_confirmed_query(query)
     return {
-        "dmf_no": query.dmf_no,
-        "applicant_name": query.applicant_name,
-        "ingredients": query.ingredients,
+        "dmf_no": "",
+        "applicant_name": "",
+        "ingredients": [
+            ingredient
+            for item in query.queries
+            for ingredient in item.ingredients
+        ],
         "requested_outputs": ["result"],
         "dmf_results": result,
     }
@@ -296,14 +303,19 @@ def finalize_document_review(state: ResearchState) -> dict[str, Any]:
 
     if state.get("document_error"):
         return {"final_answer": f"文档分析失败：{state['document_error']}"}
-    query = ExtractedDMFQuery.model_validate(state["extracted_dmf_query"])
-    ingredients = "、".join(query.ingredients) or "未提取到"
+    batch = ExtractedDMFQueryBatch.model_validate(state["extracted_dmf_query"])
+    lines = []
+    for index, query in enumerate(batch.queries, start=1):
+        ingredients = "、".join(query.ingredients) or "未提取到"
+        lines.append(
+            f"{index}. DMF 编号：{query.dmf_no or '未提取到'}；"
+            f"申请商：{query.applicant_name or '未提取到'}；"
+            f"成分：{ingredients}"
+        )
     return {
         "final_answer": (
-            "已从文档中提取以下 DMF 查询条件：\n"
-            f"- DMF 编号：{query.dmf_no or '未提取到'}\n"
-            f"- 申请商：{query.applicant_name or '未提取到'}\n"
-            f"- 成分：{ingredients}"
+            f"已从文档中提取 {len(batch.queries)} 组 DMF 查询条件：\n"
+            + "\n".join(lines)
         )
     }
 
@@ -384,13 +396,38 @@ def _collect_records(result: dict[str, Any]) -> list[dict[str, Any]]:
     return records
 
 
+def _format_query_condition(query: dict[str, Any]) -> str:
+    conditions = [
+        f"DMF 编号={query['dmf_no']}" if query.get("dmf_no") else "",
+        f"申请商={query['applicant_name']}" if query.get("applicant_name") else "",
+        f"成分={query['ingredient']}" if query.get("ingredient") else "",
+    ]
+    return "，".join(item for item in conditions if item) or "无有效条件"
+
+
+def _format_empty_result_diagnostics(result: dict[str, Any]) -> str:
+    query_results = result.get("results") or []
+    if not query_results:
+        return f"DMF 查询未完成：{result.get('message', '上游未返回查询结果')}"
+
+    lines = ["没有找到符合条件的 DMF 记录。各项查询状态如下："]
+    for index, query_result in enumerate(query_results, start=1):
+        condition = _format_query_condition(query_result.get("query") or {})
+        if query_result.get("success"):
+            status = "查询成功，返回 0 条记录"
+        else:
+            status = f"查询失败：{query_result.get('message', '未知错误')}"
+        lines.append(f"{index}. {condition}：{status}")
+    return "\n".join(lines)
+
+
 def _format_dmf_result_text(result: dict[str, Any]) -> str:
     """确定性格式化原始 DMF 查询结果，不调用 LLM。"""
 
     records = _collect_records(result)
 
     if not records:
-        return "查询成功，但没有找到符合条件的 DMF 记录。"
+        return _format_empty_result_diagnostics(result)
 
     lines = [
         f"查询成功，共找到 **{len(records)} 条** DMF 记录。",
@@ -406,6 +443,20 @@ def _format_dmf_result_text(result: dict[str, Any]) -> str:
             f"{record.get('applicant_name') or '-'} | "
             f"{record.get('ingredient') or '-'} | "
             f"{record.get('valid_date') or '未提供'} |"
+        )
+
+    unmatched_queries = [
+        query_result
+        for query_result in result.get("results", [])
+        if query_result.get("success") and not query_result.get("records")
+    ]
+    if unmatched_queries:
+        lines.extend(["", "未命中查询：", ""])
+        lines.extend(
+            f"{index}. "
+            f"{_format_query_condition(query_result.get('query') or {})}："
+            "返回 0 条记录"
+            for index, query_result in enumerate(unmatched_queries, start=1)
         )
 
     return "\n".join(lines)
@@ -478,18 +529,16 @@ def build_dmf_answer(state: ResearchState) -> dict[str, Any]:
     start = time.perf_counter()
     result = state.get("dmf_results") or {}
 
-    if not result.get("success"):
+    records = _collect_records(result)
+    if not result.get("success") and not records:
         _print_elapsed("build_dmf_answer", start)
         return {
-            "final_answer": (
-                f"DMF 查询失败：{result.get('message', '未知错误')}"
-            )
+            "final_answer": _format_empty_result_diagnostics(result)
         }
 
-    records = _collect_records(result)
     if not records:
         _print_elapsed("build_dmf_answer", start)
-        return {"final_answer": "查询成功，但没有找到符合条件的 DMF 记录。"}
+        return {"final_answer": _format_empty_result_diagnostics(result)}
 
     requested_outputs = _normalize_requested_outputs(
         "dmf_query",
@@ -521,6 +570,13 @@ def build_dmf_answer(state: ResearchState) -> dict[str, Any]:
             for name in requested_outputs
         ]
         final_answer = "\n\n".join(parts)
+
+    if result.get("failed_count", 0):
+        final_answer = (
+            f"{final_answer}\n\n> 部分查询未完成："
+            f"成功 {result.get('success_count', 0)}，"
+            f"失败 {result.get('failed_count', 0)}。"
+        )
 
     export_results = [
         artifact.get("result", {})

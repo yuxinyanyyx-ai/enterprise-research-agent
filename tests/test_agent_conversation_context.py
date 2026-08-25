@@ -1,6 +1,5 @@
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 from langgraph.checkpoint.memory import InMemorySaver
-from langgraph.types import Command
 
 from src.agent import graph as graph_module
 from src.agent import nodes, tooling
@@ -116,18 +115,12 @@ def test_query_then_export_reuses_active_result_without_requery(
     assert "12345" in first["final_answer"]
     assert query_calls == 1
 
-    paused = graph.invoke(
+    completed = graph.invoke(
         {"user_query": "导出 exel", "warnings": []},
         config=config,
     )
-    assert paused["__interrupt__"][0].value["calls"][0]["name"] == "export_dmf_excel"
-    assert query_calls == 1
-    assert not output_path.exists()
 
-    completed = graph.invoke(
-        Command(resume={"approved_call_ids": ["export-cross-turn"]}),
-        config=config,
-    )
+    assert "__interrupt__" not in completed
     assert output_path.exists()
     assert str(output_path) in completed["final_answer"]
     assert "| 12345 |" not in completed["final_answer"]

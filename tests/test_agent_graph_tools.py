@@ -1,9 +1,5 @@
-from pathlib import Path
-
-import pytest
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 from langgraph.checkpoint.memory import InMemorySaver
-from langgraph.types import Command
 
 from src.agent import graph as graph_module
 from src.agent import tooling
@@ -100,11 +96,9 @@ class SearchToolModel:
         )
 
 
-@pytest.mark.parametrize("approved", [True, False])
-def test_dmf_export_pauses_and_preserves_fixed_answer(
+def test_dmf_export_executes_without_approval_and_preserves_fixed_answer(
     tmp_path,
     monkeypatch,
-    approved,
 ) -> None:
     output_path = tmp_path / "agent-export.xlsx"
 
@@ -119,28 +113,15 @@ def test_dmf_export_pauses_and_preserves_fixed_answer(
     monkeypatch.setattr(export_tools, "export_multi_query_result", fake_export)
 
     graph = graph_module.build_research_graph(checkpointer=InMemorySaver())
-    config = {"configurable": {"thread_id": f"export-{approved}"}}
-    paused = graph.invoke(
-        {"user_query": "查询 Ibuprofen 并导出 Excel", "warnings": []},
-        config=config,
-    )
-
-    assert paused["__interrupt__"][0].value["calls"][0]["name"] == "export_dmf_excel"
-    assert not output_path.exists()
-
-    approved_ids = ["export-1"] if approved else []
     completed = graph.invoke(
-        Command(resume={"approved_call_ids": approved_ids}),
-        config=config,
+        {"user_query": "查询 Ibuprofen 并导出 Excel", "warnings": []},
+        config={"configurable": {"thread_id": "export-direct"}},
     )
 
+    assert "__interrupt__" not in completed
     assert "| 12345 | Example Pharma | Ibuprofen | 2027-01-01 |" in completed["final_answer"]
-    if approved:
-        assert output_path.exists()
-        assert str(output_path) in completed["final_answer"]
-    else:
-        assert not output_path.exists()
-        assert "用户拒绝执行该工具" in completed["final_answer"]
+    assert output_path.exists()
+    assert str(output_path) in completed["final_answer"]
 
 
 def test_general_agent_dynamically_calls_registered_search(monkeypatch) -> None:

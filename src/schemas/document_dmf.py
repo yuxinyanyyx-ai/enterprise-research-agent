@@ -55,11 +55,49 @@ class ExtractedDMFQuery(BaseModel):
 		return self
 
 
+class ExtractedDMFQueryBatch(BaseModel):
+	"""Independent DMF conditions extracted from document rows."""
+
+	queries: list[ExtractedDMFQuery]
+
+	@model_validator(mode="before")
+	@classmethod
+	def accept_legacy_single_query(cls, value: object) -> object:
+		if isinstance(value, cls):
+			return value
+		if isinstance(value, ExtractedDMFQuery):
+			return {"queries": [value]}
+		if isinstance(value, dict) and "queries" not in value:
+			return {"queries": [value]}
+		return value
+
+	@field_validator("queries")
+	@classmethod
+	def require_unique_queries(
+		cls,
+		value: list[ExtractedDMFQuery],
+	) -> list[ExtractedDMFQuery]:
+		if not value:
+			raise ValueError("文档中未提取到可用的 DMF 查询条件")
+		seen: set[tuple[str, str, tuple[str, ...]]] = set()
+		result: list[ExtractedDMFQuery] = []
+		for query in value:
+			key = (
+				query.dmf_no.casefold(),
+				query.applicant_name.casefold(),
+				tuple(item.casefold() for item in query.ingredients),
+			)
+			if key not in seen:
+				seen.add(key)
+				result.append(query)
+		return result
+
+
 class DocumentQueryDecision(BaseModel):
 	"""User decision for extracted conditions before a real DMF query."""
 
 	action: Literal["confirm", "edit", "reject"]
-	query: ExtractedDMFQuery | None = None
+	query: ExtractedDMFQueryBatch | None = None
 
 	@model_validator(mode="after")
 	def require_query_for_execution(self) -> "DocumentQueryDecision":
