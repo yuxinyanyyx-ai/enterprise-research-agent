@@ -2,8 +2,7 @@ from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 from langgraph.checkpoint.memory import InMemorySaver
 
 from src.agent import graph as graph_module
-from src.agent import tooling
-from src.tools import dmf_tools, export_tools
+from src.agent import nodes
 
 
 def _dmf_result() -> dict:
@@ -31,11 +30,16 @@ def _dmf_result() -> dict:
     }
 
 
-def _intent(task_type: str):
+def _intent(data_source: str):
     def understand(state):
+        requested_outputs = ["result"] if data_source == "dmf" else []
+        if data_source == "dmf" and "导出" in state["user_query"]:
+            requested_outputs.append("export")
         return {
-            "task_type": task_type,
-            "requested_outputs": ["result"] if task_type == "dmf_query" else [],
+            "data_source": data_source,
+            "use_existing_data": False,
+            "query_document_conditions": False,
+            "requested_outputs": requested_outputs,
             "needs_clarification": False,
             "dmf_no": "",
             "applicant_name": "",
@@ -107,10 +111,9 @@ def test_dmf_export_executes_without_approval_and_preserves_fixed_answer(
         output_path.write_text("workbook", encoding="utf-8")
         return output_path
 
-    monkeypatch.setattr(graph_module, "understand_request", _intent("dmf_query"))
+    monkeypatch.setattr(graph_module, "understand_request", _intent("dmf"))
     monkeypatch.setattr(graph_module, "query_dmf", lambda state: {"dmf_results": _dmf_result()})
-    monkeypatch.setattr(tooling, "create_apollo_llm", ExportToolModel)
-    monkeypatch.setattr(export_tools, "export_multi_query_result", fake_export)
+    monkeypatch.setattr(nodes, "export_multi_query_result", fake_export)
 
     graph = graph_module.build_research_graph(checkpointer=InMemorySaver())
     completed = graph.invoke(
@@ -124,15 +127,18 @@ def test_dmf_export_executes_without_approval_and_preserves_fixed_answer(
     assert str(output_path) in completed["final_answer"]
 
 
-def test_general_agent_dynamically_calls_registered_search(monkeypatch) -> None:
-    monkeypatch.setattr(graph_module, "understand_request", _intent("general_chat"))
-    monkeypatch.setattr(tooling, "create_apollo_llm", SearchToolModel)
-    monkeypatch.setattr(dmf_tools, "search_dmf_queries", lambda **kwargs: _dmf_result())
+def test_general_chat_does_not_call_registered_business_tools(monkeypatch) -> None:
+    class GeneralChatModel:
+        def invoke(self, messages):
+            return AIMessage(content="这是普通交流回答。")
+
+    monkeypatch.setattr(graph_module, "understand_request", _intent("none"))
+    monkeypatch.setattr(nodes, "create_apollo_llm", GeneralChatModel)
 
     graph = graph_module.build_research_graph()
     completed = graph.invoke({"user_query": "查一下 Ibuprofen", "warnings": []})
 
-    assert completed["final_answer"] == "已根据真实工具结果完成查询。"
-    assert completed["tool_artifacts"][0]["tool_name"] == "search_dmf"
+    assert completed["final_answer"] == "这是普通交流回答。"
+    assert completed["tool_artifacts"] == []
 
 

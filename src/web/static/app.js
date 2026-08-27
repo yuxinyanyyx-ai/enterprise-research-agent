@@ -1,9 +1,9 @@
-const state = { sessionId: "", busy: false, awaiting: false, document: null, thinking: null, dragDepth: 0 };
+const state = { sessionId: "", busy: false, awaiting: false, documents: [], thinking: null, dragDepth: 0 };
 const elements = {
     sidebar: document.getElementById("sidebar"), menu: document.getElementById("menuButton"), conversation: document.getElementById("conversation"), welcome: document.getElementById("welcome"),
     form: document.getElementById("messageForm"), input: document.getElementById("messageInput"), send: document.getElementById("sendButton"), attach: document.getElementById("attachButton"),
-    file: document.getElementById("fileInput"), upload: document.getElementById("uploadButton"), clear: document.getElementById("clearDocumentButton"), documentName: document.getElementById("documentName"),
-    documentMeta: document.getElementById("documentMeta"), sessionStatus: document.getElementById("sessionStatus"), statusDot: document.getElementById("statusDot"), activity: document.getElementById("activityText"),
+    file: document.getElementById("fileInput"), upload: document.getElementById("uploadButton"), clear: document.getElementById("clearDocumentButton"), documentList: document.getElementById("documentList"),
+    documentCount: document.getElementById("documentCount"), sessionStatus: document.getElementById("sessionStatus"), statusDot: document.getElementById("statusDot"), activity: document.getElementById("activityText"),
     progress: document.getElementById("uploadProgress"), progressText: document.getElementById("uploadProgressText"), chars: document.getElementById("charCount"), toasts: document.getElementById("toastRegion"),
     dropOverlay: document.getElementById("dropOverlay")
 };
@@ -14,12 +14,16 @@ elements.input.addEventListener("input", resizeComposer);
 elements.input.addEventListener("keydown", event => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); elements.form.requestSubmit(); } });
 elements.attach.addEventListener("click", () => elements.file.click());
 elements.upload.addEventListener("click", () => elements.file.click());
-elements.file.addEventListener("change", () => { if (elements.file.files[0]) uploadDocument(elements.file.files[0]); elements.file.value = ""; });
+elements.file.addEventListener("change", () => { if (elements.file.files.length) uploadDocuments(Array.from(elements.file.files)); elements.file.value = ""; });
 document.addEventListener("dragenter", handleDragEnter);
 document.addEventListener("dragover", handleDragOver);
 document.addEventListener("dragleave", handleDragLeave);
 document.addEventListener("drop", handleDrop);
-elements.clear.addEventListener("click", clearDocument);
+elements.clear.addEventListener("click", clearDocuments);
+elements.documentList.addEventListener("click", event => {
+    const button = event.target.closest("[data-document-id]");
+    if (button) deleteDocument(button.dataset.documentId);
+});
 elements.menu.addEventListener("click", () => elements.sidebar.classList.toggle("open"));
 document.getElementById("sidebarCloseButton").addEventListener("click", () => elements.sidebar.classList.remove("open"));
 document.querySelectorAll(".suggestion").forEach(button => button.addEventListener("click", () => sendMessage(button.dataset.prompt)));
@@ -54,11 +58,7 @@ function handleDrop(event) {
     event.preventDefault();
     const files = Array.from(event.dataTransfer?.files || []);
     hideDropOverlay();
-    if (files.length !== 1) {
-        toast("每次只能上传一个文档", true);
-        return;
-    }
-    uploadDocument(files[0]);
+    if (files.length) uploadDocuments(files);
 }
 
 function hideDropOverlay() {
@@ -112,7 +112,7 @@ async function sendMessage(rawMessage) {
     }
 }
 
-async function uploadDocument(file) {
+async function uploadDocuments(files) {
     if (!state.sessionId) {
         toast("会话尚未建立，请稍后重试", true);
         return;
@@ -122,17 +122,20 @@ async function uploadDocument(file) {
         return;
     }
     const formData = new FormData();
-    formData.append("file", file, file.name);
+    files.forEach(file => formData.append("files", file, file.name));
     setBusy(true, "正在解析文档");
     elements.progress.classList.remove("hidden");
-    elements.progressText.textContent = `正在处理 ${file.name}`;
+    elements.progressText.textContent = `正在处理 ${files.length} 份文档`;
     try {
-        const response = await api(`/api/agent/sessions/${state.sessionId}/document`, { method: "POST", body: formData });
-        state.document = response.document;
+        const response = await api(`/api/agent/sessions/${state.sessionId}/documents`, { method: "POST", body: formData });
+        state.documents = response.documents || [];
         renderDocumentState();
         hideWelcome();
-        addSystemMessage(`文档已就绪：${response.document.file_name}`);
-        toast("文档解析完成");
+        const failed = response.errors?.length || 0;
+        const succeeded = files.length - failed;
+        if (succeeded) addSystemMessage(`新增 ${succeeded} 份文档，当前共 ${state.documents.length} 份。`);
+        response.errors?.forEach(error => toast(`${error.file_name}：${error.message}`, true));
+        if (succeeded) toast("文档解析完成");
         if (window.innerWidth <= 850) elements.sidebar.classList.remove("open");
     } catch (error) {
         toast(error.message, true);
@@ -142,13 +145,23 @@ async function uploadDocument(file) {
     }
 }
 
-async function clearDocument() {
-    if (!state.document || state.busy || state.awaiting) return;
+async function deleteDocument(documentId) {
+    if (state.busy || state.awaiting) return;
     try {
-        await api(`/api/agent/sessions/${state.sessionId}/document`, { method: "DELETE" });
-        state.document = null;
+        const response = await api(`/api/agent/sessions/${state.sessionId}/documents/${encodeURIComponent(documentId)}`, { method: "DELETE" });
+        state.documents = response.documents || [];
         renderDocumentState();
-        addSystemMessage("已清除当前文档");
+        addSystemMessage("已删除文档");
+    } catch (error) { toast(error.message, true); }
+}
+
+async function clearDocuments() {
+    if (!state.documents.length || state.busy || state.awaiting) return;
+    try {
+        const response = await api(`/api/agent/sessions/${state.sessionId}/documents`, { method: "DELETE" });
+        state.documents = response.documents || [];
+        renderDocumentState();
+        addSystemMessage("已清空当前文档");
     } catch (error) { toast(error.message, true); }
 }
 
@@ -177,6 +190,12 @@ function renderDocumentConfirmation(interrupt) {
     panel.className = "interrupt-panel";
     const queries = interrupt.query?.queries || [];
     panel.innerHTML = `<div class="interrupt-header"><strong>确认 DMF 查询条件</strong><span class="query-count">${queries.length} 组</span></div>`;
+    if (interrupt.warnings?.length) {
+        const warning = document.createElement("div");
+        warning.className = "confirmation-warning";
+        warning.textContent = `部分文档未能提取：${interrupt.warnings.map(item => item.message).join("；")}`;
+        panel.appendChild(warning);
+    }
     const grid = document.createElement("div");
     grid.className = "query-grid";
     queries.forEach((query, index) => grid.appendChild(createQueryItem(query, index)));
@@ -198,6 +217,20 @@ function createQueryItem(query, index) {
     item.appendChild(queryField("DMF 编号", "dmf_no", query.dmf_no || ""));
     item.appendChild(queryField("申请商", "applicant_name", query.applicant_name || ""));
     item.appendChild(queryField("成分（逗号分隔）", "ingredients", (query.ingredients || []).join(", ")));
+    if (query.sources?.length) {
+        const sources = document.createElement("div");
+        sources.className = "query-sources";
+        sources.textContent = `来源：${query.sources.map(source => source.file_name).join("、")}`;
+        item.appendChild(sources);
+    }
+    const flags = [];
+    if (query.broad_query) flags.push("条件较宽泛，可能返回较多记录");
+    if (flags.length) {
+        const warning = document.createElement("div");
+        warning.className = "query-warning";
+        warning.textContent = flags.join("；");
+        item.appendChild(warning);
+    }
     return item;
 }
 
@@ -336,5 +369,21 @@ function resizeComposer() { elements.input.style.height = "auto"; elements.input
 function hideWelcome() { if (elements.welcome) elements.welcome.remove(); }
 function scrollConversation() { requestAnimationFrame(() => { elements.conversation.scrollTop = elements.conversation.scrollHeight; }); }
 function setSessionStatus(text, error) { elements.sessionStatus.textContent = text; elements.statusDot.classList.toggle("error", error); }
-function renderDocumentState() { if (state.document) { elements.documentName.textContent = state.document.file_name; elements.documentMeta.textContent = "已解析，可用于查询"; elements.clear.classList.remove("hidden"); } else { elements.documentName.textContent = "未选择文档"; elements.documentMeta.textContent = "等待上传"; elements.clear.classList.add("hidden"); } }
+function renderDocumentState() {
+    elements.documentCount.textContent = state.documents.length;
+    elements.clear.classList.toggle("hidden", !state.documents.length);
+    elements.documentList.replaceChildren();
+    if (!state.documents.length) {
+        const empty = document.createElement("div"); empty.className = "document-empty"; empty.textContent = "未选择文档"; elements.documentList.appendChild(empty); return;
+    }
+    state.documents.forEach(documentItem => {
+        const row = document.createElement("div"); row.className = "document-item";
+        const icon = document.createElement("span"); icon.className = "document-icon"; icon.textContent = "▱"; icon.setAttribute("aria-hidden", "true");
+        const copy = document.createElement("div"); copy.className = "document-copy";
+        const name = document.createElement("strong"); name.textContent = documentItem.file_name;
+        const status = document.createElement("span"); status.textContent = "已解析"; copy.append(name, status);
+        const remove = document.createElement("button"); remove.type = "button"; remove.className = "icon-button"; remove.dataset.documentId = documentItem.document_id; remove.title = `删除 ${documentItem.file_name}`; remove.setAttribute("aria-label", remove.title); remove.textContent = "×";
+        row.append(icon, copy, remove); elements.documentList.appendChild(row);
+    });
+}
 function toast(message, error = false) { const item = document.createElement("div"); item.className = `toast${error ? " error" : ""}`; item.textContent = message; elements.toasts.appendChild(item); window.setTimeout(() => item.remove(), 4200); }

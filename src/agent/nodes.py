@@ -18,9 +18,15 @@ from src.schemas.intent import ResearchIntent
 from src.schemas.document_dmf import (
     DocumentQueryDecision,
     ExtractedDMFQueryBatch,
+    MergedDocumentQuery,
 )
-from src.services.document_dmf_service import DocumentDMFError, DocumentDMFService
+from src.services.document_dmf_service import (
+    DocumentDMFError,
+    DocumentDMFService,
+    merge_document_queries,
+)
 from src.tools.dmf_tools import search_dmf
+from src.export_excel.excel_exporter import export_multi_query_result
 
 AGENT_SYSTEM_PROMPT = """
 你是 DMF Research Agent。
@@ -33,26 +39,21 @@ AGENT_SYSTEM_PROMPT = """
 3. 不要根据模型记忆编造 DMF 查询结果。
 4. 如果已经获得工具返回的数据，应根据真实工具结果回答用户。
 5. 如果还需要额外工具信息，可以继续调用工具。
+6. 如果用户要求查询结果你提取不到，应明确说明情况，不要盲目分析。
 """
 OUTPUT_ORDER = ("result", "summary", "analysis")
-EXPORT_ACTIONS = ("导出", "下载", "生成", "保存")
-EXCEL_MARKERS = ("excel", "xlsx", "exel", "表格")
-CLARIFICATION_FALLBACKS = {
-    "dmf_compare": (
-        "请明确需要比较的成分、DMF 或申请商，"
-        "以及希望比较的具体维度？"
-    ),
-    "document_review": (
-        "请提供需要分析的文档，并说明希望重点检查哪些内容？"
-    ),
-    "dmf_document_compare": (
-        "请提供需要核对的文档，并明确要比较的 DMF、"
-        "成分或申请商？"
-    ),
-}
+REQUESTED_OUTPUT_ORDER = (*OUTPUT_ORDER, "export")
 DEFAULT_CLARIFICATION = (
     "请提供需要查询的成分名称、DMF 编号或申请商名称？"
 )
+MISSING_RESULTS_CLARIFICATION = (
+    "当前会话没有可继续处理的 DMF 查询结果，请先执行查询。"
+)
+MISSING_DOCUMENT_CLARIFICATION = "请先使用 /file <文件路径> 上传需要分析的文档。"
+MISSING_EXTRACTED_QUERY_CLARIFICATION = (
+    "当前会话没有已提取的文档查询条件，请先分析文档。"
+)
+AMBIGUOUS_REQUEST_CLARIFICATION = "请说明需要查询、分析还是导出哪些内容？"
 
 
 def _print_elapsed(name: str, start: float) -> None:
@@ -61,51 +62,23 @@ def _print_elapsed(name: str, start: float) -> None:
 
 
 def _normalize_requested_outputs(
-    task_type: str,
+    default_result: bool,
     requested_outputs: list[str] | None,
 ) -> list[str]:
     """过滤非法/重复输出，并为 DMF 查询提供安全默认值。"""
 
     requested = set(requested_outputs or [])
-    normalized = [name for name in OUTPUT_ORDER if name in requested]
+    normalized = [name for name in REQUESTED_OUTPUT_ORDER if name in requested]
 
-    if task_type == "dmf_query" and not normalized:
+    if default_result and not normalized:
         return ["result"]
 
     return normalized
 
 
-def _normalize_clarification_question(
-    question: str | None,
-    task_type: str,
-) -> str:
-    """Replace incomplete LLM clarification text with a stable fallback."""
-
-    normalized = (question or "").strip()
-    is_complete = (
-        len(normalized) >= 10
-        and normalized.endswith(("？", "?", "。", "！", "!"))
-    )
-    if is_complete:
-        return normalized
-
-    return CLARIFICATION_FALLBACKS.get(
-        task_type,
-        DEFAULT_CLARIFICATION,
-    )
-
-
 def _has_active_dmf_results(state: ResearchState) -> bool:
     result = state.get("dmf_results") or {}
     return bool(result.get("success") and result.get("results"))
-
-
-def _requests_excel_export(user_query: str) -> bool:
-    normalized = user_query.lower()
-    return (
-        any(action in normalized for action in EXPORT_ACTIONS)
-        and any(marker in normalized for marker in EXCEL_MARKERS)
-    )
 
 
 def _active_dmf_context(state: ResearchState) -> dict[str, Any]:
@@ -118,11 +91,27 @@ def _active_dmf_context(state: ResearchState) -> dict[str, Any]:
 
 
 def _active_document_context(state: ResearchState) -> dict[str, Any]:
-    artifact = state.get("document_artifact") or {}
+    artifacts = state.get("document_artifacts") or {}
     return {
-        "available": bool(artifact.get("markdown_path")),
-        "file_name": artifact.get("file_name", ""),
-        "status": artifact.get("status", ""),
+        "available": bool(artifacts),
+        "documents": [
+            {
+                "document_id": document_id,
+                "file_name": artifact.get("file_name", ""),
+                "status": artifact.get("status", ""),
+                "extracted": document_id in (state.get("document_extractions") or {}),
+            }
+            for document_id, artifact in artifacts.items()
+        ],
+    }
+
+
+def _active_extracted_query_context(state: ResearchState) -> dict[str, Any]:
+    queries = (state.get("merged_document_query") or {}).get("queries") or []
+    return {
+        "available": bool(queries),
+        "query_count": len(queries),
+        "preview": queries[:3],
     }
 
 
@@ -137,6 +126,117 @@ def _request_state(user_query: str) -> dict[str, Any]:
     }
 
 
+def _answer(content: str, **updates: Any) -> dict[str, Any]:
+    answer = content.strip()
+    return {
+        **updates,
+        "final_answer": answer,
+        "messages": [AIMessage(content=answer)],
+    }
+
+
+def _recent_conversation(state: ResearchState, limit: int = 12) -> list[dict[str, str]]:
+    conversation = []
+    for message in state.get("messages") or []:
+        if not isinstance(message, (HumanMessage, AIMessage)):
+            continue
+        role = "human" if isinstance(message, HumanMessage) else "ai"
+        conversation.append({"role": role, "content": str(message.content)})
+    return conversation[-limit:]
+
+
+def _validate_intent(
+    intent: ResearchIntent,
+    state: ResearchState,
+) -> dict[str, Any]:
+    """Validate semantic intent against trusted state without changing it."""
+
+    executes_new_query = (
+        intent.data_source == "dmf" and not intent.use_existing_data
+    ) or (
+        intent.data_source == "document"
+        and intent.query_document_conditions
+    )
+    requested_outputs = _normalize_requested_outputs(
+        executes_new_query,
+        intent.requested_outputs,
+    )
+    if executes_new_query and "export" in requested_outputs and not any(
+        output in requested_outputs for output in OUTPUT_ORDER
+    ):
+        requested_outputs = ["result", *requested_outputs]
+    base: dict[str, Any] = {
+        "data_source": intent.data_source,
+        "use_existing_data": intent.use_existing_data,
+        "query_document_conditions": intent.query_document_conditions,
+        "document_ids": intent.document_ids,
+        "selected_document_ids": intent.document_ids,
+        "requested_outputs": requested_outputs,
+        "needs_clarification": False,
+        "clarification_question": "",
+        "dmf_no": intent.dmf_no,
+        "applicant_name": intent.applicant_name,
+        "ingredients": intent.ingredients,
+        "pending_intent": {},
+        "pending_clarification_reason": "",
+    }
+
+    if intent.needs_clarification:
+        return {
+            **base,
+            "needs_clarification": True,
+            "clarification_question": AMBIGUOUS_REQUEST_CLARIFICATION,
+        }
+
+    if intent.data_source == "none":
+        return base
+
+    if intent.data_source == "dmf":
+        if intent.use_existing_data:
+            if not _has_active_dmf_results(state):
+                return {
+                    **base,
+                    "needs_clarification": True,
+                    "clarification_question": MISSING_RESULTS_CLARIFICATION,
+                }
+            return base
+
+        has_query = bool(intent.dmf_no or intent.applicant_name or intent.ingredients)
+        if not has_query:
+            return {
+                **base,
+                "needs_clarification": True,
+                "clarification_question": DEFAULT_CLARIFICATION,
+            }
+        return base
+
+    artifacts = state.get("document_artifacts") or {}
+    unknown_ids = [item for item in intent.document_ids if item not in artifacts]
+    if unknown_ids:
+        return {
+            **base,
+            "needs_clarification": True,
+            "clarification_question": "指定的文档不存在或已被删除，请重新选择当前文档。",
+        }
+
+    if intent.use_existing_data:
+        if not _active_extracted_query_context(state)["available"]:
+            return {
+                **base,
+                "needs_clarification": True,
+                "clarification_question": MISSING_EXTRACTED_QUERY_CLARIFICATION,
+            }
+        return base
+
+    if not artifacts:
+        return {
+            **base,
+            "needs_clarification": True,
+            "clarification_question": MISSING_DOCUMENT_CLARIFICATION,
+        }
+    return base
+
+
 def understand_request(state: ResearchState) -> dict[str, Any]:
     """使用 LLM 将用户自然语言转成结构化业务意图。"""
 
@@ -146,28 +246,17 @@ def understand_request(state: ResearchState) -> dict[str, Any]:
     if not user_query:
         _print_elapsed("understand_request", start)
         return {
-            "task_type": "unknown",
+            **_request_state(user_query),
+            "data_source": "none",
+            "use_existing_data": False,
+            "query_document_conditions": False,
             "requested_outputs": [],
+            "needs_clarification": True,
+            "clarification_question": AMBIGUOUS_REQUEST_CLARIFICATION,
             "warnings": ["用户请求为空"],
         }
 
     request_state = _request_state(user_query)
-    if _requests_excel_export(user_query):
-        active_results = _has_active_dmf_results(state)
-        _print_elapsed("understand_request", start)
-        return {
-            **request_state,
-            "task_type": "dmf_post_process",
-            "request_mode": "post_process",
-            "requested_outputs": [],
-            "needs_clarification": not active_results,
-            "clarification_question": (
-                ""
-                if active_results
-                else "当前会话没有可导出的 DMF 查询结果，请先执行查询。"
-            ),
-        }
-
     llm = create_apollo_llm()
     structured_llm = llm.with_structured_output(ResearchIntent)
 
@@ -180,90 +269,84 @@ def understand_request(state: ResearchState) -> dict[str, Any]:
                     f"{json.dumps(_active_dmf_context(state), ensure_ascii=False)}\n\n"
                     "当前上传文档上下文：\n"
                     f"{json.dumps(_active_document_context(state), ensure_ascii=False)}\n\n"
+                    "当前已提取文档条件上下文：\n"
+                    f"{json.dumps(_active_extracted_query_context(state), ensure_ascii=False)}\n\n"
+                    "待补全意图：\n"
+                    f"{json.dumps(state.get('pending_intent') or {}, ensure_ascii=False)}\n\n"
+                    "最近 6 轮完整对话：\n"
+                    f"{json.dumps(_recent_conversation(state), ensure_ascii=False)}\n\n"
                     f"用户最新请求：{user_query}"
                 )
             ),
         ]
     )
 
-    requested_outputs = _normalize_requested_outputs(
-        intent.task_type,
-        intent.requested_outputs,
-    )
-
     _print_elapsed("understand_request", start)
-
-    has_active_results = _has_active_dmf_results(state)
-    needs_clarification = intent.needs_clarification
-    clarification_question = intent.clarification_question
-    if intent.task_type == "dmf_post_process":
-        needs_clarification = not has_active_results
-        if needs_clarification:
-            clarification_question = (
-                "当前会话没有可继续处理的 DMF 查询结果，请先执行查询。"
-            )
-
-    document_available = _active_document_context(state)["available"]
-    if intent.task_type in {"document_review", "dmf_document_compare"}:
-        needs_clarification = not document_available
-        if needs_clarification:
-            clarification_question = "请先使用 /file <文件路径> 上传需要分析的文档。"
-        elif intent.task_type == "dmf_document_compare":
-            requested_outputs = ["result"]
-
-    if needs_clarification:
-        clarification_question = _normalize_clarification_question(
-            clarification_question,
-            intent.task_type,
-        )
-
-    result: dict[str, Any] = {
-        **request_state,
-        "task_type": intent.task_type,
-        "request_mode": (
-            "post_process"
-            if intent.task_type == "dmf_post_process"
-            else "new_query"
-        ),
-        "requested_outputs": requested_outputs,
-        "needs_clarification": needs_clarification,
-        "clarification_question": clarification_question,
-        "dmf_no": intent.dmf_no,
-        "applicant_name": intent.applicant_name,
-        "ingredients": intent.ingredients,
-    }
-    return result
+    return {**request_state, **_validate_intent(intent, state)}
 
 
 def extract_document_query(state: ResearchState) -> dict[str, Any]:
-    """Extract normalized DMF conditions from the active document."""
+    """Extract selected documents independently and merge their conditions."""
+
+    artifacts = state.get("document_artifacts") or {}
+    selected_ids = state.get("selected_document_ids") or list(artifacts)
+    extractions = dict(state.get("document_extractions") or {})
+    errors = dict(state.get("document_errors") or {})
+    service = DocumentDMFService()
+    for document_id in selected_ids:
+        if document_id in extractions or document_id not in artifacts:
+            continue
+        try:
+            extractions[document_id] = service.extract_query(
+                artifacts[document_id]
+            ).model_dump()
+            errors.pop(document_id, None)
+        except DocumentDMFError as exc:
+            errors[document_id] = str(exc)
 
     try:
-        query = DocumentDMFService().extract_query(state["document_artifact"])
-    except (DocumentDMFError, KeyError) as exc:
+        merged = merge_document_queries(artifacts, extractions, selected_ids)
+    except DocumentDMFError as exc:
         return {
             "document_status": "failed",
-            "document_error": str(exc),
-            "extracted_dmf_query": {},
+            "document_extractions": extractions,
+            "document_errors": errors or {"workflow": str(exc)},
+            "merged_document_query": {},
         }
     return {
         "document_status": "extracted",
-        "document_error": "",
-        "extracted_dmf_query": query.model_dump(),
+        "document_extractions": extractions,
+        "document_errors": errors,
+        "merged_document_query": merged.model_dump(),
     }
 
 
 def confirm_document_query(state: ResearchState) -> dict[str, Any]:
     """Pause before a real DMF query and accept confirmed or edited conditions."""
 
-    candidate = ExtractedDMFQueryBatch.model_validate(state["extracted_dmf_query"])
-    artifact = state.get("document_artifact") or {}
+    merged = MergedDocumentQuery.model_validate(state["merged_document_query"])
+    candidate = merged.to_query_batch()
+    confirmation_query = merged.model_dump()
+    for query in confirmation_query["queries"]:
+        query["broad_query"] = bool(
+            query.get("applicant_name")
+            and not query.get("dmf_no")
+            and not query.get("ingredients")
+        )
     resumed = interrupt(
         {
             "type": "document_query_confirmation",
             "message": "请确认或修改从文档中提取的 DMF 查询条件。",
-            "file_name": artifact.get("file_name", ""),
-            "query": candidate.model_dump(),
+            "file_names": list(dict.fromkeys(
+                source.file_name
+                for query in merged.queries
+                for source in query.sources
+            )),
+            "query": confirmation_query,
+            "warnings": [
+                {"document_id": document_id, "message": message}
+                for document_id, message in (state.get("document_errors") or {}).items()
+            ],
         }
     )
     payload = resumed if isinstance(resumed, dict) else {"action": "reject"}
@@ -293,7 +376,6 @@ def query_confirmed_document_dmf(state: ResearchState) -> dict[str, Any]:
             for item in query.queries
             for ingredient in item.ingredients
         ],
-        "requested_outputs": ["result"],
         "dmf_results": result,
     }
 
@@ -301,27 +383,28 @@ def query_confirmed_document_dmf(state: ResearchState) -> dict[str, Any]:
 def finalize_document_review(state: ResearchState) -> dict[str, Any]:
     """Present extracted conditions without performing a DMF query."""
 
-    if state.get("document_error"):
-        return {"final_answer": f"文档分析失败：{state['document_error']}"}
-    batch = ExtractedDMFQueryBatch.model_validate(state["extracted_dmf_query"])
+    if not state.get("merged_document_query"):
+        errors = state.get("document_errors") or {}
+        detail = "；".join(errors.values()) or "未提取到可用条件"
+        return _answer(f"文档分析失败：{detail}")
+    merged = MergedDocumentQuery.model_validate(state["merged_document_query"])
     lines = []
-    for index, query in enumerate(batch.queries, start=1):
+    for index, query in enumerate(merged.queries, start=1):
         ingredients = "、".join(query.ingredients) or "未提取到"
+        sources = "、".join(source.file_name for source in query.sources)
         lines.append(
             f"{index}. DMF 编号：{query.dmf_no or '未提取到'}；"
             f"申请商：{query.applicant_name or '未提取到'}；"
-            f"成分：{ingredients}"
+            f"成分：{ingredients}；来源：{sources}"
         )
-    return {
-        "final_answer": (
-            f"已从文档中提取 {len(batch.queries)} 组 DMF 查询条件：\n"
-            + "\n".join(lines)
-        )
-    }
+    return _answer(
+        f"已从文档中提取 {len(merged.queries)} 组 DMF 查询条件：\n"
+        + "\n".join(lines)
+    )
 
 
 def finalize_document_rejection(state: ResearchState) -> dict[str, Any]:
-    return {"final_answer": "已取消使用文档条件执行 DMF 查询。"}
+    return _answer("已取消使用文档条件执行 DMF 查询。")
 
 def general_chat(state: ResearchState) -> dict[str, Any]:
     """处理不需要业务工具的普通交流。"""
@@ -340,34 +423,54 @@ def general_chat(state: ResearchState) -> dict[str, Any]:
 - 查询成分、申请商或 DMF 编号
 - 对查询结果进行总结
 - 对 DMF 数据进行分析
+- 上传并解析 PDF、Word、图片、Excel、Markdown 或文本文件
+- 从当前文档提取 DMF 查询条件并在确认后查询
 
 当前用户输入属于普通交流，不需要调用 DMF 查询工具。
-请自然、简洁地回答用户，不要虚构不存在的系统能力。
+系统会提供当前会话的可信文档清单。涉及当前文档时只能依据该清单回答。
+请自然、简洁地回答用户，不要否认上述真实能力，也不要虚构其他能力。
 """
             ),
-            HumanMessage(content=user_query),
+            HumanMessage(
+                content=(
+                    "当前可信文档上下文：\n"
+                    f"{json.dumps(_active_document_context(state), ensure_ascii=False)}\n\n"
+                    "近期完整对话：\n"
+                    f"{json.dumps(_recent_conversation(state), ensure_ascii=False)}\n\n"
+                    f"用户最新请求：{user_query}"
+                )
+            ),
         ]
     )
 
-    return {"final_answer": str(response.content).strip()}
+    return _answer(str(response.content))
 
 
 def ask_clarification(state: ResearchState) -> dict[str, Any]:
-    question = _normalize_clarification_question(
-        state.get("clarification_question"),
-        state.get("task_type", "unknown"),
+    return _answer(
+        state.get("clarification_question") or AMBIGUOUS_REQUEST_CLARIFICATION,
+        pending_intent={
+            key: state.get(key)
+            for key in (
+                "data_source",
+                "use_existing_data",
+                "query_document_conditions",
+                "document_ids",
+                "requested_outputs",
+                "dmf_no",
+                "applicant_name",
+                "ingredients",
+            )
+        },
+        pending_clarification_reason=state.get("clarification_question", ""),
     )
-
-    return {"final_answer": question}
 
 
 def handle_unknown(state: ResearchState) -> dict[str, Any]:
-    return {
-        "final_answer": (
-            "我暂时无法确定你希望执行什么任务。"
-            "你可以让我查询 DMF、总结查询结果，或分析 DMF 数据。"
-        )
-    }
+    return _answer(
+        "我暂时无法确定你希望执行什么任务。"
+        "你可以让我查询 DMF、总结查询结果，或分析 DMF 数据。"
+    )
 
 
 def query_dmf(state: ResearchState) -> dict[str, Any]:
@@ -532,18 +635,18 @@ def build_dmf_answer(state: ResearchState) -> dict[str, Any]:
     records = _collect_records(result)
     if not result.get("success") and not records:
         _print_elapsed("build_dmf_answer", start)
-        return {
-            "final_answer": _format_empty_result_diagnostics(result)
-        }
+        return _answer(_format_empty_result_diagnostics(result))
 
     if not records:
         _print_elapsed("build_dmf_answer", start)
-        return {"final_answer": _format_empty_result_diagnostics(result)}
+        return _answer(_format_empty_result_diagnostics(result))
 
-    requested_outputs = _normalize_requested_outputs(
-        "dmf_query",
+    requested_outputs = [
+        output for output in _normalize_requested_outputs(
+        True,
         state.get("requested_outputs"),
-    )
+        ) if output in OUTPUT_ORDER
+    ]
 
     output_text: dict[str, str] = {}
 
@@ -615,11 +718,11 @@ def build_dmf_answer(state: ResearchState) -> dict[str, Any]:
         )
 
     _print_elapsed("build_dmf_answer", start)
-    return {"final_answer": final_answer}
+    return _answer(final_answer)
 
 
-def finalize_dmf_post_process(state: ResearchState) -> dict[str, Any]:
-    """Return only the outcome of a cross-turn DMF post-processing request."""
+def finalize_dmf_export(state: ResearchState) -> dict[str, Any]:
+    """Return only the outcome of a cross-turn DMF export request."""
 
     export_results = [
         artifact.get("result", {})
@@ -631,20 +734,47 @@ def finalize_dmf_post_process(state: ResearchState) -> dict[str, Any]:
         paths = "\n".join(
             f"- `{item.get('file_path', '')}`" for item in successful
         )
-        return {"final_answer": f"DMF 查询结果已导出：\n{paths}"}
+        return _answer(f"DMF 查询结果已导出：\n{paths}")
 
     failed = [item for item in export_results if not item.get("success")]
     if failed:
         messages = "\n".join(
             f"- {item.get('message', '导出未完成')}" for item in failed
         )
-        return {"final_answer": f"DMF 导出未完成：\n{messages}"}
+        return _answer(f"DMF 导出未完成：\n{messages}")
 
     if state.get("tool_stop_reason"):
-        return {"final_answer": state["tool_stop_reason"]}
+        return _answer(state["tool_stop_reason"])
 
     messages = state.get("messages") or []
     last_message = messages[-1] if messages else None
     if isinstance(last_message, AIMessage) and last_message.content:
         return {"final_answer": str(last_message.content).strip()}
-    return {"final_answer": "本次没有执行 DMF 后处理操作。"}
+    return _answer("本次没有执行 DMF 后处理操作。")
+
+
+def export_dmf_results(state: ResearchState) -> dict[str, Any]:
+    """Export the active trusted DMF result without another LLM decision."""
+
+    try:
+        output_path = export_multi_query_result(state.get("dmf_results") or {})
+        result = {
+            "success": True,
+            "message": "DMF 查询结果已导出为 Excel。",
+            "file_path": str(output_path),
+            "file_name": output_path.name,
+        }
+    except Exception as exc:
+        result = {
+            "success": False,
+            "message": f"导出失败：{exc}",
+        }
+    return {
+        "tool_artifacts": [
+            {
+                "tool_name": "export_dmf_excel",
+                "tool_call_id": "deterministic-export",
+                "result": result,
+            }
+        ]
+    }

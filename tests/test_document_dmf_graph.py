@@ -10,6 +10,7 @@ from langgraph.types import Command
 from src.agent import graph as graph_module
 from src.agent import nodes
 from src.schemas.document_dmf import ExtractedDMFQueryBatch
+from src.schemas.intent import ResearchIntent
 
 
 def _artifact(tmp_path: Path) -> dict:
@@ -25,11 +26,27 @@ def _artifact(tmp_path: Path) -> dict:
     }
 
 
-def _intent(task_type: str):
+def _documents(tmp_path: Path) -> dict[str, dict]:
+    artifact = _artifact(tmp_path)
+    return {artifact["document_id"]: artifact}
+
+
+def _intent(
+    *,
+    use_existing_data: bool = False,
+    query: bool = False,
+    requested_outputs: list[str] | None = None,
+):
     def understand(state):
         return {
-            "task_type": task_type,
-            "requested_outputs": ["result"] if task_type == "dmf_document_compare" else [],
+            "data_source": "document",
+            "use_existing_data": use_existing_data,
+            "query_document_conditions": query,
+            "requested_outputs": (
+                requested_outputs
+                if requested_outputs is not None
+                else (["result"] if query else [])
+            ),
             "needs_clarification": False,
             "dmf_no": "",
             "applicant_name": "",
@@ -89,14 +106,14 @@ class FakeDocumentService:
 def test_document_review_extracts_without_querying_dmf(tmp_path, monkeypatch) -> None:
     calls: list[dict] = []
     service = FakeDocumentService(calls)
-    monkeypatch.setattr(graph_module, "understand_request", _intent("document_review"))
+    monkeypatch.setattr(graph_module, "understand_request", _intent())
     monkeypatch.setattr(nodes, "DocumentDMFService", lambda: service)
 
     graph = graph_module.build_research_graph()
     result = graph.invoke(
         {
             "user_query": "分析上传的文档",
-            "document_artifact": _artifact(tmp_path),
+            "document_artifacts": _documents(tmp_path),
             "warnings": [],
         }
     )
@@ -139,7 +156,7 @@ def test_document_query_requires_confirmation_before_single_dmf_call(
     monkeypatch.setattr(
         graph_module,
         "understand_request",
-        _intent("dmf_document_compare"),
+        _intent(query=True),
     )
     monkeypatch.setattr(nodes, "DocumentDMFService", lambda: service)
 
@@ -148,7 +165,7 @@ def test_document_query_requires_confirmation_before_single_dmf_call(
     paused = graph.invoke(
         {
             "user_query": "分析上传文档并查询 DMF",
-            "document_artifact": _artifact(tmp_path),
+                "document_artifacts": _documents(tmp_path),
             "warnings": [],
         },
         config=config,
@@ -189,7 +206,7 @@ def test_document_query_confirms_all_extracted_rows_as_one_batch(
     monkeypatch.setattr(
         graph_module,
         "understand_request",
-        _intent("dmf_document_compare"),
+        _intent(query=True),
     )
     monkeypatch.setattr(nodes, "DocumentDMFService", lambda: service)
     graph = graph_module.build_research_graph(checkpointer=InMemorySaver())
@@ -198,7 +215,7 @@ def test_document_query_confirms_all_extracted_rows_as_one_batch(
     paused = graph.invoke(
         {
             "user_query": "分析上传文档并查询 DMF",
-            "document_artifact": _artifact(tmp_path),
+            "document_artifacts": _documents(tmp_path),
             "warnings": [],
         },
         config=config,
@@ -216,3 +233,254 @@ def test_document_query_confirms_all_extracted_rows_as_one_batch(
     assert completed["dmf_results"]["success"] is True
     assert len(calls) == 1
     assert len(calls[0]["queries"]) == 3
+
+
+def test_multi_document_query_extracts_independently_and_executes_deduplicated_batch(
+    tmp_path,
+    monkeypatch,
+) -> None:
+    calls: list[dict] = []
+    extracted: list[str] = []
+    first = _artifact(tmp_path)
+    second = {
+        **first,
+        "document_id": "doc-2",
+        "file_name": "second.xlsx",
+    }
+
+    class MultiDocumentService(FakeDocumentService):
+        def extract_query(self, artifact) -> ExtractedDMFQueryBatch:
+            extracted.append(artifact["document_id"])
+            ingredients = (
+                ["Ibuprofen", "Aspirin"]
+                if artifact["document_id"] == "doc-1"
+                else ["aspirin", "IBUPROFEN"]
+            )
+            return ExtractedDMFQueryBatch.model_validate(
+                {"dmf_no": "123", "ingredients": ingredients}
+            )
+
+    service = MultiDocumentService(calls)
+    monkeypatch.setattr(graph_module, "understand_request", _intent(query=True))
+    monkeypatch.setattr(nodes, "DocumentDMFService", lambda: service)
+    graph = graph_module.build_research_graph(checkpointer=InMemorySaver())
+    config = {"configurable": {"thread_id": "multi-document"}}
+
+    paused = graph.invoke(
+        {
+            "user_query": "联合查询这两个文档",
+            "document_artifacts": {"doc-1": first, "doc-2": second},
+            "warnings": [],
+        },
+        config=config,
+    )
+
+    query = paused["__interrupt__"][0].value["query"]["queries"][0]
+    assert extracted == ["doc-1", "doc-2"]
+    assert len(paused["__interrupt__"][0].value["query"]["queries"]) == 1
+    assert [source["document_id"] for source in query["sources"]] == [
+        "doc-1",
+        "doc-2",
+    ]
+
+    completed = graph.invoke(
+        Command(
+            resume={
+                "action": "confirm",
+                "query": {
+                    "queries": [{
+                        "dmf_no": query["dmf_no"],
+                        "applicant_name": query["applicant_name"],
+                        "ingredients": query["ingredients"],
+                    }]
+                },
+            }
+        ),
+        config=config,
+    )
+
+    assert completed["dmf_results"]["success"] is True
+    assert len(calls) == 1
+    assert len(calls[0]["queries"]) == 1
+
+
+def test_document_review_then_query_these_reuses_extracted_conditions(
+    tmp_path,
+    monkeypatch,
+) -> None:
+    calls: list[dict] = []
+    extraction_calls = 0
+    intent_messages = []
+
+    class StructuredModel:
+        def invoke(self, messages):
+            intent_messages.append(messages)
+            return ResearchIntent(
+                data_source="document",
+                use_existing_data=True,
+                query_document_conditions=True,
+                requested_outputs=["result"],
+            )
+
+    class FakeLlm:
+        def with_structured_output(self, schema):
+            assert schema is ResearchIntent
+            return StructuredModel()
+
+    class CountingDocumentService(FakeDocumentService):
+        def extract_query(self, artifact) -> ExtractedDMFQueryBatch:
+            nonlocal extraction_calls
+            extraction_calls += 1
+            return super().extract_query(artifact)
+
+    service = CountingDocumentService(calls)
+
+    def understand(state):
+        if state["user_query"] == "分析上传的文档":
+            return _intent()(state)
+        return nodes.understand_request(state)
+
+    monkeypatch.setattr(graph_module, "understand_request", understand)
+    monkeypatch.setattr(nodes, "DocumentDMFService", lambda: service)
+    monkeypatch.setattr(nodes, "create_apollo_llm", FakeLlm)
+    graph = graph_module.build_research_graph(checkpointer=InMemorySaver())
+    config = {"configurable": {"thread_id": "document-followup"}}
+
+    reviewed = graph.invoke(
+        {
+            "user_query": "分析上传的文档",
+            "document_artifacts": _documents(tmp_path),
+            "warnings": [],
+        },
+        config=config,
+    )
+    assert "Ibuprofen" in reviewed["final_answer"]
+
+    paused = graph.invoke(
+        {"user_query": "把这些逐一查询 DFM", "warnings": []},
+        config=config,
+    )
+
+    assert paused["__interrupt__"][0].value["type"] == "document_query_confirmation"
+    assert paused["__interrupt__"][0].value["query"]["queries"][0]["ingredients"] == [
+        "Ibuprofen"
+    ]
+    assert extraction_calls == 1
+    assert calls == []
+    assert len(intent_messages) == 1
+    assert '"available": true' in intent_messages[0][1].content
+    assert '"ingredients": ["Ibuprofen"]' in intent_messages[0][1].content
+
+
+def test_existing_document_conditions_are_reviewed_without_reextracting(
+    monkeypatch,
+) -> None:
+    monkeypatch.setattr(
+        graph_module,
+        "understand_request",
+        _intent(use_existing_data=True),
+    )
+    monkeypatch.setattr(
+        nodes,
+        "DocumentDMFService",
+        lambda: (_ for _ in ()).throw(AssertionError("must not reextract")),
+    )
+    graph = graph_module.build_research_graph()
+
+    result = graph.invoke(
+        {
+            "user_query": "展示上述条件",
+            "merged_document_query": {
+                "queries": [{
+                    "ingredients": ["Ibuprofen"],
+                    "sources": [{"document_id": "doc-1", "file_name": "sample.pdf"}],
+                }],
+            },
+            "warnings": [],
+        }
+    )
+
+    assert "Ibuprofen" in result["final_answer"]
+
+
+def test_document_query_preserves_analysis_output(tmp_path, monkeypatch) -> None:
+    calls: list[dict] = []
+    service = FakeDocumentService(calls)
+    monkeypatch.setattr(
+        graph_module,
+        "understand_request",
+        _intent(query=True, requested_outputs=["analysis"]),
+    )
+    monkeypatch.setattr(nodes, "DocumentDMFService", lambda: service)
+    monkeypatch.setattr(
+        nodes,
+        "_analyze_dmf_text",
+        lambda state, result: "文档条件分析结果",
+    )
+    graph = graph_module.build_research_graph(checkpointer=InMemorySaver())
+    config = {"configurable": {"thread_id": "document-analysis"}}
+
+    graph.invoke(
+        {
+            "user_query": "按文档条件查询并分析",
+            "document_artifacts": _documents(tmp_path),
+            "warnings": [],
+        },
+        config=config,
+    )
+    completed = graph.invoke(
+        Command(
+            resume={
+                "action": "confirm",
+                "query": {"queries": [{"ingredients": ["Ibuprofen"]}]},
+            }
+        ),
+        config=config,
+    )
+
+    assert completed["requested_outputs"] == ["analysis"]
+    assert completed["final_answer"] == "文档条件分析结果"
+    assert len(calls) == 1
+
+
+def test_document_query_preserves_export_output(tmp_path, monkeypatch) -> None:
+    calls: list[dict] = []
+    service = FakeDocumentService(calls)
+    output_path = tmp_path / "document-query.xlsx"
+
+    def fake_export(result, *, filename=None, output_dir=None):
+        output_path.write_text("workbook", encoding="utf-8")
+        return output_path
+
+    monkeypatch.setattr(
+        graph_module,
+        "understand_request",
+        _intent(query=True, requested_outputs=["result", "export"]),
+    )
+    monkeypatch.setattr(nodes, "DocumentDMFService", lambda: service)
+    monkeypatch.setattr(nodes, "export_multi_query_result", fake_export)
+    graph = graph_module.build_research_graph(checkpointer=InMemorySaver())
+    config = {"configurable": {"thread_id": "document-export"}}
+
+    graph.invoke(
+        {
+            "user_query": "按文档条件查询并导出",
+            "document_artifacts": _documents(tmp_path),
+            "warnings": [],
+        },
+        config=config,
+    )
+    completed = graph.invoke(
+        Command(
+            resume={
+                "action": "confirm",
+                "query": {"queries": [{"ingredients": ["Ibuprofen"]}]},
+            }
+        ),
+        config=config,
+    )
+
+    assert completed["requested_outputs"] == ["result", "export"]
+    assert output_path.exists()
+    assert str(output_path) in completed["final_answer"]
+    assert len(calls) == 1

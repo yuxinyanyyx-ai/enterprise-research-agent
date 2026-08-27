@@ -93,6 +93,37 @@ class ExtractedDMFQueryBatch(BaseModel):
 		return result
 
 
+class QuerySource(BaseModel):
+	"""Document that contributed a merged DMF query condition."""
+
+	document_id: str
+	file_name: str
+
+
+class SourcedDMFQuery(ExtractedDMFQuery):
+	"""A deduplicated DMF query with its document provenance."""
+
+	sources: list[QuerySource]
+
+
+class MergedDocumentQuery(BaseModel):
+	"""Deduplicated DMF conditions merged from selected documents."""
+
+	queries: list[SourcedDMFQuery]
+
+	def to_query_batch(self) -> ExtractedDMFQueryBatch:
+		return ExtractedDMFQueryBatch(
+			queries=[
+				ExtractedDMFQuery(
+					dmf_no=query.dmf_no,
+					applicant_name=query.applicant_name,
+					ingredients=query.ingredients,
+				)
+				for query in self.queries
+			]
+		)
+
+
 class DocumentQueryDecision(BaseModel):
 	"""User decision for extracted conditions before a real DMF query."""
 

@@ -6,14 +6,9 @@ import json
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
-from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, ToolMessage
+from langchain_core.messages import AIMessage, ToolMessage
 
-from src.agent.prompts import (
-    DMF_POST_PROCESS_TOOL_SYSTEM_PROMPT,
-    GENERAL_TOOL_SYSTEM_PROMPT,
-)
 from src.agent.state import ResearchState
-from src.llm.apollo import create_apollo_llm
 from src.tools.registry import ToolContext, ToolDefinition, load_builtin_tools
 
 DEFAULT_MAX_TOOL_ROUNDS = 8
@@ -21,52 +16,6 @@ DEFAULT_MAX_TOOL_ROUNDS = 8
 
 def _tool_context(state: ResearchState) -> ToolContext:
     return ToolContext(state.get("tool_context", ToolContext.GENERAL.value))
-
-
-def _messages(state: ResearchState) -> list:
-    messages = list(state.get("messages") or [])
-    if not messages:
-        messages.append(HumanMessage(content=state.get("user_query", "")))
-    return messages
-
-
-def invoke_tool_agent(state: ResearchState) -> dict[str, Any]:
-    """Ask the LLM to answer directly or select registered tools."""
-
-    context = _tool_context(state)
-    definitions = load_builtin_tools().for_context(context)
-    system_prompt = (
-        DMF_POST_PROCESS_TOOL_SYSTEM_PROMPT
-        if context is ToolContext.DMF_POST_PROCESS
-        else GENERAL_TOOL_SYSTEM_PROMPT
-    )
-
-    llm = create_apollo_llm()
-    llm_with_tools = llm.bind_tools([item.tool for item in definitions])
-    response = llm_with_tools.invoke(
-        [SystemMessage(content=system_prompt), *_messages(state)]
-    )
-
-    return {
-        "messages": [response],
-        "tool_rounds": state.get("tool_rounds", 0) + 1,
-    }
-
-
-def invoke_general_tool_agent(state: ResearchState) -> dict[str, Any]:
-    result = invoke_tool_agent(
-        {**state, "tool_context": ToolContext.GENERAL.value}
-    )
-    result["tool_context"] = ToolContext.GENERAL.value
-    return result
-
-
-def invoke_dmf_tool_agent(state: ResearchState) -> dict[str, Any]:
-    result = invoke_tool_agent(
-        {**state, "tool_context": ToolContext.DMF_POST_PROCESS.value}
-    )
-    result["tool_context"] = ToolContext.DMF_POST_PROCESS.value
-    return result
 
 
 def route_after_tool_agent(state: ResearchState) -> str:

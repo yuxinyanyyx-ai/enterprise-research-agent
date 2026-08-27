@@ -9,27 +9,35 @@ OutputType = Literal[
     "result",
     "summary",
     "analysis",
+    "export",
 ]
 
 
 class ResearchIntent(BaseModel):
     """LLM 对用户 DMF 调研请求的结构化理解结果。"""
 
-    task_type: Literal[
-        "dmf_query",
-        "dmf_post_process",
-        "dmf_compare",
-        "document_review",
-        "dmf_document_compare",
-        "general_chat",
-        "unknown",
-    ] = Field(
-        description="用户的业务任务类型"
+    data_source: Literal["dmf", "document", "none"] = Field(
+        description="完成请求需要使用的数据来源"
+    )
+
+    use_existing_data: bool = Field(
+        default=False,
+        description="是否复用当前会话已有的 DMF 结果或文档提取条件",
     )
 
     requested_outputs: list[OutputType] = Field(
         default_factory=list,
-        description="用户最终明确希望看到的输出内容，可包含多个值",
+        description="用户希望得到的结果、摘要、分析或导出，可包含多个值",
+    )
+
+    query_document_conditions: bool = Field(
+        default=False,
+        description="是否需要使用文档中提取的条件继续查询 DMF",
+    )
+
+    document_ids: list[str] = Field(
+        default_factory=list,
+        description="需要使用的当前会话文档 ID；空列表表示全部活动文档",
     )
 
     dmf_no: str = Field(
@@ -49,10 +57,5 @@ class ResearchIntent(BaseModel):
 
     needs_clarification: bool = Field(
         default=False,
-        description="是否需要向用户补充询问信息",
-    )
-
-    clarification_question: str = Field(
-        default="",
-        description="需要补充信息时向用户提出的问题",
+        description="用户语义本身是否不完整或存在歧义",
     )

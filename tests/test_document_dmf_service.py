@@ -8,7 +8,11 @@ from openpyxl import Workbook
 
 from src.mineru.services.mineru_client import BatchParseResult, ParseResult
 from src.schemas.document_dmf import ExtractedDMFQueryBatch
-from src.services.document_dmf_service import DocumentDMFError, DocumentDMFService
+from src.services.document_dmf_service import (
+	DocumentDMFError,
+	DocumentDMFService,
+	merge_document_queries,
+)
 from src.settings import load_settings
 
 
@@ -119,6 +123,58 @@ def test_batch_flow_conditions_preserve_rows_and_execute_each_query(
 	assert result["query_count"] == 3
 	assert result["success_count"] == 3
 	assert result["total_records"] == 3
+
+
+def test_merge_document_queries_deduplicates_and_accumulates_sources() -> None:
+	artifacts = {
+		"doc-a": {
+			"document_id": "doc-a",
+			"file_name": "a.xlsx",
+			"source_path": "a.xlsx",
+			"markdown_path": "a.md",
+			"status": "parsed",
+		},
+		"doc-b": {
+			"document_id": "doc-b",
+			"file_name": "b.xlsx",
+			"source_path": "b.xlsx",
+			"markdown_path": "b.md",
+			"status": "parsed",
+		},
+	}
+	extractions = {
+		"doc-a": {
+			"queries": [
+				{"dmf_no": " 123 ", "ingredients": ["Ibuprofen", "Aspirin"]},
+			]
+		},
+		"doc-b": {
+			"queries": [
+				{"dmf_no": "123", "ingredients": ["aspirin", "IBUPROFEN"]},
+				{"applicant_name": "Example Pharma"},
+			]
+		},
+	}
+
+	merged = merge_document_queries(artifacts, extractions)
+
+	assert len(merged.queries) == 2
+	assert merged.queries[0].dmf_no == "123"
+	assert [source.document_id for source in merged.queries[0].sources] == [
+		"doc-a",
+		"doc-b",
+	]
+	assert merged.to_query_batch().model_dump() == {
+		"queries": [
+			{"dmf_no": "123", "applicant_name": "", "ingredients": ["Ibuprofen", "Aspirin"]},
+			{"dmf_no": "", "applicant_name": "Example Pharma", "ingredients": []},
+		]
+	}
+
+
+def test_merge_document_queries_rejects_unknown_selected_document() -> None:
+	with pytest.raises(DocumentDMFError, match="missing"):
+		merge_document_queries({}, {}, ["missing"])
 
 
 def test_batch_merge_counts_captcha_or_network_failure_before_query(
@@ -319,6 +375,39 @@ def test_xlsx_markdown_size_limit_is_enforced_without_artifact(
 		DocumentDMFService(settings).parse_document(source)
 
 	assert not documents_dir.exists() or not any(documents_dir.iterdir())
+
+
+def test_xlsx_conversion_stops_before_reading_all_rows_when_limit_is_exceeded(
+	tmp_path: Path,
+	monkeypatch,
+) -> None:
+	settings = replace(_settings(tmp_path), max_markdown_size_bytes=120)
+	source = tmp_path / "many-rows.xlsx"
+	workbook = Workbook(write_only=True)
+	sheet = workbook.create_sheet("Records")
+	sheet.append(["Ingredient"])
+	for row_number in range(500):
+		sheet.append([f"Ingredient {row_number}"])
+	workbook.save(source)
+
+	original_markdown_cell = DocumentDMFService._markdown_cell
+	converted_cells = 0
+
+	def counting_markdown_cell(value) -> str:
+		nonlocal converted_cells
+		converted_cells += 1
+		return original_markdown_cell(value)
+
+	monkeypatch.setattr(
+		DocumentDMFService,
+		"_markdown_cell",
+		staticmethod(counting_markdown_cell),
+	)
+
+	with pytest.raises(DocumentDMFError, match="Markdown 超过大小限制"):
+		DocumentDMFService(settings).parse_document(source)
+
+	assert converted_cells < 50
 
 
 def test_xls_uses_xlrd_and_converts_all_nonempty_sheets(

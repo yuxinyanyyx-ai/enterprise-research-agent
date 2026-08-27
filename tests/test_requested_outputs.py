@@ -1,4 +1,6 @@
-from src.agent import nodes
+import pytest
+
+from src.agent import nodes, routes
 from src.schemas.intent import ResearchIntent
 
 
@@ -25,9 +27,33 @@ def _fake_result() -> dict:
     }
 
 
+def _document_artifacts() -> dict:
+    return {
+        "doc-1": {
+            "document_id": "doc-1",
+            "file_name": "sample.pdf",
+            "source_path": "sample.pdf",
+            "markdown_path": "trusted/document.md",
+            "status": "parsed",
+        }
+    }
+
+
+def _merged_query(queries: list[dict]) -> dict:
+    return {
+        "queries": [
+            {
+                **query,
+                "sources": [{"document_id": "doc-1", "file_name": "sample.pdf"}],
+            }
+            for query in queries
+        ]
+    }
+
+
 def test_intent_supports_multiple_requested_outputs() -> None:
     intent = ResearchIntent(
-        task_type="dmf_query",
+        data_source="dmf",
         requested_outputs=["result", "summary"],
         ingredients=["Ibuprofen"],
     )
@@ -37,7 +63,7 @@ def test_intent_supports_multiple_requested_outputs() -> None:
 
 def test_normalize_requested_outputs_deduplicates_and_orders() -> None:
     outputs = nodes._normalize_requested_outputs(
-        "dmf_query",
+        True,
         ["summary", "result", "summary"],
     )
 
@@ -45,54 +71,86 @@ def test_normalize_requested_outputs_deduplicates_and_orders() -> None:
 
 
 def test_dmf_query_defaults_to_result_when_outputs_missing() -> None:
-    outputs = nodes._normalize_requested_outputs("dmf_query", [])
+    outputs = nodes._normalize_requested_outputs(True, [])
     assert outputs == ["result"]
 
 
-def test_incomplete_compare_clarification_uses_fallback() -> None:
-    answer = nodes.ask_clarification(
-        {
-            "task_type": "dmf_compare",
-            "clarification_question": "您提到要查询",
-        }
-    )["final_answer"]
+@pytest.mark.parametrize(
+    ("state", "expected_route"),
+    [
+        ({"needs_clarification": True}, "clarify"),
+        ({"data_source": "none"}, "general_chat"),
+        (
+            {"data_source": "dmf", "use_existing_data": False},
+            "dmf_query",
+        ),
+        (
+            {
+                "data_source": "dmf",
+                "use_existing_data": True,
+                "requested_outputs": ["export"],
+            },
+            "dmf_export",
+        ),
+        (
+            {"data_source": "dmf", "use_existing_data": True},
+            "dmf_result_review",
+        ),
+        (
+            {
+                "data_source": "document",
+                "use_existing_data": False,
+                "query_document_conditions": False,
+            },
+            "document_review",
+        ),
+        (
+            {
+                "data_source": "document",
+                "use_existing_data": False,
+                "query_document_conditions": True,
+            },
+            "document_query",
+        ),
+        (
+            {
+                "data_source": "document",
+                "use_existing_data": True,
+                "query_document_conditions": False,
+            },
+            "document_existing_review",
+        ),
+        (
+            {
+                "data_source": "document",
+                "use_existing_data": True,
+                "query_document_conditions": True,
+            },
+            "document_followup",
+        ),
+    ],
+)
+def test_route_after_intent_uses_structured_fields(state, expected_route) -> None:
+    assert routes.route_after_intent(state) == expected_route
 
-    assert "比较的成分、DMF 或申请商" in answer
-    assert "比较的具体维度" in answer
-    assert answer.endswith("？")
+
+def test_empty_request_uses_complete_intent_state_and_clarifies() -> None:
+    result = nodes.understand_request({"user_query": ""})
+
+    assert result["data_source"] == "none"
+    assert result["use_existing_data"] is False
+    assert result["query_document_conditions"] is False
+    assert result["requested_outputs"] == []
+    assert result["needs_clarification"] is True
+    assert routes.route_after_intent(result) == "clarify"
 
 
-def test_incomplete_query_clarification_uses_default() -> None:
-    answer = nodes.ask_clarification(
-        {
-            "task_type": "dmf_query",
-            "clarification_question": "请提供",
-        }
-    )["final_answer"]
-
-    assert answer == nodes.DEFAULT_CLARIFICATION
-
-
-def test_valid_statement_clarification_is_preserved() -> None:
-    question = "当前会话没有可导出的 DMF 查询结果，请先执行查询。"
-
-    answer = nodes.ask_clarification(
-        {
-            "task_type": "dmf_post_process",
-            "clarification_question": question,
-        }
-    )["final_answer"]
-
-    assert answer == question
-
-
-def test_understand_request_normalizes_incomplete_clarification(monkeypatch) -> None:
+def test_understand_request_uses_fixed_clarification_for_ambiguous_intent(monkeypatch) -> None:
     class StructuredModel:
         def invoke(self, messages):
             return ResearchIntent(
-                task_type="dmf_compare",
+                data_source="dmf",
                 needs_clarification=True,
-                clarification_question="您提到要查询",
                 ingredients=["Ibuprofen"],
             )
 
@@ -110,17 +168,41 @@ def test_understand_request_normalizes_incomplete_clarification(monkeypatch) -> 
     )
 
     assert result["needs_clarification"] is True
-    assert "比较的具体维度" in result["clarification_question"]
-    assert result["clarification_question"].endswith("？")
+    assert result["clarification_question"] == nodes.AMBIGUOUS_REQUEST_CLARIFICATION
+
+
+def test_new_query_without_conditions_uses_fixed_clarification() -> None:
+    result = nodes._validate_intent(
+        ResearchIntent(data_source="dmf", requested_outputs=["result"]),
+        {},
+    )
+
+    assert "task_type" not in result
+    assert result["data_source"] == "dmf"
+    assert result["needs_clarification"] is True
+    assert result["clarification_question"] == nodes.DEFAULT_CLARIFICATION
+
+
+def test_document_query_export_also_keeps_result_output() -> None:
+    result = nodes._validate_intent(
+        ResearchIntent(
+            data_source="document",
+            query_document_conditions=True,
+            requested_outputs=["export"],
+        ),
+        {"document_artifacts": _document_artifacts()},
+    )
+
+    assert result["requested_outputs"] == ["result", "export"]
 
 
 def test_active_document_prevents_redundant_upload_clarification(monkeypatch) -> None:
     class StructuredModel:
         def invoke(self, messages):
             return ResearchIntent(
-                task_type="dmf_document_compare",
-                needs_clarification=True,
-                clarification_question="请提供文档。",
+                data_source="document",
+                query_document_conditions=True,
+                requested_outputs=["result"],
             )
 
     class FakeLlm:
@@ -132,17 +214,191 @@ def test_active_document_prevents_redundant_upload_clarification(monkeypatch) ->
     result = nodes.understand_request(
         {
             "user_query": "分析上传文档并查询 DMF",
-            "document_artifact": {
-                "file_name": "sample.pdf",
-                "markdown_path": "trusted/document.md",
-                "status": "parsed",
-            },
+            "document_artifacts": _document_artifacts(),
         }
     )
 
-    assert result["task_type"] == "dmf_document_compare"
+    assert "task_type" not in result
+    assert routes.route_after_intent(result) == "document_query"
     assert result["needs_clarification"] is False
     assert result["requested_outputs"] == ["result"]
+
+
+def test_existing_result_analysis_uses_structured_llm(monkeypatch) -> None:
+    calls = []
+
+    class StructuredModel:
+        def invoke(self, messages):
+            calls.append(messages)
+            return ResearchIntent(
+                data_source="dmf",
+                use_existing_data=True,
+                requested_outputs=["analysis"],
+            )
+
+    class FakeLlm:
+        def with_structured_output(self, schema):
+            assert schema is ResearchIntent
+            return StructuredModel()
+
+    monkeypatch.setattr(nodes, "create_apollo_llm", FakeLlm)
+
+    result = nodes.understand_request(
+        {
+            "user_query": "分析刚才的结果",
+            "dmf_results": _fake_result(),
+        }
+    )
+
+    assert len(calls) == 1
+    assert "task_type" not in result
+    assert routes.route_after_intent(result) == "dmf_result_review"
+    assert result["requested_outputs"] == ["analysis"]
+    assert result["needs_clarification"] is False
+
+
+def test_extracted_document_query_followup_uses_structured_llm(monkeypatch) -> None:
+    calls = []
+
+    class StructuredModel:
+        def invoke(self, messages):
+            calls.append(messages)
+            return ResearchIntent(
+                data_source="document",
+                use_existing_data=True,
+                query_document_conditions=True,
+                requested_outputs=["result"],
+            )
+
+    class FakeLlm:
+        def with_structured_output(self, schema):
+            assert schema is ResearchIntent
+            return StructuredModel()
+
+    monkeypatch.setattr(nodes, "create_apollo_llm", FakeLlm)
+
+    result = nodes.understand_request(
+        {
+            "user_query": "把这些逐一查询 DFM",
+            "merged_document_query": _merged_query(
+                [{"ingredients": ["Ibuprofen"]}]
+            ),
+        }
+    )
+
+    assert len(calls) == 1
+    assert "task_type" not in result
+    assert routes.route_after_intent(result) == "document_followup"
+    assert result["requested_outputs"] == ["result"]
+    assert result["needs_clarification"] is False
+
+
+def test_document_contexts_are_sent_once_with_limited_preview(monkeypatch) -> None:
+    calls = []
+
+    class StructuredModel:
+        def invoke(self, messages):
+            calls.append(messages)
+            return ResearchIntent(
+                data_source="document",
+                use_existing_data=True,
+            )
+
+    class FakeLlm:
+        def with_structured_output(self, schema):
+            return StructuredModel()
+
+    monkeypatch.setattr(nodes, "create_apollo_llm", FakeLlm)
+    queries = [
+        {"ingredients": [f"Ingredient-{index}"]}
+        for index in range(1, 5)
+    ]
+
+    nodes.understand_request(
+        {
+            "user_query": "展示上述条件",
+            "document_artifacts": _document_artifacts(),
+            "merged_document_query": _merged_query(queries),
+        }
+    )
+
+    content = calls[0][1].content
+    assert content.count("当前上传文档上下文：") == 1
+    assert content.count("当前已提取文档条件上下文：") == 1
+    assert '"query_count": 4' in content
+    assert "Ingredient-3" in content
+    assert "Ingredient-4" not in content
+
+
+@pytest.mark.parametrize(
+    ("user_query", "intent", "state", "expected_task"),
+    [
+        (
+            "总结上述数据",
+            ResearchIntent(
+                data_source="dmf",
+                use_existing_data=True,
+                requested_outputs=["summary"],
+            ),
+            {"dmf_results": _fake_result()},
+            "dmf_result_review",
+        ),
+        (
+            "给我一个 xlsx",
+            ResearchIntent(
+                data_source="dmf",
+                use_existing_data=True,
+                requested_outputs=["export"],
+            ),
+            {"dmf_results": _fake_result()},
+            "dmf_export",
+        ),
+        (
+            "按上述提取条件查询",
+            ResearchIntent(
+                data_source="document",
+                use_existing_data=True,
+                query_document_conditions=True,
+                requested_outputs=["result"],
+            ),
+            {"merged_document_query": _merged_query([{"ingredients": ["Ibuprofen"]}])},
+            "document_followup",
+        ),
+        (
+            "分析当前文件",
+            ResearchIntent(data_source="document"),
+            {"document_artifacts": _document_artifacts()},
+            "document_review",
+        ),
+    ],
+)
+def test_semantic_expressions_use_structured_llm(
+    monkeypatch,
+    user_query,
+    intent,
+    state,
+    expected_task,
+) -> None:
+    calls = []
+
+    class StructuredModel:
+        def invoke(self, messages):
+            calls.append(messages)
+            return intent
+
+    class FakeLlm:
+        def with_structured_output(self, schema):
+            return StructuredModel()
+
+    monkeypatch.setattr(nodes, "create_apollo_llm", FakeLlm)
+
+    result = nodes.understand_request({"user_query": user_query, **state})
+
+    assert len(calls) == 1
+    assert user_query in calls[0][1].content
+    assert "task_type" not in result
+    assert routes.route_after_intent(result) == expected_task
+    assert result["needs_clarification"] is False
 
 
 def test_build_answer_result_only_does_not_call_llm() -> None:

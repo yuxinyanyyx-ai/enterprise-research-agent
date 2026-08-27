@@ -7,7 +7,6 @@ from typing import Annotated, Any
 from langchain_core.tools import InjectedToolArg, tool
 
 from src.services.document_dmf_service import DocumentDMFService
-from src.tools.registry import ToolContext, ToolRisk, register_tool
 
 
 @tool(
@@ -23,12 +22,3 @@ def extract_document_dmf_params(
 	"""Extract structured DMF query parameters from document Markdown."""
 
 	return DocumentDMFService().extract_query(document_artifact).model_dump()
-
-
-register_tool(
-	extract_document_dmf_params,
-	risk=ToolRisk.READ_ONLY,
-	contexts={ToolContext.GENERAL},
-	parallel_safe=True,
-	state_arguments={"document_artifact": "document_artifact"},
-)

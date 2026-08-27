@@ -17,12 +17,62 @@ from src.mineru.services.mineru_client import BatchParseResult, MinerUClient
 from src.schemas.document_dmf import (
 	DocumentArtifact,
 	ExtractedDMFQueryBatch,
+	MergedDocumentQuery,
+	QuerySource,
+	SourcedDMFQuery,
 )
 from src.settings import Settings, get_settings
 
 
 class DocumentDMFError(RuntimeError):
 	"""Document workflow input or processing failed."""
+
+
+def merge_document_queries(
+	document_artifacts: dict[str, dict[str, Any]],
+	document_extractions: dict[str, dict[str, Any]],
+	selected_ids: list[str] | None = None,
+) -> MergedDocumentQuery:
+	"""Merge selected per-document extractions with stable provenance."""
+
+	requested_ids = selected_ids or list(document_artifacts)
+	unknown_ids = [item for item in requested_ids if item not in document_artifacts]
+	if unknown_ids:
+		raise DocumentDMFError(
+			"文档不存在或已被删除：" + "、".join(unknown_ids)
+		)
+
+	merged: dict[tuple[str, str, tuple[str, ...]], SourcedDMFQuery] = {}
+	for document_id in requested_ids:
+		extraction = document_extractions.get(document_id)
+		if not extraction:
+			continue
+		batch = ExtractedDMFQueryBatch.model_validate(extraction)
+		artifact = DocumentArtifact.model_validate(document_artifacts[document_id])
+		for query in batch.queries:
+			key = (
+				query.dmf_no.strip().casefold(),
+				query.applicant_name.strip().casefold(),
+				tuple(sorted(item.strip().casefold() for item in query.ingredients)),
+			)
+			source = QuerySource(
+				document_id=document_id,
+				file_name=artifact.file_name,
+			)
+			if key in merged:
+				if source not in merged[key].sources:
+					merged[key].sources.append(source)
+				continue
+			merged[key] = SourcedDMFQuery(
+				dmf_no=query.dmf_no,
+				applicant_name=query.applicant_name,
+				ingredients=query.ingredients,
+				sources=[source],
+			)
+
+	if not merged:
+		raise DocumentDMFError("选中文档中没有可用的 DMF 查询条件")
+	return MergedDocumentQuery(queries=list(merged.values()))
 
 
 class DocumentDMFService:
@@ -158,12 +208,10 @@ class DocumentDMFService:
 		return self._store_markdown_document(path, text)
 
 	def _store_excel_document(self, path: Path) -> DocumentArtifact:
+		if path.suffix.lower() == ".xlsx":
+			return self._store_xlsx_document(path)
 		try:
-			sheets = (
-				self._read_xlsx_sheets(path)
-				if path.suffix.lower() == ".xlsx"
-				else self._read_xls_sheets(path)
-			)
+			sheets = self._read_xls_sheets(path)
 			markdown = self._sheets_to_markdown(sheets)
 		except DocumentDMFError:
 			raise
@@ -171,21 +219,87 @@ class DocumentDMFService:
 			raise DocumentDMFError(f"解析 Excel 文件失败：{path.name}：{exc}") from exc
 		return self._store_markdown_document(path, markdown)
 
-	@staticmethod
-	def _read_xlsx_sheets(path: Path) -> list[tuple[str, list[list[Any]]]]:
+	def _store_xlsx_document(self, path: Path) -> DocumentArtifact:
+		document_id = uuid4().hex
+		document_dir = self.settings.result_dir / "documents" / document_id
+		markdown_path = document_dir / "document.md"
+		try:
+			document_dir.mkdir(parents=True, exist_ok=False)
+			self._write_xlsx_markdown(path, markdown_path)
+		except DocumentDMFError:
+			shutil.rmtree(document_dir, ignore_errors=True)
+			raise
+		except Exception as exc:
+			shutil.rmtree(document_dir, ignore_errors=True)
+			raise DocumentDMFError(
+				f"解析 Excel 文件失败：{path.name}：{exc}"
+			) from exc
+		return DocumentArtifact(
+			document_id=document_id,
+			file_name=path.name,
+			source_path=str(path),
+			markdown_path=str(markdown_path.resolve()),
+		)
+
+	def _write_xlsx_markdown(self, path: Path, markdown_path: Path) -> None:
 		workbook = load_workbook(
 			path,
 			read_only=True,
 			data_only=True,
 			keep_links=False,
 		)
+		written_bytes = 0
+		written_sheets = 0
+
+		def write_chunk(output, text: str) -> None:
+			nonlocal written_bytes
+			encoded = text.encode("utf-8")
+			if written_bytes + len(encoded) > self.settings.max_markdown_size_bytes:
+				raise DocumentDMFError("转换后的 Markdown 超过大小限制")
+			output.write(encoded)
+			written_bytes += len(encoded)
+
 		try:
-			return [
-				(sheet.title, [list(row) for row in sheet.iter_rows(values_only=True)])
-				for sheet in workbook.worksheets
-			]
+			with markdown_path.open("wb") as output:
+				for sheet in workbook.worksheets:
+					rows = sheet.iter_rows(values_only=True)
+					header: list[Any] = []
+					for raw_row in rows:
+						header = self._trim_excel_row(list(raw_row))
+						if header:
+							break
+					if not header:
+						continue
+
+					width = max(len(header), int(sheet.max_column or 0))
+					headers = self._normalize_headers(header, width)
+					prefix = "\n\n" if written_sheets else ""
+					title = self._markdown_cell(sheet.title) or "Sheet"
+					write_chunk(
+						output,
+						prefix
+						+ f"## {title}\n\n"
+						+ "| " + " | ".join(headers) + " |\n"
+						+ "| " + " | ".join("---" for _ in range(width)) + " |",
+					)
+					written_sheets += 1
+
+					for raw_row in rows:
+						row = self._trim_excel_row(list(raw_row))
+						if not row:
+							continue
+						row.extend([""] * (width - len(row)))
+						write_chunk(
+							output,
+							"\n| "
+							+ " | ".join(self._markdown_cell(value) for value in row)
+							+ " |",
+						)
 		finally:
 			workbook.close()
+
+		if not written_sheets:
+			raise DocumentDMFError("Excel 工作簿中没有可读取的单元格数据")
 
 	@staticmethod
 	def _read_xls_sheets(path: Path) -> list[tuple[str, list[list[Any]]]]:

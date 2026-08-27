@@ -8,7 +8,7 @@ from threading import RLock
 from typing import Any
 from uuid import uuid4
 
-from fastapi import APIRouter, HTTPException, UploadFile, status
+from fastapi import APIRouter, File, HTTPException, UploadFile, status
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse
 from langgraph.checkpoint.memory import InMemorySaver
@@ -32,7 +32,7 @@ class ResumeRequest(BaseModel):
 @dataclass
 class WebSession:
     session_id: str
-    active_document: dict[str, Any] = field(default_factory=dict)
+    documents: dict[str, dict[str, Any]] = field(default_factory=dict)
     awaiting_resume: bool = False
     files: dict[str, Path] = field(default_factory=dict)
     lock: RLock = field(default_factory=RLock)
@@ -72,13 +72,41 @@ class AgentWebService:
             result = self.graph.invoke(
                 {
                     "user_query": message.strip(),
-                    "document_artifact": session.active_document,
-                    "document_status": session.active_document.get("status", ""),
+                    "document_artifacts": dict(session.documents),
                     "warnings": [],
                 },
                 config=self._config(session),
             )
             return self._response(session, result)
+
+    def invalidate_document_state(self, session: WebSession) -> None:
+        current = self.graph.get_state(self._config(session)).values
+        active_ids = set(session.documents)
+        self.graph.update_state(
+            self._config(session),
+            {
+                "document_artifacts": dict(session.documents),
+                "selected_document_ids": [],
+                "document_extractions": {
+                    document_id: extraction
+                    for document_id, extraction in (
+                        current.get("document_extractions") or {}
+                    ).items()
+                    if document_id in active_ids
+                },
+                "document_errors": {
+                    document_id: message
+                    for document_id, message in (
+                        current.get("document_errors") or {}
+                    ).items()
+                    if document_id in active_ids
+                },
+                "merged_document_query": {},
+                "confirmed_dmf_query": {},
+                "document_query_decision": "",
+                "document_status": "",
+            },
+        )
 
     def resume(self, session: WebSession, request: ResumeRequest) -> dict[str, Any]:
         with session.lock:
@@ -153,6 +181,50 @@ router = APIRouter(prefix="/api/agent", tags=["DMF Agent"])
 agent_web_service = AgentWebService()
 
 
+def _document_summary(artifact: dict[str, Any]) -> dict[str, str]:
+    return {
+        "document_id": str(artifact.get("document_id", "")),
+        "file_name": str(artifact.get("file_name", "")),
+    }
+
+
+def _list_documents(session: WebSession) -> list[dict[str, str]]:
+    return [_document_summary(artifact) for artifact in session.documents.values()]
+
+
+def _ensure_documents_mutable(session: WebSession) -> None:
+    if session.awaiting_resume:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="当前操作正在等待确认，暂时不能增删文档",
+        )
+
+
+async def _append_documents(
+    session: WebSession,
+    files: list[UploadFile],
+) -> dict[str, Any]:
+    _ensure_documents_mutable(session)
+    saved_paths = await save_uploaded_files(files)
+    parsed: list[dict[str, Any]] = []
+    errors: list[dict[str, str]] = []
+    service = DocumentDMFService()
+    for file, saved_path in zip(files, saved_paths, strict=True):
+        try:
+            artifact = await run_in_threadpool(service.parse_document, saved_path)
+        except DocumentDMFError as exc:
+            errors.append({"file_name": file.filename or saved_path.name, "message": str(exc)})
+            continue
+        parsed.append(artifact.model_dump())
+
+    with session.lock:
+        _ensure_documents_mutable(session)
+        for artifact in parsed:
+            session.documents[artifact["document_id"]] = artifact
+        documents = _list_documents(session)
+    return {"status": "parsed", "documents": documents, "errors": errors}
+
+
 @router.post("/sessions", status_code=status.HTTP_201_CREATED)
 def create_session() -> dict[str, str]:
     session = agent_web_service.create_session()
@@ -171,46 +243,66 @@ def resume_session(session_id: str, request: ResumeRequest) -> dict[str, Any]:
     return agent_web_service.resume(session, request)
 
 
+@router.get("/sessions/{session_id}/documents")
+def list_documents(session_id: str) -> dict[str, Any]:
+    session = agent_web_service.get_session(session_id)
+    with session.lock:
+        return {"documents": _list_documents(session)}
+
+
+@router.post("/sessions/{session_id}/documents")
+async def upload_documents(
+    session_id: str,
+    files: list[UploadFile] = File(...),
+) -> dict[str, Any]:
+    session = agent_web_service.get_session(session_id)
+    return await _append_documents(session, files)
+
+
 @router.post("/sessions/{session_id}/document")
 async def upload_document(session_id: str, file: UploadFile) -> dict[str, Any]:
     session = agent_web_service.get_session(session_id)
-    if session.awaiting_resume:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="当前操作正在等待确认，暂时不能替换文档",
-        )
-    saved_paths = await save_uploaded_files([file])
-    try:
-        artifact = await run_in_threadpool(
-            DocumentDMFService().parse_document,
-            saved_paths[0],
-        )
-    except DocumentDMFError as exc:
+    result = await _append_documents(session, [file])
+    if result["errors"]:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=str(exc),
-        ) from exc
+            detail=result["errors"][0]["message"],
+        )
+    return {**result, "document": result["documents"][-1]}
+
+
+@router.delete("/sessions/{session_id}/documents/{document_id}")
+def delete_document(session_id: str, document_id: str) -> dict[str, Any]:
+    session = agent_web_service.get_session(session_id)
     with session.lock:
-        session.active_document = artifact.model_dump()
-    return {
-        "status": "parsed",
-        "document": {
-            "document_id": artifact.document_id,
-            "file_name": artifact.file_name,
-        },
-    }
+        _ensure_documents_mutable(session)
+        if document_id not in session.documents:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="文档不存在或已被删除",
+            )
+        del session.documents[document_id]
+        agent_web_service.invalidate_document_state(session)
+        return {"status": "deleted", "documents": _list_documents(session)}
+
+
+@router.delete("/sessions/{session_id}/documents")
+def clear_documents(session_id: str) -> dict[str, Any]:
+    session = agent_web_service.get_session(session_id)
+    with session.lock:
+        _ensure_documents_mutable(session)
+        session.documents.clear()
+        agent_web_service.invalidate_document_state(session)
+        return {"status": "cleared", "documents": []}
 
 
 @router.delete("/sessions/{session_id}/document")
 def clear_document(session_id: str) -> dict[str, str]:
     session = agent_web_service.get_session(session_id)
-    if session.awaiting_resume:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="当前操作正在等待确认，暂时不能清除文档",
-        )
     with session.lock:
-        session.active_document = {}
+        _ensure_documents_mutable(session)
+        session.documents.clear()
+        agent_web_service.invalidate_document_state(session)
     return {"status": "cleared"}
 
 

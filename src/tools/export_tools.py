@@ -38,7 +38,7 @@ def export_dmf_excel(
 register_tool(
     export_dmf_excel,
     risk=ToolRisk.LOCAL_WRITE,
-    contexts={ToolContext.DMF_POST_PROCESS},
+    contexts={ToolContext.DMF_EXPORT},
     parallel_safe=False,
     state_arguments={"dmf_results": "dmf_results"},
 )

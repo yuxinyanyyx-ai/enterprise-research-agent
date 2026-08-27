@@ -9,33 +9,48 @@ def route_after_intent(state: ResearchState) -> str:
     if state.get("needs_clarification"):
         return "clarify"
 
-    task_type = state.get("task_type", "unknown")
+    data_source = state.get("data_source", "none")
+    if data_source == "none":
+        return "general_chat"
 
-    if task_type == "dmf_query":
-        return "dmf_query"
+    use_existing_data = state.get("use_existing_data", False)
+    if data_source == "dmf":
+        if not use_existing_data:
+            return "dmf_query"
+        return (
+            "dmf_export"
+            if "export" in (state.get("requested_outputs") or [])
+            else "dmf_result_review"
+        )
 
-    if task_type == "dmf_post_process":
-        return "dmf_post_process"
-
-    if task_type == "document_review":
-        return "document_review"
-
-    if task_type == "dmf_document_compare":
-        return "document_query"
-
-    return "tools"
+    query_document_conditions = state.get("query_document_conditions", False)
+    if use_existing_data:
+        if state.get("document_ids"):
+            return "document_query" if query_document_conditions else "document_review"
+        return (
+            "document_followup"
+            if query_document_conditions
+            else "document_existing_review"
+        )
+    return "document_query" if query_document_conditions else "document_review"
 
 
 def route_after_dmf_query(state: ResearchState) -> str:
-    """Only successful fixed DMF searches may use post-processing tools."""
+    """Export only when explicitly requested; otherwise answer immediately."""
 
-    return "tools" if (state.get("dmf_results") or {}).get("success") else "answer"
+    if not (state.get("dmf_results") or {}).get("success"):
+        return "answer"
+    return (
+        "export"
+        if "export" in (state.get("requested_outputs") or [])
+        else "answer"
+    )
 
 
 def route_after_document_extraction(state: ResearchState) -> str:
-    if state.get("document_error"):
+    if not state.get("merged_document_query"):
         return "review"
-    return "confirm" if state.get("task_type") == "dmf_document_compare" else "review"
+    return "confirm" if state.get("query_document_conditions") else "review"
 
 
 def route_after_document_confirmation(state: ResearchState) -> str:

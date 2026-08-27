@@ -11,8 +11,10 @@ class ResearchState(TypedDict, total=False):
     user_query: str
     messages: Annotated[list[BaseMessage], add_messages]
 
-    task_type: str
-    request_mode: str
+    data_source: str
+    use_existing_data: bool
+    query_document_conditions: bool
+    document_ids: list[str]
     requested_outputs: list[str]
 
     needs_clarification: bool
@@ -25,12 +27,17 @@ class ResearchState(TypedDict, total=False):
     dmf_results: dict[str, Any]
     analysis_result: dict[str, Any]
 
-    document_artifact: dict[str, Any]
+    document_artifacts: dict[str, dict[str, Any]]
+    selected_document_ids: list[str]
+    document_extractions: dict[str, dict[str, Any]]
+    document_errors: dict[str, str]
+    merged_document_query: dict[str, Any]
     document_status: str
-    extracted_dmf_query: dict[str, Any]
     confirmed_dmf_query: dict[str, Any]
     document_query_decision: str
-    document_error: str
+
+    pending_intent: dict[str, Any]
+    pending_clarification_reason: str
 
     tool_context: str
     tool_rounds: int
