@@ -1,3 +1,47 @@
+# 2026-09-03 可扩展 Agent Eval
+
+- 新增严格 YAML + Pydantic 场景合同、稳定 loader、精确 Case 筛选和 pytest markers。
+- 新增 deterministic/live 共用 Runner 与 Assertions；真实执行 LangGraph、意图、路由、DMF、文档、导出和回答节点。
+- 仅替换 LLM、DMF 服务、文档 extractor/searcher 和导出文件系统；deterministic 模式额外阻断 HTTP。
+- 首批 6 个场景覆盖 DMF 查询、跨轮结果复用、文档确认、导出成功/失败和普通交流。
+- 新增调用次数、节点轨迹、interrupt、state、关键事实、禁止项、Markdown 和 artifact 断言。
+- Live LLM 通过同一 Case、Runner 和 Assertions 执行，默认 skip；报告不保存调用 payload 并脱敏认证信息、Cookie 和 captcha。
+- 框架测试通过 15 项，live 默认跳过 6 个场景；既有 Agent 回归保持通过。
+
+# 2026-09-03 DMF Watchlist
+
+- 新增 `valid_date_expired` 有效日期过期提醒，按台湾当地日期判断，到期当天仍有效。
+- 支持公历和民国年常见日期格式；不可解析日期不误报并保存 run warning。
+- 首次发现已过期立即提醒，同一过期周期按规范化有效日期去重，恢复有效后允许新周期提醒。
+- 新增过期提醒游标、周期版本和 run warnings，迁移版本为 `c42f81a6d903`。
+- 新增按单个稳定 DMF 编号管理的团队共享关注清单。
+- 新增首次观察、连续两次未返回、重新出现和字段变化状态机。
+- 新增 Watchlist CRUD、手动执行、运行历史、事件列表和幂等确认 API。
+- 新增独立定时 worker、数据库执行锁和运行幂等键。
+- 新增三张 Watchlist 表及 Alembic 迁移 `7b13d8a94f21`。
+- 历史结果新增本次查询的 `snapshot_id`，与全局 baseline ID 分离。
+
+## 2026-09-03：DMF 历史快照与变更检测 P0
+
+### 已完成
+
+- 新增 SQLAlchemy + Alembic 历史数据库层，支持 SQLite 并兼容 PostgreSQL。
+- 每个 Agent/Web 具体查询独立保存 monitor run；非空完整结果保存快照并检测新增、消失和字段变化。
+- `SUCCESS_EMPTY` 只保存空观察并告警，不生成变化、不创建或推进 baseline。
+- 严格区分 query fingerprint、DMF business key 和内容 hash；缺失或重复 DMF 编号不自动匹配。
+- monitor run 与 snapshot/diff 使用分离事务，历史处理失败不会改变 FDA 查询状态。
+- 快照保存脱敏的完整分页 raw JSON、结构化 source、UTC queried_at 及内容 hash。
+- Agent 确定性回答展示变化计数和比较警告，不展示 raw payload。
+- 批量查询中途验证码失效后，剩余查询项补记为 `NOT_EXECUTED` 并独立统计。
+- monitor run 保存每个具体查询的真实 `started_at`、`ended_at`；未执行项时间保持为空。
+- 历史存储异常对外统一返回脱敏错误码和提示，完整异常仅保留在内部日志与审计字段。
+
+### 验证记录
+
+- 历史 repository、查询接入、采集状态和输出边界聚焦测试通过。
+- Alembic 初始迁移在临时 SQLite 连续执行两次成功，5 张历史业务表完整创建。
+- 新增事务中途失败测试：在 snapshot 与 records flush 后注入异常，验证新快照、记录、事件和 baseline 推进整体回滚，而 monitor run 独立留存。
+
 ## 2026-08-25：Agent 路由与回答稳定性收敛
 
 ### 已完成
