@@ -524,6 +524,25 @@ def test_build_answer_lists_unmatched_queries_after_matching_records() -> None:
     assert "部分查询未完成：成功 3，失败 1" in answer
 
 
+def test_build_answer_includes_history_summary_without_raw_payload() -> None:
+    result = _fake_result()
+    result["results"][0]["history"] = {
+        "added_count": 2,
+        "removed_count": 1,
+        "changed_count": 3,
+        "warnings": ["有 1 条记录缺少稳定身份，未自动比较。"],
+        "raw_payload": "must-not-be-rendered",
+    }
+
+    answer = nodes.build_dmf_answer(
+        {"requested_outputs": ["result"], "dmf_results": result}
+    )["final_answer"]
+
+    assert "历史变化：新增 2 条，消失 1 条，字段变化 3 条。" in answer
+    assert "有 1 条记录缺少稳定身份，未自动比较。" in answer
+    assert "must-not-be-rendered" not in answer
+
+
 def test_build_answer_combines_result_and_summary(monkeypatch) -> None:
     monkeypatch.setattr(
         nodes,

@@ -123,6 +123,10 @@ class Settings:
 	temp_dir: Path
 	result_retention_hours: int
 	keep_uploaded_files: bool
+	dmf_history_enabled: bool = False
+	dmf_watchlist_enabled: bool = False
+	dmf_watchlist_poll_seconds: int = 60
+	database_url: str = f"sqlite:///{(SOURCE_ROOT / 'storage' / 'dmf_history.db').as_posix()}"
 
 	@property
 	def authorization_headers(self) -> dict[str, str]:
@@ -164,6 +168,17 @@ def load_settings(
 	if not model_version:
 		raise ConfigurationError("MINERU_MODEL_VERSION 不能为空")
 
+	dmf_history_enabled = _get_bool(source, "DMF_HISTORY_ENABLED", False)
+	dmf_watchlist_enabled = _get_bool(source, "DMF_WATCHLIST_ENABLED", False)
+	if dmf_watchlist_enabled and not dmf_history_enabled:
+		raise ConfigurationError("启用 DMF Watchlist 时必须同时启用 DMF 历史功能")
+	database_url = source.get(
+		"DATABASE_URL",
+		f"sqlite:///{(SOURCE_ROOT / 'storage' / 'dmf_history.db').as_posix()}",
+	).strip()
+	if dmf_history_enabled and not database_url:
+		raise ConfigurationError("启用 DMF 历史功能时 DATABASE_URL 不能为空")
+
 	return Settings(
 		mineru_token=token,
 		mineru_base_url=base_url,
@@ -190,6 +205,12 @@ def load_settings(
 		temp_dir=_get_path(source, "TEMP_DIR", SOURCE_ROOT / "storage" / "temp"),
 		result_retention_hours=_get_int(source, "RESULT_RETENTION_HOURS", 24),
 		keep_uploaded_files=_get_bool(source, "KEEP_UPLOADED_FILES", False),
+		dmf_history_enabled=dmf_history_enabled,
+		dmf_watchlist_enabled=dmf_watchlist_enabled,
+		dmf_watchlist_poll_seconds=_get_int(
+			source, "DMF_WATCHLIST_POLL_SECONDS", 60
+		),
+		database_url=database_url,
 	)
 
 

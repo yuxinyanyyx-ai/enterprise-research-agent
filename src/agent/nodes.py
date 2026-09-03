@@ -40,6 +40,7 @@ AGENT_SYSTEM_PROMPT = """
 4. 如果已经获得工具返回的数据，应根据真实工具结果回答用户。
 5. 如果还需要额外工具信息，可以继续调用工具。
 6. 如果用户要求查询结果你提取不到，应明确说明情况，不要盲目分析。
+7. 明确用户查询，不要乱复用上一轮的查询结果
 """
 OUTPUT_ORDER = ("result", "summary", "analysis")
 REQUESTED_OUTPUT_ORDER = (*OUTPUT_ORDER, "export")
@@ -513,7 +514,12 @@ def _format_empty_result_diagnostics(result: dict[str, Any]) -> str:
     if not query_results:
         return f"DMF 查询未完成：{result.get('message', '上游未返回查询结果')}"
 
-    lines = ["没有找到符合条件的 DMF 记录。各项查询状态如下："]
+    heading = (
+        "没有找到符合条件的 DMF 记录。各项查询状态如下："
+        if any(query_result.get("success") for query_result in query_results)
+        else "DMF 查询未完成。各项查询状态如下："
+    )
+    lines = [heading]
     for index, query_result in enumerate(query_results, start=1):
         condition = _format_query_condition(query_result.get("query") or {})
         if query_result.get("success"):
@@ -521,6 +527,33 @@ def _format_empty_result_diagnostics(result: dict[str, Any]) -> str:
         else:
             status = f"查询失败：{query_result.get('message', '未知错误')}"
         lines.append(f"{index}. {condition}：{status}")
+    history_summary = _format_history_summary(result)
+    if history_summary:
+        lines.extend(["", history_summary])
+    return "\n".join(lines)
+
+
+def _format_history_summary(result: dict[str, Any]) -> str:
+    histories = [
+        query_result.get("history")
+        for query_result in result.get("results", [])
+        if query_result.get("history")
+    ]
+    if not histories:
+        return ""
+
+    added = sum(history.get("added_count", 0) for history in histories)
+    removed = sum(history.get("removed_count", 0) for history in histories)
+    changed = sum(history.get("changed_count", 0) for history in histories)
+    warnings = [
+        warning
+        for history in histories
+        for warning in history.get("warnings", [])
+    ]
+    lines = [
+        f"历史变化：新增 {added} 条，消失 {removed} 条，字段变化 {changed} 条。"
+    ]
+    lines.extend(f"注意：{warning}" for warning in dict.fromkeys(warnings))
     return "\n".join(lines)
 
 
@@ -561,6 +594,10 @@ def _format_dmf_result_text(result: dict[str, Any]) -> str:
             "返回 0 条记录"
             for index, query_result in enumerate(unmatched_queries, start=1)
         )
+
+    history_summary = _format_history_summary(result)
+    if history_summary:
+        lines.extend(["", history_summary])
 
     return "\n".join(lines)
 

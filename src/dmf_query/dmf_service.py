@@ -1,9 +1,19 @@
 from .dmf_client import search_dmf_page
 from .result_parser import parse_dmf_result
 from .dmf_errors import DmfClientError
+from datetime import datetime, timezone
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+def _collection_times(started_at: datetime) -> dict[str, str]:
+    ended_at = datetime.now(timezone.utc)
+    return {
+        "started_at": started_at.isoformat(),
+        "ended_at": ended_at.isoformat(),
+        "queried_at": ended_at.isoformat(),
+    }
 
 
 def search_all_dmf(
@@ -20,6 +30,8 @@ def search_all_dmf(
     查询满足条件的所有 DMF 数据，并自动处理分页。
     """
 
+    started_at = datetime.now(timezone.utc)
+
     # ==========================
     # 1. 输入校验
     # ==========================
@@ -27,6 +39,11 @@ def search_all_dmf(
     dmf_no = dmf_no.strip()
     applicant_name = applicant_name.strip()
     ingredient = ingredient.strip()
+    query = {
+        "dmf_no": dmf_no,
+        "applicant_name": applicant_name,
+        "ingredient": ingredient,
+    }
 
     if not any([
         dmf_no,
@@ -36,18 +53,30 @@ def search_all_dmf(
         return {
             "success": False,
             "message": "DMF编号、申请商名称、成分至少填写一个。",
+            "query": query,
+            "collection_status": "FAILED",
             "total": 0,
             "total_pages": 0,
+            "successful_pages": 0,
+            "failed_page": None,
             "records": [],
+            "raw_pages": [],
+            **_collection_times(started_at),
         }
 
     if not captcha_code.strip():
         return {
             "success": False,
             "message": "验证码不能为空。",
+            "query": query,
+            "collection_status": "FAILED",
             "total": 0,
             "total_pages": 0,
+            "successful_pages": 0,
+            "failed_page": None,
             "records": [],
+            "raw_pages": [],
+            **_collection_times(started_at),
         }
 
     # ==========================
@@ -70,18 +99,33 @@ def search_all_dmf(
         return {
             "success": False,
             "message": str(exc),
+            "query": query,
+            "collection_status": "FAILED",
             "total": 0,
             "total_pages": 0,
+            "successful_pages": 0,
+            "failed_page": 1,
             "records": [],
+            "raw_pages": [],
+            **_collection_times(started_at),
         }
 
     first_result = parse_dmf_result(first_raw)
 
     if not first_result["success"]:
-        return first_result
+        return {
+            **first_result,
+            "query": query,
+            "collection_status": "FAILED",
+            "successful_pages": 0,
+            "failed_page": 1,
+            "raw_pages": [first_raw],
+            **_collection_times(started_at),
+        }
 
     total_pages = first_result["total_pages"]
     all_records = list(first_result["records"])
+    raw_pages = [first_raw]
     logger.info(
         "DMF 查询成功，总记录数：%s，总页数：%s",
         first_result["total"],
@@ -117,12 +161,19 @@ def search_all_dmf(
                 "message": (
                     f"第 {page_number} 页查询失败：{exc}"
                 ),
+                "query": query,
+                "collection_status": "PARTIAL",
                 "total": first_result["total"],
                 "total_pages": total_pages,
+                "successful_pages": page_number - 1,
+                "failed_page": page_number,
                 "records": all_records,
+                "raw_pages": raw_pages,
+                **_collection_times(started_at),
             }
 
         parsed_result = parse_dmf_result(raw_result)
+        raw_pages.append(raw_result)
 
         if not parsed_result["success"]:
             return {
@@ -131,9 +182,15 @@ def search_all_dmf(
                     f"第 {page_number} 页查询失败："
                     f"{parsed_result['message']}"
                 ),
+                "query": query,
+                "collection_status": "PARTIAL",
                 "total": first_result["total"],
                 "total_pages": total_pages,
+                "successful_pages": page_number - 1,
+                "failed_page": page_number,
                 "records": all_records,
+                "raw_pages": raw_pages,
+                **_collection_times(started_at),
             }
 
         all_records.extend(
@@ -150,14 +207,15 @@ def search_all_dmf(
     return {
         "success": True,
         "message": first_result["message"],
-
-        "query": {
-            "dmf_no": dmf_no,
-            "applicant_name": applicant_name,
-            "ingredient": ingredient,
-        },
-
+        "query": query,
+        "collection_status": (
+            "SUCCESS_NONEMPTY" if all_records else "SUCCESS_EMPTY"
+        ),
         "total": first_result["total"],
         "total_pages": total_pages,
+        "successful_pages": total_pages,
+        "failed_page": None,
         "records": all_records,
+        "raw_pages": raw_pages,
+        **_collection_times(started_at),
     }

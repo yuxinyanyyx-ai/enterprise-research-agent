@@ -3,10 +3,18 @@
 from __future__ import annotations
 
 import logging
+from datetime import datetime, timezone
 
 import requests
 
+from src.dmf_history import DMFHistoryRepository, get_configured_history_repository
+from src.dmf_history.repository import (
+    PUBLIC_HISTORY_ERROR_CODE,
+    PUBLIC_HISTORY_ERROR_MESSAGE,
+)
 from src.schemas.dmf import (
+    DMFCollectionStatus,
+    DMFHistoryResult,
     DMFQuery,
     DMFQueryResult,
     DMFSearchResult,
@@ -50,11 +58,59 @@ def _empty_search_result(
     )
 
 
+def _preflight_failure_result(
+    *,
+    message: str,
+    dmf_no: str,
+    applicant_name: str,
+    ingredients: list[str],
+    query_ingredients: list[str],
+    history_repository: DMFHistoryRepository | None,
+) -> DMFSearchResult:
+    results = []
+    for ingredient in query_ingredients:
+        result = DMFQueryResult(
+            success=False,
+            message=message,
+            query=DMFSingleQuery(
+                dmf_no=dmf_no,
+                applicant_name=applicant_name,
+                ingredient=ingredient,
+            ),
+            collection_status=DMFCollectionStatus.NOT_EXECUTED,
+        )
+        if history_repository is not None:
+            try:
+                result.history = history_repository.record_query(result)
+            except Exception as exc:
+                logger.exception("DMF 前置失败 monitor run 写入失败")
+                result.history = DMFHistoryResult(
+                    history_status="monitor_run_failed",
+                    comparison_status="failed",
+                    history_error_code=PUBLIC_HISTORY_ERROR_CODE,
+                    history_error=PUBLIC_HISTORY_ERROR_MESSAGE,
+                )
+        results.append(result)
+    return DMFSearchResult(
+        success=False,
+        message=message,
+        query=DMFQuery(
+            dmf_no=dmf_no,
+            applicant_name=applicant_name,
+            ingredients=ingredients,
+        ),
+        query_count=len(results),
+        not_executed_count=len(results),
+        results=results,
+    )
+
+
 def search_dmf_queries(
     *,
     dmf_no: str = "",
     applicant_name: str = "",
     ingredients: list[str] | None = None,
+    history_repository: DMFHistoryRepository | None = None,
 ) -> dict:
     """Execute a complete DMF search task and return a stable structured result.
 
@@ -66,6 +122,8 @@ def search_dmf_queries(
     dmf_no = (dmf_no or "").strip()
     applicant_name = (applicant_name or "").strip()
     cleaned_ingredients = clean_ingredients(ingredients)
+    if history_repository is None:
+        history_repository = get_configured_history_repository()
 
     if not any([dmf_no, applicant_name, cleaned_ingredients]):
         return _empty_search_result(
@@ -83,44 +141,52 @@ def search_dmf_queries(
         try:
             captcha = get_captcha(session)
         except CaptchaError as exc:
-            return _empty_search_result(
+            return _preflight_failure_result(
                 message=f"验证码获取失败：{exc}",
                 dmf_no=dmf_no,
                 applicant_name=applicant_name,
                 ingredients=cleaned_ingredients,
+                query_ingredients=query_ingredients,
+                history_repository=history_repository,
             ).model_dump()
         except Exception as exc:
-            return _empty_search_result(
+            return _preflight_failure_result(
                 message=f"验证码获取异常：{exc}",
                 dmf_no=dmf_no,
                 applicant_name=applicant_name,
                 ingredients=cleaned_ingredients,
+                query_ingredients=query_ingredients,
+                history_repository=history_repository,
             ).model_dump()
 
         solver = MinerUCaptchaSolver()
         try:
             captcha_code = solver.solve(captcha["captcha_path"])
         except Exception as exc:
-            return _empty_search_result(
+            return _preflight_failure_result(
                 message=f"验证码识别失败：{exc}",
                 dmf_no=dmf_no,
                 applicant_name=applicant_name,
                 ingredients=cleaned_ingredients,
+                query_ingredients=query_ingredients,
+                history_repository=history_repository,
             ).model_dump()
 
         verify_code = captcha["verify_code"]
         results: list[DMFQueryResult] = []
         success_count = 0
         failed_count = 0
+        not_executed_count = 0
         total_records = 0
 
-        for ingredient in query_ingredients:
+        for query_index, ingredient in enumerate(query_ingredients):
             query = DMFSingleQuery(
                 dmf_no=dmf_no,
                 applicant_name=applicant_name,
                 ingredient=ingredient,
             )
 
+            query_started_at = datetime.now(timezone.utc)
             try:
                 raw_result = search_all_dmf(
                     session=session,
@@ -138,9 +204,41 @@ def search_dmf_queries(
                     "total_pages": 0,
                     "records": [],
                 }
+            query_ended_at = datetime.now(timezone.utc)
+            raw_result.setdefault("started_at", query_started_at.isoformat())
+            raw_result.setdefault("ended_at", query_ended_at.isoformat())
+            raw_result.setdefault("queried_at", query_ended_at.isoformat())
 
             raw_result["query"] = query.model_dump()
+            if not raw_result.get("collection_status"):
+                raw_result["collection_status"] = (
+                    DMFCollectionStatus.SUCCESS_NONEMPTY
+                    if raw_result.get("success") and raw_result.get("records")
+                    else DMFCollectionStatus.SUCCESS_EMPTY
+                    if raw_result.get("success")
+                    else DMFCollectionStatus.FAILED
+                )
             result = DMFQueryResult.model_validate(raw_result)
+            if history_repository is not None:
+                try:
+                    queried_at = raw_result.get("queried_at")
+                    result.history = history_repository.record_query(
+                        result,
+                        raw_pages=raw_result.get("raw_pages") or [],
+                        queried_at=(
+                            datetime.fromisoformat(queried_at)
+                            if isinstance(queried_at, str)
+                            else queried_at
+                        ),
+                    )
+                except Exception as exc:
+                    logger.exception("DMF 历史 monitor run 写入失败")
+                    result.history = DMFHistoryResult(
+                        history_status="monitor_run_failed",
+                        comparison_status="failed",
+                        history_error_code=PUBLIC_HISTORY_ERROR_CODE,
+                        history_error=PUBLIC_HISTORY_ERROR_MESSAGE,
+                    )
             results.append(result)
 
             if result.success:
@@ -149,6 +247,32 @@ def search_dmf_queries(
             else:
                 failed_count += 1
                 if "驗證碼" in result.message or "验证码" in result.message:
+                    for remaining_ingredient in query_ingredients[query_index + 1 :]:
+                        skipped_result = DMFQueryResult(
+                            success=False,
+                            message="前序查询验证码失效，本项未执行",
+                            query=DMFSingleQuery(
+                                dmf_no=dmf_no,
+                                applicant_name=applicant_name,
+                                ingredient=remaining_ingredient,
+                            ),
+                            collection_status=DMFCollectionStatus.NOT_EXECUTED,
+                        )
+                        if history_repository is not None:
+                            try:
+                                skipped_result.history = history_repository.record_query(
+                                    skipped_result
+                                )
+                            except Exception:
+                                logger.exception("DMF 未执行项 monitor run 写入失败")
+                                skipped_result.history = DMFHistoryResult(
+                                    history_status="monitor_run_failed",
+                                    comparison_status="failed",
+                                    history_error_code=PUBLIC_HISTORY_ERROR_CODE,
+                                    history_error=PUBLIC_HISTORY_ERROR_MESSAGE,
+                                )
+                        results.append(skipped_result)
+                        not_executed_count += 1
                     break
 
         if failed_count == 0:
@@ -172,6 +296,7 @@ def search_dmf_queries(
             query_count=len(results),
             success_count=success_count,
             failed_count=failed_count,
+            not_executed_count=not_executed_count,
             total_records=total_records,
             results=results,
         ).model_dump()
