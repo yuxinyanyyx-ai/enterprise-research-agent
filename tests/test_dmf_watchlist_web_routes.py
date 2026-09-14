@@ -170,3 +170,71 @@ def test_expired_event_and_invalid_date_warning_are_exposed(tmp_path, monkeypatc
 
     assert invalid_run.json()["status"] == "no_change"
     assert "无法解析" in invalid_run.json()["warnings"][0]
+
+
+def test_watchlist_notification_config_web_routes(tmp_path, monkeypatch) -> None:
+    client = make_client(tmp_path, monkeypatch)
+
+    # 1. 创建带有格式化和规范化邮箱的关注项
+    res = client.post(
+        "/api/watchlists",
+        json={
+            "dmf_no": "DMF-001",
+            "notification_enabled": True,
+            "notification_emails": ["  USER1@example.com  ", "user1@example.com", "USER2@example.com"],
+            "notification_mode": "weekly_digest",
+        },
+    )
+    assert res.status_code == 201
+    body = res.json()
+    assert body["notification_enabled"] is True
+    assert body["notification_emails"] == ["user1@example.com", "user2@example.com"]
+    assert body["notification_mode"] == "weekly_digest"
+    watchlist_id = body["id"]
+
+    # 2. 带有非法邮箱返回 422
+    invalid_email_res = client.post(
+        "/api/watchlists",
+        json={
+            "dmf_no": "DMF-002",
+            "notification_enabled": True,
+            "notification_emails": ["not-an-email"],
+        },
+    )
+    assert invalid_email_res.status_code == 422
+
+    # 3. 开启通知但无邮箱返回 422
+    empty_email_res = client.post(
+        "/api/watchlists",
+        json={
+            "dmf_no": "DMF-003",
+            "notification_enabled": True,
+            "notification_emails": [],
+        },
+    )
+    assert empty_email_res.status_code == 422
+
+    # 4. PATCH 更新通知配置
+    patch_disable = client.patch(
+        f"/api/watchlists/{watchlist_id}",
+        json={"notification_enabled": False},
+    )
+    assert patch_disable.status_code == 200
+    assert patch_disable.json()["notification_enabled"] is False
+    assert patch_disable.json()["notification_emails"] == ["user1@example.com", "user2@example.com"]
+
+    patch_emails = client.patch(
+        f"/api/watchlists/{watchlist_id}",
+        json={"notification_emails": ["updated@example.com"]},
+    )
+    assert patch_emails.status_code == 200
+    assert patch_emails.json()["notification_emails"] == ["updated@example.com"]
+
+    # 5. 软删除与重新添加不带通知配置时的重置行为
+    client.delete(f"/api/watchlists/{watchlist_id}")
+    restore_res = client.post("/api/watchlists", json={"dmf_no": "DMF-001"})
+    assert restore_res.status_code == 201
+    restore_body = restore_res.json()
+    assert restore_body["id"] == watchlist_id
+    assert restore_body["notification_enabled"] is False
+    assert restore_body["notification_emails"] == ["updated@example.com"]

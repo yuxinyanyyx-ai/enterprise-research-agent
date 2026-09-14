@@ -5,6 +5,7 @@ from __future__ import annotations
 from langchain_core.tools import tool
 
 from src.dmf_query.multi_query_service import search_dmf_queries
+from src.tools.registry import ToolContext, ToolRisk, register_tool
 
 
 @tool(
@@ -28,3 +29,11 @@ def search_dmf(
         applicant_name=applicant_name,
         ingredients=ingredients,
     )
+
+
+register_tool(
+    search_dmf,
+    risk=ToolRisk.READ_ONLY,
+    contexts={ToolContext.GENERAL},
+    parallel_safe=True,
+)

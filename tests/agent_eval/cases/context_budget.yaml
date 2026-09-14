@@ -1,0 +1,92 @@
+cases:
+- id: CTX-001
+  description: Active results expose a bounded preview while retaining full checkpoint data
+  tags: [context, preview]
+  modes: [deterministic]
+  initial_state:
+    result_id: active-result
+    result_source: query
+    dmf_results:
+      success: true
+      total_records: 12
+      results:
+      - success: true
+        query: {ingredient: Ibuprofen}
+        records:
+        - &record {dmf_no: '12345', ingredient: Ibuprofen, applicant_name: Example Pharma}
+        - *record
+        - *record
+        - *record
+        - *record
+        - *record
+        - *record
+        - *record
+        - *record
+        - *record
+        - {dmf_no: HIDDEN-RECORD-11, ingredient: Ibuprofen}
+        - {dmf_no: HIDDEN-RECORD-12, ingredient: Ibuprofen}
+  fixtures:
+    answer: {kind: llm, value: Result preview available}
+  turns:
+  - user_query: '  Show the current Ibuprofen result preview  '
+    scripted_llm: [answer]
+    expected:
+      state:
+        dmf_results.total_records: 12
+        result_id: active-result
+      llm_inputs:
+      - max_estimated_tokens: 11904
+        message_types: [system, human, system]
+        current_query_verbatim: true
+        contains: [context_truncated, context_list_totals, active-result, '12345']
+        not_contains: [HIDDEN-RECORD-11, HIDDEN-RECORD-12]
+      call_deltas: {llm: 1, dmf: 0, export: 0}
+
+- id: CTX-002
+  description: New turns drop historical tool messages without dropping active data
+  tags: [context, cross-turn]
+  modes: [deterministic]
+  fixtures:
+    search:
+      kind: llm
+      value:
+        tool_calls:
+        - {name: search_dmf, args: {ingredients: [Ibuprofen]}, id: CTX-old-tool, type: tool_call}
+    result:
+      kind: dmf_result
+      value:
+        success: true
+        total_records: 1
+        results:
+        - success: true
+          query: {ingredient: Ibuprofen}
+          records: [{dmf_no: '67890', ingredient: Ibuprofen}]
+    done: {kind: llm, value: Search complete}
+    analysis: {kind: llm, value: Existing result analysis}
+  turns:
+  - user_query: Search Ibuprofen
+    scripted_llm: [search, done]
+    dmf_result: result
+    expected:
+      llm_inputs:
+      - call_index: 1
+        current_query_verbatim: true
+        tool_pairs: true
+        message_types: [system, human, ai, tool, system]
+  - user_query: Analyse the previous result
+    scripted_llm: [analysis]
+    expected:
+      state:
+        function_ledger: {}
+        tool_artifacts: []
+        react_tool_rounds: 0
+        dmf_results.total_records: 1
+      llm_inputs:
+      - max_estimated_tokens: 11904
+        current_query_verbatim: true
+        tool_pairs: true
+        message_types: [system, human, ai, human, system]
+        contains: [Historical, '67890']
+        not_contains: [CTX-old-tool]
+      call_deltas: {llm: 1, dmf: 0, export: 0}
+  expected_calls: {llm: 3, dmf: 1, export: 0}

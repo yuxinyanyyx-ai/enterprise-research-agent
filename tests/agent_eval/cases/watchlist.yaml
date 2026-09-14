@@ -1,0 +1,493 @@
+cases:
+- id: WATCH-REAL-001
+  description: Current supported Watchlist lifecycle through real external boundaries
+  tags:
+  - watchlist
+  - integration
+  - real
+  profile: real_watchlist
+  modes:
+  - live
+  allowed_external: true
+  turns:
+  - user_query: 查询 DMF ${dmf_no}
+  - user_query: 关注刚才的结果
+  - user_query: 查看团队关注清单
+  - user_query: 立即检查 DMF ${dmf_no}
+  - user_query: 查看 DMF ${dmf_no} 的事件
+  - user_query: 确认事件 ${event_id}
+  - user_query: 取消关注 DMF ${dmf_no}
+- id: WATCH-001
+  description: All supported single-item Watchlist actions use one real Agent node
+  tags:
+  - watchlist
+  - write
+  - read
+  fixtures:
+    add_result:
+      kind: watchlist_result
+      value:
+        id: watch-1
+        dmf_no: DMF-001
+        status: active
+        interval_hours: 24
+        next_run_at: null
+    list_result:
+      kind: watchlist_result
+      value:
+      - id: watch-1
+        dmf_no: DMF-001
+        status: active
+        interval_hours: 24
+        next_run_at: null
+    run_result:
+      kind: watchlist_result
+      value:
+        status: no_change
+        error_message: null
+        warnings: []
+    events_result:
+      kind: watchlist_result
+      value:
+        watchlist:
+          id: watch-1
+          dmf_no: DMF-001
+          status: active
+        events:
+        - id: event-1
+          event_type: valid_date_expired
+          status: unread
+          created_at: '2026-09-04T00:00:00Z'
+    ack_result:
+      kind: watchlist_result
+      value:
+        id: event-1
+        status: acknowledged
+    remove_result:
+      kind: watchlist_result
+      value:
+        id: watch-1
+        dmf_no: DMF-001
+        status: active
+    react_0_0:
+      kind: llm
+      value:
+        tool_calls:
+        - name: run_watchlist_workflow
+          args: {}
+          id: WATCH-001-0-0
+          type: tool_call
+    react_0_1:
+      kind: llm
+      value:
+        watchlist_action: add
+        dmf_no: DMF-001
+    react_0_2:
+      kind: llm
+      value:
+        answer_from: tool
+    react_1_0:
+      kind: llm
+      value:
+        tool_calls:
+        - name: run_watchlist_workflow
+          args: {}
+          id: WATCH-001-1-0
+          type: tool_call
+    react_1_1:
+      kind: llm
+      value:
+        watchlist_action: list
+    react_1_2:
+      kind: llm
+      value:
+        answer_from: tool
+    react_2_0:
+      kind: llm
+      value:
+        tool_calls:
+        - name: run_watchlist_workflow
+          args: {}
+          id: WATCH-001-2-0
+          type: tool_call
+    react_2_1:
+      kind: llm
+      value:
+        watchlist_action: run
+        watchlist_id: watch-1
+    react_2_2:
+      kind: llm
+      value:
+        answer_from: tool
+    react_3_0:
+      kind: llm
+      value:
+        tool_calls:
+        - name: run_watchlist_workflow
+          args: {}
+          id: WATCH-001-3-0
+          type: tool_call
+    react_3_1:
+      kind: llm
+      value:
+        watchlist_action: events
+        watchlist_id: watch-1
+    react_3_2:
+      kind: llm
+      value:
+        answer_from: tool
+    react_4_0:
+      kind: llm
+      value:
+        tool_calls:
+        - name: run_watchlist_workflow
+          args: {}
+          id: WATCH-001-4-0
+          type: tool_call
+    react_4_1:
+      kind: llm
+      value:
+        watchlist_action: ack
+        watchlist_id: watch-1
+        watchlist_event_id: event-1
+    react_4_2:
+      kind: llm
+      value:
+        answer_from: tool
+    react_5_0:
+      kind: llm
+      value:
+        tool_calls:
+        - name: run_watchlist_workflow
+          args: {}
+          id: WATCH-001-5-0
+          type: tool_call
+    react_5_1:
+      kind: llm
+      value:
+        watchlist_action: remove
+        watchlist_id: watch-1
+    react_5_2:
+      kind: llm
+      value:
+        answer_from: tool
+  turns:
+  - user_query: 关注 DMF-001
+    scripted_llm:
+    - react_0_0
+    - react_0_1
+    - react_0_2
+    watchlist_result: add_result
+    expected:
+      route: watchlist_workflow
+      state:
+        watchlist_result.action: add
+        watchlist_result.dmf_no: DMF-001
+      answer:
+        contains:
+        - DMF-001
+        - 团队共享关注清单
+        - watch-1
+      call_deltas:
+        llm: 3
+        dmf: 0
+        document_extract: 0
+        export: 0
+        watchlist: 1
+  - user_query: 查看团队关注清单
+    scripted_llm:
+    - react_1_0
+    - react_1_1
+    - react_1_2
+    watchlist_result: list_result
+    expected:
+      route: watchlist_workflow
+      answer:
+        contains:
+        - DMF-001
+        - watch-1
+        markdown_headers:
+        - 关注项 ID
+      call_deltas:
+        llm: 3
+        dmf: 0
+        document_extract: 0
+        export: 0
+        watchlist: 1
+      state: {}
+  - user_query: 立即检查关注项 watch-1
+    scripted_llm:
+    - react_2_0
+    - react_2_1
+    - react_2_2
+    watchlist_result: run_result
+    expected:
+      route: watchlist_workflow
+      answer:
+        contains:
+        - DMF-001
+        - no_change
+      call_deltas:
+        llm: 3
+        dmf: 0
+        document_extract: 0
+        export: 0
+        watchlist: 1
+      state: {}
+  - user_query: 查看关注项 watch-1 的事件
+    scripted_llm:
+    - react_3_0
+    - react_3_1
+    - react_3_2
+    watchlist_result: events_result
+    expected:
+      route: watchlist_workflow
+      answer:
+        contains:
+        - event-1
+        - valid_date_expired
+        - unread
+        not_contains:
+        - raw_payload
+        - captcha
+        - Authorization
+      call_deltas:
+        llm: 3
+        dmf: 0
+        document_extract: 0
+        export: 0
+        watchlist: 1
+      state: {}
+  - user_query: 确认关注项 watch-1 的事件 event-1
+    scripted_llm:
+    - react_4_0
+    - react_4_1
+    - react_4_2
+    watchlist_result: ack_result
+    expected:
+      route: watchlist_workflow
+      answer:
+        contains:
+        - event-1
+        - acknowledged
+      call_deltas:
+        llm: 3
+        dmf: 0
+        document_extract: 0
+        export: 0
+        watchlist: 1
+      state: {}
+  - user_query: 删除关注项 watch-1
+    scripted_llm:
+    - react_5_0
+    - react_5_1
+    - react_5_2
+    watchlist_result: remove_result
+    expected:
+      route: watchlist_workflow
+      answer:
+        contains:
+        - DMF-001
+        - 团队共享关注清单
+        - 删除
+      call_deltas:
+        llm: 3
+        dmf: 0
+        document_extract: 0
+        export: 0
+        watchlist: 1
+      state: {}
+  expected_calls:
+    llm: 18
+    dmf: 0
+    document_extract: 0
+    export: 0
+    watchlist: 6
+- id: WATCH-002
+  description: Add can reuse only one unique DMF number from trusted active results
+  tags:
+  - watchlist
+  - cross-turn
+  initial_state:
+    dmf_results:
+      success: true
+      results:
+      - records:
+        - dmf_no: DMF-002
+        - dmf_no: dmf-002
+  fixtures:
+    result:
+      kind: watchlist_result
+      value:
+        id: watch-2
+        dmf_no: DMF-002
+        status: active
+        interval_hours: 24
+        next_run_at: null
+    react_0_0:
+      kind: llm
+      value:
+        tool_calls:
+        - name: run_watchlist_workflow
+          args: {}
+          id: WATCH-002-0-0
+          type: tool_call
+    react_0_1:
+      kind: llm
+      value:
+        watchlist_action: add
+    react_0_2:
+      kind: llm
+      value:
+        answer_from: tool
+  turns:
+  - user_query: 关注刚才的结果
+    scripted_llm:
+    - react_0_0
+    - react_0_1
+    - react_0_2
+    watchlist_result: result
+    expected:
+      route: watchlist_workflow
+      state:
+        watchlist_result.dmf_no: DMF-002
+      answer:
+        contains:
+        - DMF-002
+        - watch-2
+      call_deltas:
+        llm: 3
+        dmf: 0
+        document_extract: 0
+        export: 0
+        watchlist: 1
+- id: WATCH-003
+  description: Multiple recent DMF numbers require clarification without a write
+  tags:
+  - watchlist
+  - clarification
+  - safety
+  initial_state:
+    dmf_results:
+      success: true
+      results:
+      - records:
+        - dmf_no: DMF-001
+        - dmf_no: DMF-002
+  fixtures:
+    react_0_0:
+      kind: llm
+      value:
+        tool_calls:
+        - name: run_watchlist_workflow
+          args: {}
+          id: WATCH-003-0-0
+          type: tool_call
+    react_0_1:
+      kind: llm
+      value:
+        watchlist_action: add
+  turns:
+  - user_query: 关注刚才的结果
+    scripted_llm:
+    - react_0_0
+    - react_0_1
+    expected:
+      route: watchlist_workflow
+      answer:
+        contains:
+        - DMF 编号
+        - 唯一一条
+      call_deltas:
+        llm: 2
+        dmf: 0
+        document_extract: 0
+        export: 0
+        watchlist: 0
+      state: {}
+- id: WATCH-004
+  description: Batch removal is blocked before the Watchlist service boundary
+  tags:
+  - watchlist
+  - safety
+  - high-impact
+  fixtures:
+    react_0_0:
+      kind: llm
+      value:
+        tool_calls:
+        - name: run_watchlist_workflow
+          args: {}
+          id: WATCH-004-0-0
+          type: tool_call
+    react_0_1:
+      kind: llm
+      value:
+        watchlist_action: remove
+        dmf_no: DMF-001
+  turns:
+  - user_query: 删除全部关注
+    scripted_llm:
+    - react_0_0
+    - react_0_1
+    expected:
+      route: watchlist_workflow
+      answer:
+        contains:
+        - 批量
+        - 高影响
+        - 暂未开放
+      call_deltas:
+        llm: 2
+        dmf: 0
+        document_extract: 0
+        export: 0
+        watchlist: 0
+      state: {}
+- id: WATCH-005
+  description: Unexpected Watchlist failure is sanitized by the real Agent node
+  tags:
+  - watchlist
+  - failure
+  - security
+  fixtures:
+    failure:
+      kind: error
+      value: database password=top-secret at C:\private\watchlist.db
+      sensitive: true
+    react_0_0:
+      kind: llm
+      value:
+        tool_calls:
+        - name: run_watchlist_workflow
+          args: {}
+          id: WATCH-005-0-0
+          type: tool_call
+    react_0_1:
+      kind: llm
+      value:
+        watchlist_action: list
+  turns:
+  - user_query: 查看团队关注清单
+    scripted_llm:
+    - react_0_0
+    - react_0_1
+    watchlist_result: failure
+    expected:
+      route: watchlist_workflow
+      answer:
+        contains:
+        - 暂时失败
+        - 稍后重试
+        not_contains:
+        - top-secret
+        - password
+        - private
+        - watchlist.db
+      call_deltas:
+        llm: 2
+        dmf: 0
+        document_extract: 0
+        export: 0
+        watchlist: 1
+      state: {}

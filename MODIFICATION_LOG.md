@@ -1,3 +1,11 @@
+# 2026-09-03 Agent Watchlist 集成
+
+- 将团队共享 Watchlist 接入现有 LangGraph，新增单一确定性 `manage_watchlist` 节点，支持添加、删除、列表、立即检查、事件列表和事件确认。
+- LLM 只提取结构化意图；目标解析、安全校验、服务调用、幂等键和回答格式由确定性代码负责。
+- 单项操作直接执行；v1 阻断批量、清空、批量确认和外发请求，未来开放时必须接入 `interrupt/resume` 确认。
+- Web 与 CLI 为每条消息注入请求 ID，立即检查使用稳定幂等键；API 与 Agent 共用 Watchlist Service façade。
+- Agent Eval 增加 Watchlist fake 边界和 5 个 YAML Cases，核心节点保持真实；新增真实 SQLite façade、恢复、事件归属和重复确认集成测试。
+
 # 2026-09-03 可扩展 Agent Eval
 
 - 新增严格 YAML + Pydantic 场景合同、稳定 loader、精确 Case 筛选和 pytest markers。

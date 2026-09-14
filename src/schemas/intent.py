@@ -11,13 +11,31 @@ OutputType = Literal[
     "analysis",
     "export",
 ]
+WatchlistAction = Literal["add", "remove", "list", "run", "events", "ack", "configure_notifications"]
 
 
 class ResearchIntent(BaseModel):
     """LLM 对用户 DMF 调研请求的结构化理解结果。"""
 
-    data_source: Literal["dmf", "document", "none"] = Field(
+    data_source: Literal["dmf", "document", "watchlist", "none"] = Field(
         description="完成请求需要使用的数据来源"
+    )
+
+    watchlist_action: WatchlistAction | None = Field(
+        default=None,
+        description="团队关注清单操作",
+    )
+
+    watchlist_id: str = Field(default="", description="明确提供的关注项 ID")
+
+    watchlist_event_id: str = Field(default="", description="明确提供的关注事件 ID")
+    watchlist_notification_enabled: bool | None = Field(default=None, description="明确开启或关闭邮件通知；未修改为 null")
+    watchlist_notification_emails: list[str] | None = Field(default=None, description="用户明确指定的完整收件邮箱列表；未修改为 null，清空为 []")
+    watchlist_notification_mode: Literal["immediate", "weekly_digest"] | None = Field(default=None, description="有更新通知为 immediate；每周邮件汇总为 weekly_digest；未修改为 null")
+
+    watchlist_interval_hours: int | None = Field(
+        default=None,
+        description="添加关注项时明确提供的检查间隔小时数",
     )
 
     use_existing_data: bool = Field(

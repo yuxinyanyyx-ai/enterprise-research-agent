@@ -1,71 +1,90 @@
 cases:
-  - id: DMF-001
-    description: A single ingredient query executes the real intent, route, query, and answer nodes
-    tags: [dmf, smoke]
-    fixtures:
-      intent_ibuprofen:
-        kind: llm
-        value:
-          data_source: dmf
-          use_existing_data: false
-          query_document_conditions: false
-          document_ids: []
-          requested_outputs: [result]
-          needs_clarification: false
-          dmf_no: ""
-          applicant_name: ""
-          ingredients: [Ibuprofen]
-      result_ibuprofen:
-        kind: dmf_result
-        value:
-          success: true
-          message: 全部查询完成
-          query_count: 1
-          success_count: 1
-          failed_count: 0
-          total_records: 1
-          results:
-            - success: true
-              message: 查询成功
-              query:
-                dmf_no: ""
-                applicant_name: ""
-                ingredient: Ibuprofen
-              total: 1
-              total_pages: 1
-              records:
-                - dmf_no: "12345"
-                  applicant_name: Example Pharma
-                  ingredient: Ibuprofen
-                  valid_date: "2027-01-01"
-    turns:
-      - user_query: 查询 Ibuprofen 的 DMF
-        scripted_llm: [intent_ibuprofen]
-        dmf_result: result_ibuprofen
-        expected:
-          route: query_dmf
-          interrupt: false
-          state:
-            data_source: dmf
-            ingredients: [Ibuprofen]
-          answer:
-            contains:
-              - "12345"
-              - Example Pharma
-              - Ibuprofen
-              - "2027-01-01"
-            not_contains:
-              - raw_payload
-            markdown_headers:
-              - DMF 编号
-              - 申请商
-          call_deltas:
-            llm: 1
-            dmf: 1
-            document_extract: 0
-            export: 0
-    expected_calls:
-      llm: 1
-      dmf: 1
-      document_extract: 0
-      export: 0
+- id: DMF-001
+  description: A single ingredient query executes the real intent, route, query, and
+    answer nodes
+  tags:
+  - dmf
+  - smoke
+  fixtures:
+    result_ibuprofen:
+      kind: dmf_result
+      value:
+        success: true
+        message: 全部查询完成
+        query_count: 1
+        success_count: 1
+        failed_count: 0
+        total_records: 1
+        results: &id001
+        - success: true
+          message: 查询成功
+          query:
+            dmf_no: ''
+            applicant_name: ''
+            ingredient: Ibuprofen
+          total: 1
+          total_pages: 1
+          records:
+          - dmf_no: '12345'
+            applicant_name: Example Pharma
+            ingredient: Ibuprofen
+            valid_date: '2027-01-01'
+        query: {}
+    react_0_0:
+      kind: llm
+      value:
+        tool_calls:
+        - name: search_dmf
+          args:
+            ingredients:
+            - Ibuprofen
+          id: DMF-001-0-0
+          type: tool_call
+    react_0_1:
+      kind: llm
+      value:
+        answer_from: tool
+  turns:
+  - user_query: 查询 Ibuprofen 的 DMF
+    scripted_llm:
+    - react_0_0
+    - react_0_1
+    dmf_result: result_ibuprofen
+    expected:
+      llm_inputs:
+      - call_index: 0
+        call_type: text
+        max_estimated_tokens: 11904
+        current_query_verbatim: true
+        message_types: [system, human, system]
+      - call_index: 1
+        max_estimated_tokens: 11904
+        current_query_verbatim: true
+        tool_pairs: true
+        message_types: [system, human, ai, tool, system]
+        contains: [context_source, search_dmf, '12345']
+      route: execute_function_tools
+      interrupt: false
+      state:
+        dmf_results.results: *id001
+      answer:
+        contains:
+        - '12345'
+        - Example Pharma
+        - Ibuprofen
+        - '2027-01-01'
+        not_contains:
+        - raw_payload
+        markdown_headers:
+        - DMF 编号
+        - 申请商
+      call_deltas:
+        llm: 2
+        dmf: 1
+        document_extract: 0
+        export: 0
+  expected_calls:
+    llm: 2
+    dmf: 1
+    document_extract: 0
+    export: 0

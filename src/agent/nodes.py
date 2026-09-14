@@ -1,17 +1,15 @@
 from __future__ import annotations
 
 import json
+import logging
+import re
 import time
 from typing import Any
 
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langgraph.types import interrupt
 
-from src.agent.prompts import (
-    DMF_ANALYSIS_SYSTEM_PROMPT,
-    DMF_INTENT_SYSTEM_PROMPT,
-    DMF_SUMMARY_SYSTEM_PROMPT,
-)
+from src.agent.audit_log import trace_operation, write_event
 from src.agent.state import ResearchState
 from src.llm.apollo import create_apollo_llm
 from src.schemas.intent import ResearchIntent
@@ -25,8 +23,17 @@ from src.services.document_dmf_service import (
     DocumentDMFService,
     merge_document_queries,
 )
-from src.tools.dmf_tools import search_dmf
-from src.export_excel.excel_exporter import export_multi_query_result
+from src.dmf_watchlist.repository import (
+    WatchlistConflictError,
+    WatchlistNotFoundError,
+)
+from src.dmf_watchlist.service import (
+    DMFWatchlistService,
+    WatchlistUnavailableError,
+    create_watchlist_service,
+)
+
+logger = logging.getLogger(__name__)
 
 AGENT_SYSTEM_PROMPT = """
 你是 DMF Research Agent。
@@ -55,6 +62,34 @@ MISSING_EXTRACTED_QUERY_CLARIFICATION = (
     "当前会话没有已提取的文档查询条件，请先分析文档。"
 )
 AMBIGUOUS_REQUEST_CLARIFICATION = "请说明需要查询、分析还是导出哪些内容？"
+WATCHLIST_TARGET_CLARIFICATION = "请提供一个明确的关注项 ID 或 DMF 编号。"
+WATCHLIST_EVENT_CLARIFICATION = "请同时提供关注项和需要确认的事件 ID。"
+WATCHLIST_ADD_CLARIFICATION = "请提供一个 DMF 编号，或先查询出唯一一条 DMF 记录。"
+WATCHLIST_HIGH_IMPACT_UNSUPPORTED = (
+    "当前仅支持团队关注清单的单项操作；批量、高影响或外发操作需要单独确认，暂未开放。"
+)
+WATCHLIST_DISPLAY_LIMIT = 10
+NOTIFICATION_FIELDS = (
+    "watchlist_notification_enabled", "watchlist_notification_emails", "watchlist_notification_mode",
+)
+
+
+class NotificationClarification(ValueError):
+    pass
+
+
+def _notification_values(state) -> dict[str, Any]:
+    return {name.removeprefix("watchlist_"): state[name]
+            for name in NOTIFICATION_FIELDS if state.get(name) is not None}
+
+
+def _notification_summary(row) -> str:
+    recipients = getattr(row, "notification_emails", []) or []
+    masked = ", ".join("***@" + address.rsplit("@", 1)[-1] for address in recipients) or "未配置"
+    mode = getattr(row, "notification_mode", "immediate")
+    mode_text = "每周汇总" if mode == "weekly_digest" else "有变化时通知"
+    enabled = "开启" if getattr(row, "notification_enabled", False) else "关闭"
+    return f"通知：{enabled}；模式：{mode_text}；收件邮箱：{masked}。"
 
 
 def _print_elapsed(name: str, start: float) -> None:
@@ -88,7 +123,53 @@ def _active_dmf_context(state: ResearchState) -> dict[str, Any]:
         "available": _has_active_dmf_results(state),
         "query": result.get("query", {}),
         "total_records": result.get("total_records", 0),
+        "dmf_numbers": _active_dmf_numbers(state)[:WATCHLIST_DISPLAY_LIMIT],
     }
+
+
+def _active_dmf_numbers(state: ResearchState) -> list[str]:
+    numbers: list[str] = []
+    seen: set[str] = set()
+    for query_result in (state.get("dmf_results") or {}).get("results", []):
+        for record in query_result.get("records") or []:
+            dmf_no = str(record.get("dmf_no") or "").strip()
+            key = dmf_no.casefold()
+            if dmf_no and key not in seen:
+                seen.add(key)
+                numbers.append(dmf_no)
+    return numbers
+
+
+def _is_high_impact_watchlist_request(user_query: str) -> bool:
+    normalized = "".join(user_query.lower().split())
+    return any(
+        phrase in normalized
+        for phrase in (
+            "清空关注",
+            "清空清单",
+            "全部删除",
+            "删除全部",
+            "删除所有",
+            "批量删除",
+            "批量关注",
+            "全部关注",
+            "批量确认",
+            "确认全部",
+            "确认所有",
+            "发送事件",
+            "推送事件",
+            "外发事件",
+        )
+    )
+
+
+def _notification_request_problem(user_query: str) -> str:
+    normalized = "".join(user_query.lower().split())
+    if re.search(r"批量|全部|所有|allwatchlists|bulk|转发|一次性|立即发|马上发|现在发|sendnow|forward", normalized):
+        return WATCHLIST_HIGH_IMPACT_UNSUPPORTED
+    if re.search(r"(追加|新增|添加|删除|移除).*(邮箱|收件人)|另一个邮箱|再加|append|remove.*recipient", normalized):
+        return "请提供该关注项完整的新收件邮箱列表；当前不支持追加或移除部分收件人。"
+    return ""
 
 
 def _active_document_context(state: ResearchState) -> dict[str, Any]:
@@ -116,15 +197,6 @@ def _active_extracted_query_context(state: ResearchState) -> dict[str, Any]:
     }
 
 
-def _request_state(user_query: str) -> dict[str, Any]:
-    return {
-        "messages": [HumanMessage(content=user_query)],
-        "tool_rounds": 0,
-        "max_tool_rounds": 8,
-        "last_tool_batch": [],
-        "tool_stop_reason": "",
-        "tool_artifacts": [],
-    }
 
 
 def _answer(content: str, **updates: Any) -> dict[str, Any]:
@@ -136,14 +208,6 @@ def _answer(content: str, **updates: Any) -> dict[str, Any]:
     }
 
 
-def _recent_conversation(state: ResearchState, limit: int = 12) -> list[dict[str, str]]:
-    conversation = []
-    for message in state.get("messages") or []:
-        if not isinstance(message, (HumanMessage, AIMessage)):
-            continue
-        role = "human" if isinstance(message, HumanMessage) else "ai"
-        conversation.append({"role": role, "content": str(message.content)})
-    return conversation[-limit:]
 
 
 def _validate_intent(
@@ -178,9 +242,22 @@ def _validate_intent(
         "dmf_no": intent.dmf_no,
         "applicant_name": intent.applicant_name,
         "ingredients": intent.ingredients,
+        "watchlist_action": intent.watchlist_action or "",
+        "watchlist_id": intent.watchlist_id,
+        "watchlist_event_id": intent.watchlist_event_id,
+        "watchlist_interval_hours": intent.watchlist_interval_hours,
+        **{name: getattr(intent, name) if intent.data_source == "watchlist" else None for name in NOTIFICATION_FIELDS},
+        "watchlist_result": {},
         "pending_intent": {},
         "pending_clarification_reason": "",
     }
+
+    if intent.data_source == "watchlist" and (
+        intent.watchlist_action == "configure_notifications" or _notification_values(base)
+    ):
+        problem = _notification_request_problem(state.get("user_query") or "")
+        if problem:
+            return {**base, "needs_clarification": True, "clarification_question": problem}
 
     if intent.needs_clarification:
         return {
@@ -190,6 +267,73 @@ def _validate_intent(
         }
 
     if intent.data_source == "none":
+        return base
+
+    if intent.data_source == "watchlist":
+        if _is_high_impact_watchlist_request(state.get("user_query") or ""):
+            return {
+                **base,
+                "needs_clarification": True,
+                "clarification_question": WATCHLIST_HIGH_IMPACT_UNSUPPORTED,
+            }
+        if (
+            intent.watchlist_interval_hours is not None
+            and not 1 <= intent.watchlist_interval_hours <= 168
+        ):
+            return {
+                **base,
+                "needs_clarification": True,
+                "clarification_question": "关注项检查间隔必须在 1 到 168 小时之间。",
+            }
+        action = intent.watchlist_action
+        if action == "configure_notifications" or _notification_values(base):
+            problem = _notification_request_problem(state.get("user_query") or "")
+            if problem:
+                return {**base, "needs_clarification": True, "clarification_question": problem}
+            if action not in {"add", "configure_notifications", "list"}:
+                return {**base, "needs_clarification": True,
+                        "clarification_question": "请单独说明要配置哪个关注项的通知。"}
+            if action == "configure_notifications" and not _notification_values(base):
+                return {**base, "needs_clarification": True,
+                        "clarification_question": "请提供要修改的通知开关、完整邮箱列表或通知模式。"}
+        if action is None:
+            return {
+                **base,
+                "needs_clarification": True,
+                "clarification_question": "请说明要添加、删除、查看还是检查团队关注项。",
+            }
+        if action == "list":
+            return base
+        if action == "add":
+            if intent.dmf_no:
+                return base
+            references_result = any(word in (state.get("user_query") or "") for word in ("这个", "刚才", "上述", "结果"))
+            candidates = _active_dmf_numbers(state) if references_result else []
+            if len(candidates) == 1:
+                return {**base, "dmf_no": candidates[0]}
+            return {
+                **base,
+                "needs_clarification": True,
+                "clarification_question": WATCHLIST_ADD_CLARIFICATION,
+            }
+        if not (intent.watchlist_id or intent.dmf_no):
+            if action == "configure_notifications" and any(
+                word in (state.get("user_query") or "") for word in ("这个", "刚才", "上述")
+            ):
+                candidates = _active_dmf_numbers(state) if _has_active_dmf_results(state) else []
+                if len(candidates) == 1:
+                    return {**base, "dmf_no": candidates[0]}
+            return {
+                **base,
+                "needs_clarification": True,
+                "clarification_question": WATCHLIST_TARGET_CLARIFICATION,
+            }
+        if action == "ack" and not intent.watchlist_event_id:
+            return {
+                **base,
+                "needs_clarification": True,
+                "clarification_question": WATCHLIST_EVENT_CLARIFICATION,
+            }
         return base
 
     if intent.data_source == "dmf":
@@ -238,52 +382,6 @@ def _validate_intent(
     return base
 
 
-def understand_request(state: ResearchState) -> dict[str, Any]:
-    """使用 LLM 将用户自然语言转成结构化业务意图。"""
-
-    start = time.perf_counter()
-    user_query = (state.get("user_query") or "").strip()
-
-    if not user_query:
-        _print_elapsed("understand_request", start)
-        return {
-            **_request_state(user_query),
-            "data_source": "none",
-            "use_existing_data": False,
-            "query_document_conditions": False,
-            "requested_outputs": [],
-            "needs_clarification": True,
-            "clarification_question": AMBIGUOUS_REQUEST_CLARIFICATION,
-            "warnings": ["用户请求为空"],
-        }
-
-    request_state = _request_state(user_query)
-    llm = create_apollo_llm()
-    structured_llm = llm.with_structured_output(ResearchIntent)
-
-    intent = structured_llm.invoke(
-        [
-            SystemMessage(content=DMF_INTENT_SYSTEM_PROMPT),
-            HumanMessage(
-                content=(
-                    "当前 DMF 结果上下文：\n"
-                    f"{json.dumps(_active_dmf_context(state), ensure_ascii=False)}\n\n"
-                    "当前上传文档上下文：\n"
-                    f"{json.dumps(_active_document_context(state), ensure_ascii=False)}\n\n"
-                    "当前已提取文档条件上下文：\n"
-                    f"{json.dumps(_active_extracted_query_context(state), ensure_ascii=False)}\n\n"
-                    "待补全意图：\n"
-                    f"{json.dumps(state.get('pending_intent') or {}, ensure_ascii=False)}\n\n"
-                    "最近 6 轮完整对话：\n"
-                    f"{json.dumps(_recent_conversation(state), ensure_ascii=False)}\n\n"
-                    f"用户最新请求：{user_query}"
-                )
-            ),
-        ]
-    )
-
-    _print_elapsed("understand_request", start)
-    return {**request_state, **_validate_intent(intent, state)}
 
 
 def extract_document_query(state: ResearchState) -> dict[str, Any]:
@@ -334,6 +432,8 @@ def confirm_document_query(state: ResearchState) -> dict[str, Any]:
             and not query.get("dmf_no")
             and not query.get("ingredients")
         )
+    write_event("document.confirmation_reached", state,
+                operation="confirm_document_query")
     resumed = interrupt(
         {
             "type": "document_query_confirmation",
@@ -356,6 +456,8 @@ def confirm_document_query(state: ResearchState) -> dict[str, Any]:
     decision = DocumentQueryDecision.model_validate(
         {"action": action, "query": None if action == "reject" else query_payload}
     )
+    write_event("document.resumed", state, operation="confirm_document_query",
+                decision=decision.action)
     return {
         "document_query_decision": decision.action,
         "confirmed_dmf_query": (
@@ -368,7 +470,10 @@ def query_confirmed_document_dmf(state: ResearchState) -> dict[str, Any]:
     """Run a DMF query only after document conditions were confirmed."""
 
     query = ExtractedDMFQueryBatch.model_validate(state["confirmed_dmf_query"])
-    result = DocumentDMFService().execute_confirmed_query(query)
+    with trace_operation(state, operation="query_confirmed_document_dmf") as outcome:
+        result = DocumentDMFService().execute_confirmed_query(query)
+        if result.get("success") is False:
+            outcome["status"] = "business_failure"
     return {
         "dmf_no": "",
         "applicant_name": "",
@@ -407,47 +512,11 @@ def finalize_document_review(state: ResearchState) -> dict[str, Any]:
 def finalize_document_rejection(state: ResearchState) -> dict[str, Any]:
     return _answer("已取消使用文档条件执行 DMF 查询。")
 
-def general_chat(state: ResearchState) -> dict[str, Any]:
-    """处理不需要业务工具的普通交流。"""
-
-    user_query = (state.get("user_query") or "").strip()
-    llm = create_apollo_llm()
-
-    response = llm.invoke(
-        [
-            SystemMessage(
-                content="""
-你是 DMF Research Agent。
-
-你可以帮助用户：
-- 查询 DMF 信息
-- 查询成分、申请商或 DMF 编号
-- 对查询结果进行总结
-- 对 DMF 数据进行分析
-- 上传并解析 PDF、Word、图片、Excel、Markdown 或文本文件
-- 从当前文档提取 DMF 查询条件并在确认后查询
-
-当前用户输入属于普通交流，不需要调用 DMF 查询工具。
-系统会提供当前会话的可信文档清单。涉及当前文档时只能依据该清单回答。
-请自然、简洁地回答用户，不要否认上述真实能力，也不要虚构其他能力。
-"""
-            ),
-            HumanMessage(
-                content=(
-                    "当前可信文档上下文：\n"
-                    f"{json.dumps(_active_document_context(state), ensure_ascii=False)}\n\n"
-                    "近期完整对话：\n"
-                    f"{json.dumps(_recent_conversation(state), ensure_ascii=False)}\n\n"
-                    f"用户最新请求：{user_query}"
-                )
-            ),
-        ]
-    )
-
-    return _answer(str(response.content))
 
 
 def ask_clarification(state: ResearchState) -> dict[str, Any]:
+    if state.get("clarification_question") == WATCHLIST_HIGH_IMPACT_UNSUPPORTED:
+        return _answer(WATCHLIST_HIGH_IMPACT_UNSUPPORTED, pending_intent={}, pending_clarification_reason="")
     return _answer(
         state.get("clarification_question") or AMBIGUOUS_REQUEST_CLARIFICATION,
         pending_intent={
@@ -461,34 +530,186 @@ def ask_clarification(state: ResearchState) -> dict[str, Any]:
                 "dmf_no",
                 "applicant_name",
                 "ingredients",
+                "watchlist_action",
+                "watchlist_id",
+                "watchlist_event_id",
+                "watchlist_interval_hours",
+                *NOTIFICATION_FIELDS,
             )
         },
         pending_clarification_reason=state.get("clarification_question", ""),
     )
 
 
-def handle_unknown(state: ResearchState) -> dict[str, Any]:
-    return _answer(
-        "我暂时无法确定你希望执行什么任务。"
-        "你可以让我查询 DMF、总结查询结果，或分析 DMF 数据。"
+
+
+def _format_watchlist_rows(rows: list[Any]) -> str:
+    if not rows:
+        return "团队关注清单当前为空。"
+    lines = [
+        "| 关注项 ID | DMF 编号 | 状态 | 间隔（小时） | 下次检查 | 通知配置 |",
+        "|---|---|---|---:|---|---|",
+    ]
+    for row in rows[:WATCHLIST_DISPLAY_LIMIT]:
+        lines.append(
+            f"| {row.id} | {row.dmf_no} | {row.status.value} | "
+            f"{row.interval_hours} | {row.next_run_at or '-'} | {_notification_summary(row)} |"
+        )
+    if len(rows) > WATCHLIST_DISPLAY_LIMIT:
+        lines.append(f"\n仅展示前 {WATCHLIST_DISPLAY_LIMIT} 项，共 {len(rows)} 项。")
+    return "团队共享关注清单：\n\n" + "\n".join(lines)
+
+
+def _watchlist_add(service: DMFWatchlistService, state: ResearchState) -> str:
+    notification = _notification_values(state)
+    if notification and notification.get("notification_enabled") is True:
+        if not notification.get("notification_emails"):
+            raise NotificationClarification("请提供通知接收邮箱，系统无法推断你的邮箱。")
+        if not notification.get("notification_mode"):
+            raise NotificationClarification("请选择有变化时通知，还是每周汇总邮件。")
+    row = service.add(
+        state.get("dmf_no", ""),
+        state.get("watchlist_interval_hours") or 24,
+        **notification,
+    )
+    return (
+        f"已将 DMF {row.dmf_no} 加入团队共享关注清单。"
+        f"检查间隔为 {row.interval_hours} 小时，关注项 ID：{row.id}。"
+        + (f"{_notification_summary(row)}配置已保存，实际发送取决于后台通知服务。" if notification else "")
     )
 
 
-def query_dmf(state: ResearchState) -> dict[str, Any]:
-    """根据 Workflow State 中的查询条件调用 DMF Tool。"""
+def _watchlist_configure_notifications(service: DMFWatchlistService, state: ResearchState) -> str:
+    row = service.configure_notifications(
+        watchlist_id=state.get("watchlist_id", ""), dmf_no=state.get("dmf_no", ""),
+        **_notification_values(state),
+    )
+    return (f"团队共享关注项 DMF {row.dmf_no}（ID：{row.id}）的通知配置已保存。"
+            f"{_notification_summary(row)}检查间隔仍为 {row.interval_hours} 小时。"
+            "实际发送取决于后台通知服务，本次操作未发送邮件。")
 
-    start = time.perf_counter()
 
-    result = search_dmf.invoke(
-        {
-            "dmf_no": state.get("dmf_no", ""),
-            "applicant_name": state.get("applicant_name", ""),
-            "ingredients": state.get("ingredients", []),
-        }
+def _watchlist_remove(service: DMFWatchlistService, state: ResearchState) -> str:
+    row = service.remove(
+        watchlist_id=state.get("watchlist_id", ""),
+        dmf_no=state.get("dmf_no", ""),
+    )
+    return f"已从团队共享关注清单删除 DMF {row.dmf_no}（关注项 ID：{row.id}）。"
+
+
+def _watchlist_list(service: DMFWatchlistService, state: ResearchState) -> str:
+    del state
+    return _format_watchlist_rows(service.list_watchlists())
+
+
+def _watchlist_run(service: DMFWatchlistService, state: ResearchState) -> tuple[str, dict[str, Any]]:
+    request_id = str(state.get("request_id") or "").strip()
+    if not request_id:
+        raise ValueError("当前请求缺少幂等标识，请重新发送立即检查请求")
+    watchlist = service.resolve(
+        watchlist_id=state.get("watchlist_id", ""),
+        dmf_no=state.get("dmf_no", ""),
+    )
+    run = service.run_manual(
+        watchlist.id,
+        idempotency_key=f"agent:{request_id}:{watchlist.id}",
+    )
+    detail = run.error_message or "检查完成"
+    warnings = "；".join(run.warnings)
+    warning_text = f" 注意：{warnings}" if warnings else ""
+    return (
+        f"DMF {watchlist.dmf_no} 的立即检查状态：{run.status.value}。{detail}{warning_text}",
+        {"watchlist_id": str(watchlist.id), "dmf_no": watchlist.dmf_no, "run_status": run.status.value,
+         "status": "completed" if run.status.value in {"no_change", "changed"} and not run.error_message else "failed"},
     )
 
-    _print_elapsed("query_dmf", start)
-    return {"dmf_results": result}
+
+def _watchlist_events(service: DMFWatchlistService, state: ResearchState) -> str:
+    watchlist, events = service.list_events(
+        watchlist_id=state.get("watchlist_id", ""),
+        dmf_no=state.get("dmf_no", ""),
+    )
+    if not events:
+        return f"DMF {watchlist.dmf_no} 当前暂无更新。"
+    lines = [f"DMF {watchlist.dmf_no} 的团队关注事件："]
+    lines.extend(
+        f"- {event.id}：{event.event_type.value}，状态 {event.status.value}，"
+        f"时间 {event.created_at}"
+        for event in events[:WATCHLIST_DISPLAY_LIMIT]
+    )
+    if len(events) > WATCHLIST_DISPLAY_LIMIT:
+        lines.append(f"仅展示前 {WATCHLIST_DISPLAY_LIMIT} 条，共 {len(events)} 条。")
+    return "\n".join(lines)
+
+
+def _watchlist_ack(service: DMFWatchlistService, state: ResearchState) -> str:
+    event = service.acknowledge_event(
+        state.get("watchlist_event_id", ""),
+        watchlist_id=state.get("watchlist_id", ""),
+        dmf_no=state.get("dmf_no", ""),
+    )
+    return f"已确认团队关注事件 {event.id}，状态：{event.status.value}。"
+
+
+WATCHLIST_HANDLERS = {
+    "add": _watchlist_add,
+    "remove": _watchlist_remove,
+    "list": _watchlist_list,
+    "run": _watchlist_run,
+    "events": _watchlist_events,
+    "ack": _watchlist_ack,
+    "configure_notifications": _watchlist_configure_notifications,
+}
+
+
+def manage_watchlist(state: ResearchState) -> dict[str, Any]:
+    """Execute one validated team Watchlist action without another LLM call."""
+
+    action = state.get("watchlist_action", "")
+    notification_request = action == "configure_notifications" or bool(_notification_values(state))
+    if notification_request:
+        problem = _notification_request_problem(state.get("user_query") or "")
+        if _is_high_impact_watchlist_request(state.get("user_query") or ""):
+            problem = WATCHLIST_HIGH_IMPACT_UNSUPPORTED
+        if problem:
+            return ask_clarification({**state, "clarification_question": problem}) | {
+                "needs_clarification": True, "clarification_question": problem,
+            }
+    handler = WATCHLIST_HANDLERS.get(action)
+    if handler is None:
+        return _answer("请说明要添加、删除、查看还是检查团队关注项。")
+    status = "failed"
+    business_result = {"action": action, "watchlist_id": state.get("watchlist_id", ""), "dmf_no": state.get("dmf_no", "")}
+    try:
+        with trace_operation(state, operation=f"watchlist.{action}"):
+            answer = handler(create_watchlist_service(), state)
+        status = "completed"
+        if isinstance(answer, tuple):
+            answer, details = answer
+            business_result.update(details)
+            status = details["status"]
+    except WatchlistUnavailableError:
+        answer = "DMF 团队关注清单暂未启用，请联系管理员。"
+    except WatchlistNotFoundError:
+        answer = "未找到指定的团队关注项或关注事件。"
+    except WatchlistConflictError as exc:
+        answer = f"团队关注清单操作未完成：{exc}。"
+    except ValueError as exc:
+        if notification_request:
+            question = str(exc) if isinstance(exc, NotificationClarification) else (
+                "请提供有效的完整收件邮箱列表；开启通知时至少需要一个邮箱，并确认关注项 ID 与 DMF 编号一致。"
+            )
+            return ask_clarification({**state, "clarification_question": question}) | {
+                "needs_clarification": True, "clarification_question": question,
+                "watchlist_result": {"action": action, "status": "needs_clarification"},
+            }
+        answer = f"团队关注清单参数无效：{exc}。"
+    except Exception:
+        logger.exception("团队关注清单操作失败，action=%s", action)
+        answer = "团队关注清单操作暂时失败，请稍后重试。"
+    return _answer(answer, watchlist_result={**business_result, "status": status}, pending_intent={}, pending_clarification_reason="")
+
+
 
 
 def _collect_records(result: dict[str, Any]) -> list[dict[str, Any]]:
@@ -600,218 +821,3 @@ def _format_dmf_result_text(result: dict[str, Any]) -> str:
         lines.extend(["", history_summary])
 
     return "\n".join(lines)
-
-
-def _summarize_dmf_text(result: dict[str, Any]) -> str:
-    """基于真实查询结果生成摘要文本。"""
-
-    llm = create_apollo_llm()
-    response = llm.invoke(
-        [
-            SystemMessage(content=DMF_SUMMARY_SYSTEM_PROMPT),
-            HumanMessage(
-                content=(
-                    "下面是系统真实查询得到的 DMF 数据。\n"
-                    "请进行简要摘要，不要进行深入分析。\n\n"
-                    f"{json.dumps(result, ensure_ascii=False, indent=2)}"
-                )
-            ),
-        ]
-    )
-
-    return str(response.content).strip()
-
-
-def _build_analysis_result(result: dict[str, Any]) -> dict[str, Any]:
-    """生成供 LLM 使用的确定性统计信息。"""
-
-    return {
-        "success": True,
-        "total_records": result.get("total_records", 0),
-        "query_count": result.get("query_count", 0),
-        "success_count": result.get("success_count", 0),
-        "failed_count": result.get("failed_count", 0),
-    }
-
-
-def _analyze_dmf_text(
-    state: ResearchState,
-    result: dict[str, Any],
-) -> str:
-    """基于真实查询结果生成用户明确要求的分析文本。"""
-
-    context = {
-        "user_query": (state.get("user_query") or "").strip(),
-        "analysis_result": _build_analysis_result(result),
-        "dmf_results": result,
-    }
-
-    llm = create_apollo_llm()
-    response = llm.invoke(
-        [
-            SystemMessage(content=DMF_ANALYSIS_SYSTEM_PROMPT),
-            HumanMessage(
-                content=(
-                    "下面是用户问题、系统真实查询数据和确定性统计信息。\n"
-                    "请只生成分析部分，不要重复完整查询结果表。\n\n"
-                    f"{json.dumps(context, ensure_ascii=False, indent=2)}"
-                )
-            ),
-        ]
-    )
-
-    return str(response.content).strip()
-
-
-def build_dmf_answer(state: ResearchState) -> dict[str, Any]:
-    """按照 requested_outputs 组合用户最终需要的一个或多个输出。"""
-
-    start = time.perf_counter()
-    result = state.get("dmf_results") or {}
-
-    records = _collect_records(result)
-    if not result.get("success") and not records:
-        _print_elapsed("build_dmf_answer", start)
-        return _answer(_format_empty_result_diagnostics(result))
-
-    if not records:
-        _print_elapsed("build_dmf_answer", start)
-        return _answer(_format_empty_result_diagnostics(result))
-
-    requested_outputs = [
-        output for output in _normalize_requested_outputs(
-        True,
-        state.get("requested_outputs"),
-        ) if output in OUTPUT_ORDER
-    ]
-
-    output_text: dict[str, str] = {}
-
-    if "result" in requested_outputs:
-        output_text["result"] = _format_dmf_result_text(result)
-
-    if "summary" in requested_outputs:
-        output_text["summary"] = _summarize_dmf_text(result)
-
-    if "analysis" in requested_outputs:
-        output_text["analysis"] = _analyze_dmf_text(state, result)
-
-    # 单一输出时不额外加标题；组合输出时加标题，避免内容混在一起。
-    if len(requested_outputs) == 1:
-        final_answer = output_text[requested_outputs[0]]
-    else:
-        titles = {
-            "result": "查询结果",
-            "summary": "摘要",
-            "analysis": "分析",
-        }
-        parts = [
-            f"## {titles[name]}\n{output_text[name]}"
-            for name in requested_outputs
-        ]
-        final_answer = "\n\n".join(parts)
-
-    if result.get("failed_count", 0):
-        final_answer = (
-            f"{final_answer}\n\n> 部分查询未完成："
-            f"成功 {result.get('success_count', 0)}，"
-            f"失败 {result.get('failed_count', 0)}。"
-        )
-
-    export_results = [
-        artifact.get("result", {})
-        for artifact in state.get("tool_artifacts", [])
-        if artifact.get("tool_name") == "export_dmf_excel"
-    ]
-    successful_exports = [
-        item for item in export_results if item.get("success")
-    ]
-    failed_exports = [
-        item for item in export_results if not item.get("success")
-    ]
-    if successful_exports:
-        export_lines = [
-            f"- `{item.get('file_path', '')}`"
-            for item in successful_exports
-        ]
-        final_answer = (
-            f"{final_answer}\n\n## 导出文件\n"
-            + "\n".join(export_lines)
-        )
-    if failed_exports:
-        failure_lines = [
-            f"- {item.get('message', '导出未完成')}"
-            for item in failed_exports
-        ]
-        final_answer = (
-            f"{final_answer}\n\n## 导出状态\n"
-            + "\n".join(failure_lines)
-        )
-
-    if state.get("tool_stop_reason"):
-        final_answer = (
-            f"{final_answer}\n\n> 工具执行已停止："
-            f"{state['tool_stop_reason']}"
-        )
-
-    _print_elapsed("build_dmf_answer", start)
-    return _answer(final_answer)
-
-
-def finalize_dmf_export(state: ResearchState) -> dict[str, Any]:
-    """Return only the outcome of a cross-turn DMF export request."""
-
-    export_results = [
-        artifact.get("result", {})
-        for artifact in state.get("tool_artifacts", [])
-        if artifact.get("tool_name") == "export_dmf_excel"
-    ]
-    successful = [item for item in export_results if item.get("success")]
-    if successful:
-        paths = "\n".join(
-            f"- `{item.get('file_path', '')}`" for item in successful
-        )
-        return _answer(f"DMF 查询结果已导出：\n{paths}")
-
-    failed = [item for item in export_results if not item.get("success")]
-    if failed:
-        messages = "\n".join(
-            f"- {item.get('message', '导出未完成')}" for item in failed
-        )
-        return _answer(f"DMF 导出未完成：\n{messages}")
-
-    if state.get("tool_stop_reason"):
-        return _answer(state["tool_stop_reason"])
-
-    messages = state.get("messages") or []
-    last_message = messages[-1] if messages else None
-    if isinstance(last_message, AIMessage) and last_message.content:
-        return {"final_answer": str(last_message.content).strip()}
-    return _answer("本次没有执行 DMF 后处理操作。")
-
-
-def export_dmf_results(state: ResearchState) -> dict[str, Any]:
-    """Export the active trusted DMF result without another LLM decision."""
-
-    try:
-        output_path = export_multi_query_result(state.get("dmf_results") or {})
-        result = {
-            "success": True,
-            "message": "DMF 查询结果已导出为 Excel。",
-            "file_path": str(output_path),
-            "file_name": output_path.name,
-        }
-    except Exception as exc:
-        result = {
-            "success": False,
-            "message": f"导出失败：{exc}",
-        }
-    return {
-        "tool_artifacts": [
-            {
-                "tool_name": "export_dmf_excel",
-                "tool_call_id": "deterministic-export",
-                "result": result,
-            }
-        ]
-    }

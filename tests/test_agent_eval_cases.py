@@ -29,9 +29,7 @@ def test_runner_executes_real_core_nodes() -> None:
         result = runner.run(case)
 
     assert result.turns[0].executed_nodes == [
-        "understand_request",
-        "query_dmf",
-        "build_dmf_answer",
+        "prepare_react_request", "react_agent", "execute_function_tools", "react_agent", "finalize",
     ]
 
 
@@ -51,6 +49,6 @@ def test_repeated_case_runs_do_not_share_checkpoint_state() -> None:
         first = runner.run(case)
         second = runner.run(case)
 
-    first_messages = first.turns[0].state["messages"]
-    second_messages = second.turns[0].state["messages"]
-    assert len(first_messages) == len(second_messages) == 2
+    first_messages = first.turns[0].state["react_messages"]
+    second_messages = second.turns[0].state["react_messages"]
+    assert len(first_messages) == len(second_messages) == 4

@@ -48,17 +48,28 @@ def _service() -> DMFWatchlistService:
 @router.post("", response_model=WatchlistView, status_code=status.HTTP_201_CREATED)
 def create_watchlist(payload: WatchlistCreate) -> WatchlistView:
     try:
-        row = _service().repository.create_or_restore(
-            payload.dmf_no, payload.interval_hours
+        row = _service().add(
+            payload.dmf_no,
+            payload.interval_hours,
+            notification_enabled=payload.notification_enabled,
+            notification_emails=payload.notification_emails,
+            notification_mode=payload.notification_mode,
+            notification_fields={
+                field
+                for field in payload.model_fields_set
+                if field.startswith("notification_")
+            },
         )
     except WatchlistConflictError as exc:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)) from exc
     return WatchlistView.model_validate(row)
 
 
 @router.get("", response_model=list[WatchlistView])
 def list_watchlists() -> list[WatchlistView]:
-    return [WatchlistView.model_validate(row) for row in _service().repository.list()]
+    return _service().list_watchlists()
 
 
 @router.get("/{watchlist_id}", response_model=WatchlistView)
@@ -76,6 +87,14 @@ def update_watchlist(watchlist_id: str, payload: WatchlistUpdate) -> WatchlistVi
             watchlist_id,
             status=payload.status,
             interval_hours=payload.interval_hours,
+            notification_enabled=payload.notification_enabled,
+            notification_emails=payload.notification_emails,
+            notification_mode=payload.notification_mode,
+            notification_fields={
+                field
+                for field in payload.model_fields_set
+                if field.startswith("notification_")
+            },
         )
     except WatchlistNotFoundError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="关注项不存在") from exc
@@ -87,7 +106,7 @@ def update_watchlist(watchlist_id: str, payload: WatchlistUpdate) -> WatchlistVi
 @router.delete("/{watchlist_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_watchlist(watchlist_id: str) -> Response:
     try:
-        _service().repository.soft_delete(watchlist_id)
+        _service().remove(watchlist_id=watchlist_id)
     except WatchlistNotFoundError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="关注项不存在") from exc
     return Response(status_code=status.HTTP_204_NO_CONTENT)
@@ -119,10 +138,10 @@ def list_watchlist_runs(watchlist_id: str) -> list[WatchlistRunView]:
 @router.get("/{watchlist_id}/events", response_model=list[WatchlistEventView])
 def list_watchlist_events(watchlist_id: str) -> list[WatchlistEventView]:
     try:
-        rows = _service().repository.list_events(watchlist_id)
+        _, rows = _service().list_events(watchlist_id=watchlist_id)
     except WatchlistNotFoundError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="关注项不存在") from exc
-    return [WatchlistEventView.model_validate(row) for row in rows]
+    return rows
 
 
 @router.post(
@@ -130,7 +149,7 @@ def list_watchlist_events(watchlist_id: str) -> list[WatchlistEventView]:
 )
 def acknowledge_watchlist_event(watchlist_id: str, event_id: str) -> WatchlistEventView:
     try:
-        row = _service().repository.acknowledge_event(watchlist_id, event_id)
+        row = _service().acknowledge_event(event_id, watchlist_id=watchlist_id)
     except WatchlistNotFoundError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="关注事件不存在") from exc
     return WatchlistEventView.model_validate(row)

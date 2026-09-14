@@ -131,7 +131,7 @@ def search_dmf_queries(
             dmf_no=dmf_no,
             applicant_name=applicant_name,
             ingredients=cleaned_ingredients,
-        ).model_dump()
+        ).model_dump(mode="json")
 
     # An empty ingredient still represents one valid DMF number/applicant query.
     query_ingredients = cleaned_ingredients or [""]
@@ -148,7 +148,7 @@ def search_dmf_queries(
                 ingredients=cleaned_ingredients,
                 query_ingredients=query_ingredients,
                 history_repository=history_repository,
-            ).model_dump()
+            ).model_dump(mode="json")
         except Exception as exc:
             return _preflight_failure_result(
                 message=f"验证码获取异常：{exc}",
@@ -157,7 +157,7 @@ def search_dmf_queries(
                 ingredients=cleaned_ingredients,
                 query_ingredients=query_ingredients,
                 history_repository=history_repository,
-            ).model_dump()
+            ).model_dump(mode="json")
 
         solver = MinerUCaptchaSolver()
         try:
@@ -170,7 +170,7 @@ def search_dmf_queries(
                 ingredients=cleaned_ingredients,
                 query_ingredients=query_ingredients,
                 history_repository=history_repository,
-            ).model_dump()
+            ).model_dump(mode="json")
 
         verify_code = captcha["verify_code"]
         results: list[DMFQueryResult] = []
@@ -209,7 +209,7 @@ def search_dmf_queries(
             raw_result.setdefault("ended_at", query_ended_at.isoformat())
             raw_result.setdefault("queried_at", query_ended_at.isoformat())
 
-            raw_result["query"] = query.model_dump()
+            raw_result["query"] = query.model_dump(mode="json")
             if not raw_result.get("collection_status"):
                 raw_result["collection_status"] = (
                     DMFCollectionStatus.SUCCESS_NONEMPTY
@@ -299,7 +299,7 @@ def search_dmf_queries(
             not_executed_count=not_executed_count,
             total_records=total_records,
             results=results,
-        ).model_dump()
+        ).model_dump(mode="json")
     finally:
         session.close()
 

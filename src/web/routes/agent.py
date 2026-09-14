@@ -15,7 +15,8 @@ from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.types import Command
 from pydantic import BaseModel, Field
 
-from src.agent.graph import build_research_graph
+from src.agent.react_graph import build_react_graph
+from src.dmf_query.constant import OUTPUT_DIR
 from src.mineru.routes.convert import save_uploaded_files
 from src.services.document_dmf_service import DocumentDMFError, DocumentDMFService
 
@@ -42,7 +43,7 @@ class AgentWebService:
     """Own process-local browser sessions and one checkpointed Agent graph."""
 
     def __init__(self) -> None:
-        self.graph = build_research_graph(checkpointer=InMemorySaver())
+        self.graph = build_react_graph(checkpointer=InMemorySaver())
         self.sessions: dict[str, WebSession] = {}
         self.lock = RLock()
 
@@ -72,6 +73,7 @@ class AgentWebService:
             result = self.graph.invoke(
                 {
                     "user_query": message.strip(),
+                    "request_id": uuid4().hex,
                     "document_artifacts": dict(session.documents),
                     "warnings": [],
                 },
@@ -86,7 +88,6 @@ class AgentWebService:
             self._config(session),
             {
                 "document_artifacts": dict(session.documents),
-                "selected_document_ids": [],
                 "document_extractions": {
                     document_id: extraction
                     for document_id, extraction in (
@@ -102,9 +103,8 @@ class AgentWebService:
                     if document_id in active_ids
                 },
                 "merged_document_query": {},
-                "confirmed_dmf_query": {},
-                "document_query_decision": "",
-                "document_status": "",
+                "domain_pending": {key: value for key, value in (current.get("domain_pending") or {}).items() if key != "document"},
+                **({"dmf_results": {}, "result_id": "", "result_source": ""} if current.get("result_source") == "document" else {}),
             },
         )
 
@@ -153,7 +153,7 @@ class AgentWebService:
             if not export_result.get("success"):
                 continue
             path = Path(export_result.get("file_path", "")).resolve()
-            if not path.is_file():
+            if not path.is_file() or not path.is_relative_to(OUTPUT_DIR.resolve()):
                 continue
             existing_file_id = next(
                 (

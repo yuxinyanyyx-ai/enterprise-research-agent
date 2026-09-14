@@ -1,63 +1,98 @@
 cases:
-  - id: DOC-001
-    description: Document conditions require an interrupt before the real document query node
-    tags: [document, interrupt]
-    documents:
-      - document_id: doc-1
-        markdown: 原料名称：Ibuprofen
-    fixtures:
-      document_query_intent:
-        kind: llm
-        value:
-          data_source: document
-          query_document_conditions: true
-          requested_outputs: [result]
-      extraction:
-        kind: document_extraction
-        value:
-          queries:
-            - ingredients: [Ibuprofen]
-      result:
-        kind: dmf_result
-        value:
-          success: true
-          message: 查询完成
-          query_count: 1
-          success_count: 1
-          failed_count: 0
-          total_records: 1
-          results:
-            - success: true
-              query: {ingredient: Ibuprofen}
-              records:
-                - dmf_no: "12345"
-                  applicant_name: Example Pharma
-                  ingredient: Ibuprofen
-                  valid_date: "2027-01-01"
-    turns:
-      - user_query: 从文档提取条件并查询 DMF
-        scripted_llm: [document_query_intent]
-        document_extraction: extraction
-        expected:
-          route: confirm_document_query
-          interrupt: true
-          state:
-            document_status: extracted
-          answer:
-            empty: true
-          call_deltas: {llm: 1, dmf: 0, document_extract: 1, export: 0}
-      - resume:
-          action: confirm
+- id: DOC-001
+  description: Document conditions require an interrupt before the real document query
+    node
+  tags:
+  - document
+  - interrupt
+  documents:
+  - document_id: doc-1
+    markdown: 原料名称：Ibuprofen
+  fixtures:
+    extraction:
+      kind: document_extraction
+      value:
+        queries:
+        - ingredients:
+          - Ibuprofen
+    result:
+      kind: dmf_result
+      value:
+        success: true
+        message: 查询完成
+        query_count: 1
+        success_count: 1
+        failed_count: 0
+        total_records: 1
+        results:
+        - success: true
           query:
-            queries:
-              - ingredients: [Ibuprofen]
-        dmf_result: result
-        expected:
-          route: query_confirmed_document_dmf
-          interrupt: false
-          state:
-            document_query_decision: confirm
-          answer:
-            contains: ["12345", Ibuprofen]
-          call_deltas: {llm: 0, dmf: 1, document_extract: 0, export: 0}
-    expected_calls: {llm: 1, dmf: 1, document_extract: 1, export: 0}
+            ingredient: Ibuprofen
+          records:
+          - dmf_no: '12345'
+            applicant_name: Example Pharma
+            ingredient: Ibuprofen
+            valid_date: '2027-01-01'
+          message: 查询成功
+        query: {}
+    react_0_0:
+      kind: llm
+      value:
+        tool_calls:
+        - name: run_document_dmf_workflow
+          args: {}
+          id: DOC-001-0-0
+          type: tool_call
+    react_0_1:
+      kind: llm
+      value:
+        query_document_conditions: true
+    react_1_0:
+      kind: llm
+      value:
+        answer_from: tool
+  turns:
+  - user_query: 从文档提取条件并查询 DMF
+    scripted_llm:
+    - react_0_0
+    - react_0_1
+    document_extraction: extraction
+    expected:
+      route: document_workflow
+      interrupt: true
+      state: {}
+      answer:
+        empty: true
+      call_deltas:
+        llm: 2
+        dmf: 0
+        document_extract: 1
+        export: 0
+  - resume:
+      action: confirm
+      query:
+        queries:
+        - ingredients:
+          - Ibuprofen
+    dmf_result: result
+    expected:
+      route: document_workflow
+      interrupt: false
+      state:
+        workflow_status: completed
+      answer:
+        contains:
+        - '12345'
+        - Ibuprofen
+      call_deltas:
+        llm: 1
+        dmf: 1
+        document_extract: 0
+        export: 0
+    scripted_llm:
+    - react_1_0
+  expected_calls:
+    llm: 3
+    dmf: 1
+    document_extract: 1
+    export: 0

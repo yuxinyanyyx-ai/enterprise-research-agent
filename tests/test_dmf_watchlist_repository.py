@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta, timezone
 
+import pytest
 from sqlalchemy import create_engine
 
 from src.dmf_history.models import Base
@@ -8,6 +9,7 @@ from src.dmf_watchlist.repository import DMFWatchlistRepository
 from src.schemas.watchlist import (
     WatchlistEventStatus,
     WatchlistEventType,
+    WatchlistNotificationMode,
     WatchlistObservation,
     WatchlistRunStatus,
     WatchlistRunTrigger,
@@ -106,3 +108,110 @@ def test_manual_runs_count_absence_and_ack_is_idempotent(tmp_path) -> None:
 
     with repository.session_factory() as session:
         assert session.get(DMFWatchlistEvent, events[0].id) is not None
+
+
+def test_notification_config_creation_and_validation(tmp_path) -> None:
+    repository = make_repository(tmp_path)
+    now = datetime(2026, 9, 3, tzinfo=timezone.utc)
+
+    with pytest.raises(ValueError, match="开启通知时必须指定至少一个接收邮箱"):
+        repository.create_or_restore(
+            "DMF-001",
+            24,
+            notification_enabled=True,
+            notification_emails=[],
+            now=now,
+        )
+
+    valid = repository.create_or_restore(
+        "DMF-001",
+        24,
+        notification_enabled=True,
+        notification_emails=["test@example.com"],
+        notification_mode=WatchlistNotificationMode.WEEKLY_DIGEST,
+        notification_fields={"notification_enabled", "notification_emails", "notification_mode"},
+        now=now,
+    )
+    assert valid.notification_enabled is True
+    assert valid.notification_emails == ["test@example.com"]
+    assert valid.notification_mode == WatchlistNotificationMode.WEEKLY_DIGEST.value
+
+
+def test_notification_config_update_and_validation(tmp_path) -> None:
+    repository = make_repository(tmp_path)
+    now = datetime(2026, 9, 3, tzinfo=timezone.utc)
+    watchlist = repository.create_or_restore(
+        "DMF-001",
+        24,
+        notification_enabled=True,
+        notification_emails=["test@example.com"],
+        notification_fields={"notification_enabled", "notification_emails"},
+        now=now,
+    )
+
+    # 关闭通知，原邮箱和模式保留
+    updated = repository.update(
+        watchlist.id,
+        notification_enabled=False,
+        notification_fields={"notification_enabled"},
+        now=now,
+    )
+    assert updated.notification_enabled is False
+    assert updated.notification_emails == ["test@example.com"]
+
+    # 将邮箱清空，因为 notification_enabled 为 False，允许成功保存
+    updated_emails = repository.update(
+        watchlist.id,
+        notification_emails=[],
+        notification_fields={"notification_emails"},
+        now=now,
+    )
+    assert updated_emails.notification_emails == []
+
+    # 无邮箱时重新开启通知失败
+    with pytest.raises(ValueError, match="开启通知时必须指定至少一个接收邮箱"):
+        repository.update(
+            watchlist.id,
+            notification_enabled=True,
+            notification_fields={"notification_enabled"},
+            now=now,
+        )
+
+
+def test_restore_deleted_watchlist_notification_policy(tmp_path) -> None:
+    repository = make_repository(tmp_path)
+    now = datetime(2026, 9, 3, tzinfo=timezone.utc)
+
+    # 1. 开启通知并添加关注项，后软删除
+    original = repository.create_or_restore(
+        "DMF-001",
+        24,
+        notification_enabled=True,
+        notification_emails=["team@example.com"],
+        notification_mode=WatchlistNotificationMode.WEEKLY_DIGEST,
+        notification_fields={"notification_enabled", "notification_emails", "notification_mode"},
+        now=now,
+    )
+    repository.soft_delete(original.id, now=now)
+
+    # 2. 恢复不传通知字段：配置保留原邮箱和模式，但 notification_enabled 强制为 False
+    restored_default = repository.create_or_restore("dmf-001", 24, now=now)
+    assert restored_default.id == original.id
+    assert restored_default.notification_enabled is False
+    assert restored_default.notification_emails == ["team@example.com"]
+    assert restored_default.notification_mode == WatchlistNotificationMode.WEEKLY_DIGEST.value
+
+    # 3. 再次软删除并用新通知配置恢复
+    repository.soft_delete(restored_default.id, now=now)
+    restored_new = repository.create_or_restore(
+        "DMF-001",
+        48,
+        notification_enabled=True,
+        notification_emails=["new@example.com"],
+        notification_mode=WatchlistNotificationMode.IMMEDIATE,
+        notification_fields={"notification_enabled", "notification_emails", "notification_mode"},
+        now=now,
+    )
+    assert restored_new.notification_enabled is True
+    assert restored_new.notification_emails == ["new@example.com"]
+    assert restored_new.notification_mode == WatchlistNotificationMode.IMMEDIATE.value

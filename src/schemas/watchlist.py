@@ -4,8 +4,10 @@ from __future__ import annotations
 
 from datetime import date, datetime, timezone
 from enum import StrEnum
+import re
+from typing import Self
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from src.schemas.dmf import DMFRecord
 
@@ -43,14 +45,44 @@ class WatchlistEventStatus(StrEnum):
     ACKNOWLEDGED = "acknowledged"
 
 
+class WatchlistNotificationMode(StrEnum):
+    IMMEDIATE = "immediate"
+    WEEKLY_DIGEST = "weekly_digest"
+
+
+_EMAIL_PATTERN = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+
+
 class WatchlistCreate(BaseModel):
     dmf_no: str = Field(min_length=1, max_length=255)
     interval_hours: int = Field(default=24, ge=1, le=168)
+    notification_enabled: bool | None = None
+    notification_emails: list[str] | None = None
+    notification_mode: WatchlistNotificationMode | None = None
+
+    @field_validator("notification_emails")
+    @classmethod
+    def normalize_notification_emails(cls, value: list[str] | None) -> list[str] | None:
+        return None if value is None else _normalize_notification_emails(value)
+
+    @model_validator(mode="after")
+    def validate_notification_config(self) -> Self:
+        if self.notification_enabled is True and not self.notification_emails:
+            raise ValueError("开启通知时必须指定至少一个接收邮箱")
+        return self
 
 
 class WatchlistUpdate(BaseModel):
     status: WatchlistStatus | None = None
     interval_hours: int | None = Field(default=None, ge=1, le=168)
+    notification_enabled: bool | None = None
+    notification_emails: list[str] | None = None
+    notification_mode: WatchlistNotificationMode | None = None
+
+    @field_validator("notification_emails")
+    @classmethod
+    def normalize_notification_emails(cls, value: list[str] | None) -> list[str] | None:
+        return None if value is None else _normalize_notification_emails(value)
 
 
 class WatchlistView(BaseModel):
@@ -72,6 +104,9 @@ class WatchlistView(BaseModel):
     consecutive_absent_count: int
     absence_alerted: bool
     failure_count: int
+    notification_enabled: bool
+    notification_emails: list[str]
+    notification_mode: WatchlistNotificationMode
     created_at: datetime
     updated_at: datetime
 
@@ -132,3 +167,16 @@ def _as_utc(value):
     if isinstance(value, datetime) and value.tzinfo is None:
         return value.replace(tzinfo=timezone.utc)
     return value
+
+
+def _normalize_notification_emails(value: list[str]) -> list[str]:
+    normalized: list[str] = []
+    for email in value:
+        candidate = email.strip().lower()
+        if len(candidate) > 320 or not _EMAIL_PATTERN.fullmatch(candidate):
+            raise ValueError("通知邮箱格式无效")
+        if candidate not in normalized:
+            normalized.append(candidate)
+    if len(normalized) > 20:
+        raise ValueError("通知邮箱最多支持 20 个")
+    return normalized

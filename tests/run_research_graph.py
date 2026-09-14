@@ -1,8 +1,8 @@
-from src.agent.graph import research_graph
+from src.agent.react_graph import build_react_graph
 
 
 def main():
-    result = research_graph.invoke(
+    result = build_react_graph().invoke(
         {
             "user_query": "帮我查询 Ibuprofen 的 DMF 信息",
             "warnings": [],

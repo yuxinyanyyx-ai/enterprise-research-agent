@@ -18,10 +18,12 @@ from src.schemas.watchlist import (
     WatchlistObservation,
     WatchlistRunStatus,
     WatchlistRunTrigger,
+    WatchlistNotificationMode,
     WatchlistStatus,
 )
 
 from .models import DMFWatchlist, DMFWatchlistEvent, DMFWatchlistRun
+from .notification_outbox import enqueue_delivery, event_payload, invalidate_notifications
 
 
 @dataclass(frozen=True, slots=True)
@@ -46,7 +48,15 @@ class DMFWatchlistRepository:
         self.session_factory = sessionmaker(engine, expire_on_commit=False)
 
     def create_or_restore(
-        self, dmf_no: str, interval_hours: int, *, now: datetime | None = None
+        self,
+        dmf_no: str,
+        interval_hours: int,
+        *,
+        notification_enabled: bool = False,
+        notification_emails: list[str] | None = None,
+        notification_mode: WatchlistNotificationMode = WatchlistNotificationMode.IMMEDIATE,
+        notification_fields: set[str] | None = None,
+        now: datetime | None = None,
     ) -> DMFWatchlist:
         observed_at = _utc(now)
         normalized = normalize_text(dmf_no)
@@ -62,10 +72,23 @@ class DMFWatchlistRepository:
                 existing.dmf_no = dmf_no.strip()
                 existing.status = WatchlistStatus.ACTIVE.value
                 existing.interval_hours = interval_hours
+                has_notification_fields = bool(notification_fields)
+                if has_notification_fields:
+                    existing.notification_enabled = notification_enabled
+                    if "notification_emails" in notification_fields and notification_emails is not None:
+                        existing.notification_emails = notification_emails
+                    if "notification_mode" in notification_fields:
+                        existing.notification_mode = notification_mode.value
+                else:
+                    existing.notification_enabled = False
+                _validate_notification_config(
+                    existing.notification_enabled, existing.notification_emails
+                )
                 existing.next_run_at = observed_at
                 existing.updated_at = observed_at
                 existing.deleted_at = None
                 existing.paused_at = None
+                invalidate_notifications(existing, observed_at)
                 return existing
             watchlist = DMFWatchlist(
                 id=str(uuid4()),
@@ -77,10 +100,17 @@ class DMFWatchlistRepository:
                 consecutive_absent_count=0,
                 absence_alerted=False,
                 failure_count=0,
+                notification_enabled=notification_enabled,
+                notification_emails=notification_emails or [],
+                notification_mode=notification_mode.value,
+                notification_since=observed_at,
                 created_at=observed_at,
                 updated_at=observed_at,
             )
             session.add(watchlist)
+            _validate_notification_config(
+                watchlist.notification_enabled, watchlist.notification_emails
+            )
             return watchlist
 
     def get(self, watchlist_id: str, *, include_deleted: bool = False) -> DMFWatchlist:
@@ -109,6 +139,10 @@ class DMFWatchlistRepository:
         *,
         status: WatchlistStatus | None = None,
         interval_hours: int | None = None,
+        notification_enabled: bool | None = None,
+        notification_emails: list[str] | None = None,
+        notification_mode: WatchlistNotificationMode | None = None,
+        notification_fields: set[str] | None = None,
         now: datetime | None = None,
     ) -> DMFWatchlist:
         observed_at = _utc(now)
@@ -118,13 +152,32 @@ class DMFWatchlistRepository:
                 raise WatchlistNotFoundError(watchlist_id)
             if status == WatchlistStatus.DELETED:
                 raise ValueError("请使用删除操作")
+            previous_notification = (
+                watchlist.notification_enabled, watchlist.notification_emails,
+                watchlist.notification_mode, watchlist.status,
+            )
             if interval_hours is not None:
                 watchlist.interval_hours = interval_hours
+            fields = notification_fields or set()
+            if "notification_enabled" in fields:
+                watchlist.notification_enabled = bool(notification_enabled)
+            if "notification_emails" in fields:
+                watchlist.notification_emails = notification_emails or []
+            if "notification_mode" in fields and notification_mode is not None:
+                watchlist.notification_mode = notification_mode.value
+            _validate_notification_config(
+                watchlist.notification_enabled, watchlist.notification_emails
+            )
             if status is not None:
                 watchlist.status = status.value
                 watchlist.paused_at = observed_at if status == WatchlistStatus.PAUSED else None
                 if status == WatchlistStatus.ACTIVE:
                     watchlist.next_run_at = observed_at
+            if previous_notification != (
+                watchlist.notification_enabled, watchlist.notification_emails,
+                watchlist.notification_mode, watchlist.status,
+            ):
+                invalidate_notifications(watchlist, observed_at)
             watchlist.updated_at = observed_at
             return watchlist
 
@@ -135,6 +188,7 @@ class DMFWatchlistRepository:
             if watchlist is None or watchlist.status == WatchlistStatus.DELETED.value:
                 raise WatchlistNotFoundError(watchlist_id)
             watchlist.status = WatchlistStatus.DELETED.value
+            invalidate_notifications(watchlist, observed_at)
             watchlist.deleted_at = observed_at
             watchlist.updated_at = observed_at
             watchlist.next_run_at = None
@@ -328,8 +382,7 @@ class DMFWatchlistRepository:
                     if event_type == WatchlistEventType.VALID_DATE_EXPIRED
                     else f"{run.id}:{event_type.value}"
                 )
-                session.add(
-                    DMFWatchlistEvent(
+                event = DMFWatchlistEvent(
                         id=str(uuid4()),
                         watchlist_id=watchlist.id,
                         run_id=run.id,
@@ -340,8 +393,21 @@ class DMFWatchlistRepository:
                         status=WatchlistEventStatus.UNREAD.value,
                         dedupe_key=dedupe_key,
                         created_at=observed_at,
+                        notification_generation=(
+                            watchlist.notification_generation
+                            if watchlist.notification_enabled and watchlist.status == "active"
+                            else -1
+                        ),
                     )
-                )
+                session.add(event)
+                if (
+                    event.notification_generation >= 0
+                    and watchlist.notification_mode == "immediate"
+                ):
+                    enqueue_delivery(session, watchlist, {
+                        "dmf_no": watchlist.dmf_no, "mode": "immediate",
+                        "events": [event_payload(event)],
+                    }, event.id, observed_at)
             return run
 
     def release_failed_claim(
@@ -397,3 +463,8 @@ class DMFWatchlistRepository:
 def _utc(value: datetime | None) -> datetime:
     result = value or datetime.now(timezone.utc)
     return result if result.tzinfo is not None else result.replace(tzinfo=timezone.utc)
+
+
+def _validate_notification_config(enabled: bool, emails: list[str] | None) -> None:
+    if enabled and not emails:
+        raise ValueError("开启通知时必须指定至少一个接收邮箱")

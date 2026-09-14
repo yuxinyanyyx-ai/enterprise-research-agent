@@ -8,6 +8,7 @@ from langchain_core.tools import InjectedToolArg, tool
 
 from src.export_excel.excel_exporter import export_multi_query_result
 from src.tools.registry import ToolContext, ToolRisk, register_tool
+from src.schemas.dmf import DMFSearchResult
 
 
 @tool(
@@ -24,7 +25,7 @@ def export_dmf_excel(
     """Export trusted DMF state; dmf_results is injected by the executor."""
 
     output_path = export_multi_query_result(
-        dmf_results,
+        DMFSearchResult.model_validate(dmf_results).model_dump(mode="json"),
         filename=filename or None,
     )
     return {
@@ -38,7 +39,7 @@ def export_dmf_excel(
 register_tool(
     export_dmf_excel,
     risk=ToolRisk.LOCAL_WRITE,
-    contexts={ToolContext.DMF_EXPORT},
+    contexts={ToolContext.GENERAL, ToolContext.DMF_EXPORT},
     parallel_safe=False,
     state_arguments={"dmf_results": "dmf_results"},
 )

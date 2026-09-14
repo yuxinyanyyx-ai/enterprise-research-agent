@@ -1,107 +1,175 @@
 cases:
-  - id: EXPORT-001
-    description: Export uses the real export node and reports the fake filesystem artifact
-    tags: [export]
-    fixtures:
-      intent:
-        kind: llm
-        value:
-          data_source: dmf
-          requested_outputs: [result, export]
-          ingredients: [Ibuprofen]
-      result:
-        kind: dmf_result
-        value:
-          success: true
-          message: 查询完成
-          query_count: 1
-          success_count: 1
-          failed_count: 0
-          total_records: 1
-          results:
-            - success: true
-              query: {ingredient: Ibuprofen}
-              records:
-                - dmf_no: "12345"
-                  applicant_name: Example Pharma
-                  ingredient: Ibuprofen
-                  valid_date: "2027-01-01"
-      workbook:
-        kind: export_result
-        value: agent-export.xlsx
-    turns:
-      - user_query: 查询 Ibuprofen 并导出
-        scripted_llm: [intent]
-        dmf_result: result
-        export_result: workbook
-        expected:
-          route: export_dmf_results
-          answer:
-            contains: ["12345", agent-export.xlsx]
-          artifact_types: [export_dmf_excel]
-          call_deltas: {llm: 1, dmf: 1, document_extract: 0, export: 1}
-    expected_calls: {llm: 1, dmf: 1, document_extract: 0, export: 1}
-
-  - id: EXPORT-002
-    description: Export failure preserves the query result and does not invent a file
-    tags: [export, failure]
-    fixtures:
-      intent:
-        kind: llm
-        value:
-          data_source: dmf
-          requested_outputs: [result, export]
-          ingredients: [Ibuprofen]
-      result:
-        kind: dmf_result
-        value:
-          success: true
-          message: 查询完成
-          query_count: 1
-          success_count: 1
-          failed_count: 0
-          total_records: 1
-          results:
-            - success: true
-              query: {ingredient: Ibuprofen}
-              records:
-                - dmf_no: "12345"
-                  applicant_name: Example Pharma
-                  ingredient: Ibuprofen
-                  valid_date: "2027-01-01"
-      disk_error:
-        kind: error
-        value: disk full
-    turns:
-      - user_query: 查询 Ibuprofen 并导出
-        scripted_llm: [intent]
-        dmf_result: result
-        export_result: disk_error
-        expected:
-          route: export_dmf_results
-          answer:
-            contains: ["12345", 导出失败, disk full]
-            not_contains: [agent-export.xlsx]
-          artifact_types: [export_dmf_excel]
-          call_deltas: {llm: 1, dmf: 1, document_extract: 0, export: 1}
-
-  - id: GENERAL-001
-    description: General chat uses only intent and chat LLM calls
-    tags: [general-chat]
-    fixtures:
-      intent:
-        kind: llm
-        value:
-          data_source: none
-      response:
-        kind: llm
-        value: 你好，我可以协助查询 DMF 信息。
-    turns:
-      - user_query: 你好
-        scripted_llm: [intent, response]
-        expected:
-          route: general_chat
-          answer:
-            contains: [DMF]
-          call_deltas: {llm: 2, dmf: 0, document_extract: 0, export: 0}
-    expected_calls: {llm: 2, dmf: 0, document_extract: 0, export: 0}
+- id: EXPORT-001
+  description: Export uses the real export node and reports the fake filesystem artifact
+  tags:
+  - export
+  fixtures:
+    result:
+      kind: dmf_result
+      value:
+        success: true
+        message: 查询完成
+        query_count: 1
+        success_count: 1
+        failed_count: 0
+        total_records: 1
+        results:
+        - success: true
+          query:
+            ingredient: Ibuprofen
+          records:
+          - dmf_no: '12345'
+            applicant_name: Example Pharma
+            ingredient: Ibuprofen
+            valid_date: '2027-01-01'
+          message: 查询成功
+        query: {}
+    workbook:
+      kind: export_result
+      value: agent-export.xlsx
+    react_0_0:
+      kind: llm
+      value:
+        tool_calls:
+        - name: search_dmf
+          args:
+            ingredients:
+            - Ibuprofen
+          id: EXPORT-001-0-0
+          type: tool_call
+    react_0_1:
+      kind: llm
+      value:
+        tool_calls:
+        - name: export_dmf_excel
+          args: {}
+          id: EXPORT-001-0-1
+          type: tool_call
+    react_0_2:
+      kind: llm
+      value:
+        answer_from: tool
+  turns:
+  - user_query: 查询 Ibuprofen 并导出
+    scripted_llm:
+    - react_0_0
+    - react_0_1
+    - react_0_2
+    dmf_result: result
+    export_result: workbook
+    expected:
+      route: execute_function_tools
+      answer:
+        contains:
+        - '12345'
+        - agent-export.xlsx
+      artifact_types:
+      - export_dmf_excel
+      call_deltas:
+        llm: 3
+        dmf: 1
+        document_extract: 0
+        export: 1
+      state: {}
+  expected_calls:
+    llm: 3
+    dmf: 1
+    document_extract: 0
+    export: 1
+- id: EXPORT-002
+  description: Export failure preserves the query result and does not invent a file
+  tags:
+  - export
+  - failure
+  fixtures:
+    result:
+      kind: dmf_result
+      value:
+        success: true
+        message: 查询完成
+        query_count: 1
+        success_count: 1
+        failed_count: 0
+        total_records: 1
+        results:
+        - success: true
+          query:
+            ingredient: Ibuprofen
+          records:
+          - dmf_no: '12345'
+            applicant_name: Example Pharma
+            ingredient: Ibuprofen
+            valid_date: '2027-01-01'
+          message: 查询成功
+        query: {}
+    disk_error:
+      kind: error
+      value: disk full
+    react_0_0:
+      kind: llm
+      value:
+        tool_calls:
+        - name: search_dmf
+          args:
+            ingredients:
+            - Ibuprofen
+          id: EXPORT-002-0-0
+          type: tool_call
+    react_0_1:
+      kind: llm
+      value:
+        tool_calls:
+        - name: export_dmf_excel
+          args: {}
+          id: EXPORT-002-0-1
+          type: tool_call
+  turns:
+  - user_query: 查询 Ibuprofen 并导出
+    scripted_llm:
+    - react_0_0
+    - react_0_1
+    dmf_result: result
+    export_result: disk_error
+    expected:
+      route: execute_function_tools
+      answer:
+        contains:
+        - disk full
+        not_contains:
+        - agent-export.xlsx
+      artifact_types:
+      - export_dmf_excel
+      call_deltas:
+        llm: 2
+        dmf: 1
+        document_extract: 0
+        export: 1
+      state: {}
+- id: GENERAL-001
+  description: General chat uses only intent and chat LLM calls
+  tags:
+  - general-chat
+  fixtures:
+    react_0_0:
+      kind: llm
+      value: 你好，我可以协助查询 DMF 信息。
+  turns:
+  - user_query: 你好
+    scripted_llm:
+    - react_0_0
+    expected:
+      route: react_agent
+      answer:
+        contains:
+        - DMF
+      call_deltas:
+        llm: 1
+        dmf: 0
+        document_extract: 0
+        export: 0
+      state: {}
+  expected_calls:
+    llm: 1
+    dmf: 0
+    document_extract: 0
+    export: 0

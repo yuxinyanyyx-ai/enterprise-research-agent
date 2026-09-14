@@ -16,7 +16,7 @@ def test_report_redacts_secrets_and_omits_raw_call_log(tmp_path: Path) -> None:
             TurnResult(
                 index=0,
                 state={},
-                executed_nodes=["understand_request", "general_chat"],
+                executed_nodes=["prepare_react_request", "react_agent", "finalize"],
                 pending_nodes=[],
                 interrupted=False,
                 answer=(

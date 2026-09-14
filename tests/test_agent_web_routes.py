@@ -63,6 +63,9 @@ def test_agent_session_reuses_thread_across_multiple_messages(monkeypatch) -> No
         config["configurable"]["thread_id"]
         for _, config in graph.calls
     ] == [session_id, session_id, session_id]
+    request_ids = [value["request_id"] for value, _ in graph.calls]
+    assert all(request_ids)
+    assert len(set(request_ids)) == 3
 
 
 def test_agent_sessions_use_isolated_thread_ids(monkeypatch) -> None:
@@ -89,6 +92,29 @@ def test_agent_sessions_use_isolated_thread_ids(monkeypatch) -> None:
         config["configurable"]["thread_id"]
         for _, config in graph.calls
     ] == [session_a, session_b]
+
+
+def test_export_download_is_scoped_to_session_and_directory(tmp_path, monkeypatch):
+    output_dir = tmp_path / "exports"
+    output_dir.mkdir()
+    target = output_dir / "result.xlsx"
+    target.write_bytes(b"workbook")
+    outside = tmp_path / "outside.xlsx"
+    outside.write_bytes(b"private")
+    monkeypatch.setattr(web_routes, "OUTPUT_DIR", output_dir)
+    artifact = {"tool_name": "export_dmf_excel", "result": {"success": True, "file_path": str(target)}}
+    client, graph = _new_client(monkeypatch, [{"tool_artifacts": [artifact, {
+        "tool_name": "export_dmf_excel", "result": {"success": True, "file_path": str(outside)},
+    }]}, {"tool_artifacts": [artifact]}])
+    owner = client.post("/api/agent/sessions").json()["session_id"]
+    other = client.post("/api/agent/sessions").json()["session_id"]
+    result = client.post(f"/api/agent/sessions/{owner}/messages", json={"message": "导出"}).json()
+    assert len(result["downloads"]) == 1
+    download = result["downloads"][0]
+    assert client.get(download["url"]).content == b"workbook"
+    assert client.get(f"/api/agent/sessions/{other}/files/{download['file_id']}").status_code == 404
+    repeated = client.post(f"/api/agent/sessions/{owner}/messages", json={"message": "导出"}).json()
+    assert repeated["downloads"] == []
 
 
 def test_agent_session_message_interrupt_and_resume(monkeypatch) -> None:

@@ -1,5 +1,7 @@
 from datetime import datetime
 from pathlib import Path
+import re
+from uuid import uuid4
 
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill
@@ -35,13 +37,19 @@ def export_multi_query_result(
         "%Y%m%d_%H%M%S"
     )
 
-    target_name = filename or f"dmf_results_{timestamp}.xlsx"
-    if Path(target_name).name != target_name:
+    target_name = filename or f"dmf_results_{timestamp}_{uuid4().hex}.xlsx"
+    if (Path(target_name).name != target_name or re.search(r'[<>:"/\\|?*\x00-\x1f]', target_name)
+            or target_name.endswith((".", " ")) or len(target_name) > 180
+            or re.fullmatch(r"(?i)(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\..*)?", target_name)):
         raise ValueError("导出文件名不能包含目录。")
     if not target_name.lower().endswith(".xlsx"):
         target_name = f"{target_name}.xlsx"
 
-    output_path = target_dir / target_name
+    output_path = (target_dir / target_name).resolve()
+    if not output_path.is_relative_to(target_dir.resolve()):
+        raise ValueError("导出路径必须位于导出目录。")
+    if output_path.exists():
+        output_path = output_path.with_name(f"{output_path.stem}_{uuid4().hex}.xlsx")
 
     # ==========================
     # 创建 Excel

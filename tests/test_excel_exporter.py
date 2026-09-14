@@ -1,6 +1,23 @@
+import pytest
 from openpyxl import load_workbook
 
 from src.export_excel.excel_exporter import export_multi_query_result
+
+
+@pytest.mark.parametrize("filename", ["C:\\outside.xlsx", "..\\outside.xlsx", "CON.xlsx", "bad:name.xlsx", "trailing."])
+def test_export_rejects_windows_unsafe_names(tmp_path, filename):
+    from tests.test_react_composition import result_data
+    with pytest.raises(ValueError):
+        export_multi_query_result(result_data(), output_dir=tmp_path, filename=filename)
+
+
+def test_export_does_not_overwrite_existing_filename(tmp_path):
+    from tests.test_react_composition import result_data
+    first = export_multi_query_result(result_data(), output_dir=tmp_path, filename="result.xlsx")
+    original = first.read_bytes()
+    second = export_multi_query_result(result_data(), output_dir=tmp_path, filename="result.xlsx")
+    assert first != second
+    assert first.read_bytes() == original
 
 
 def _result() -> dict:

@@ -14,6 +14,11 @@ class ToolRisk(StrEnum):
     EXTERNAL_WRITE = "external_write"
 
 
+class ToolKind(StrEnum):
+    FUNCTION = "function"
+    WORKFLOW_HANDOFF = "workflow_handoff"
+
+
 class ToolContext(StrEnum):
     GENERAL = "general"
     DMF_EXPORT = "dmf_export"
@@ -24,6 +29,7 @@ class ToolDefinition:
     tool: BaseTool
     risk: ToolRisk
     contexts: frozenset[ToolContext]
+    kind: ToolKind = ToolKind.FUNCTION
     parallel_safe: bool = False
     state_arguments: tuple[tuple[str, str], ...] = ()
 
@@ -60,6 +66,7 @@ def register_tool(
     *,
     risk: ToolRisk,
     contexts: set[ToolContext],
+    kind: ToolKind = ToolKind.FUNCTION,
     parallel_safe: bool = False,
     state_arguments: dict[str, str] | None = None,
 ) -> BaseTool:
@@ -68,6 +75,7 @@ def register_tool(
             tool=tool,
             risk=risk,
             contexts=frozenset(contexts),
+            kind=kind,
             parallel_safe=parallel_safe,
             state_arguments=tuple((state_arguments or {}).items()),
         )

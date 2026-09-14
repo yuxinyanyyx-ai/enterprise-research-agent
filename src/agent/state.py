@@ -17,6 +17,16 @@ class ResearchState(TypedDict, total=False):
     document_ids: list[str]
     requested_outputs: list[str]
 
+    watchlist_action: str
+    watchlist_id: str
+    watchlist_event_id: str
+    watchlist_interval_hours: int | None
+    watchlist_notification_enabled: bool | None
+    watchlist_notification_emails: list[str] | None
+    watchlist_notification_mode: str | None
+    watchlist_result: dict[str, Any]
+    request_id: str
+
     needs_clarification: bool
     clarification_question: str
 

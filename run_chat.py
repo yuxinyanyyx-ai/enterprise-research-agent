@@ -7,7 +7,7 @@ from uuid import uuid4
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.types import Command
 
-from src.agent.graph import build_research_graph
+from src.agent.react_graph import build_react_graph
 from src.schemas.document_dmf import DocumentArtifact
 from src.services.document_dmf_service import DocumentDMFService
 
@@ -78,7 +78,7 @@ def _resume_after_interrupt(graph, config, result, input_fn=input):
 
 
 def main():
-    graph = build_research_graph(checkpointer=InMemorySaver())
+    graph = build_react_graph(checkpointer=InMemorySaver())
     config = {"configurable": {"thread_id": str(uuid4())}}
     active_document: dict = {}
 
@@ -129,7 +129,12 @@ def main():
             result = graph.invoke(
                 {
                     "user_query": question,
-                    "document_artifact": active_document,
+                    "request_id": uuid4().hex,
+                    "document_artifacts": (
+                        {active_document["document_id"]: active_document}
+                        if active_document
+                        else {}
+                    ),
                     "document_status": (
                         active_document.get("status", "") if active_document else ""
                     ),

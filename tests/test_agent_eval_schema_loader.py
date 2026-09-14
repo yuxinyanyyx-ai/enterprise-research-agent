@@ -3,6 +3,34 @@ from pathlib import Path
 import pytest
 
 from tests.agent_eval.loader import CaseLoadError, load_cases
+from tests.agent_eval.schema import AgentCase
+
+
+def test_real_watchlist_profile_requires_live_external_access() -> None:
+    with pytest.raises(ValueError, match="requires modes"):
+        AgentCase.model_validate(
+            {
+                "id": "WATCH-REAL-001",
+                "description": "real integration",
+                "profile": "real_watchlist",
+                "modes": ["live"],
+                "allowed_external": False,
+                "turns": [{"user_query": "查看团队关注清单"}],
+            }
+        )
+
+    case = AgentCase.model_validate(
+        {
+            "id": "WATCH-REAL-001",
+            "description": "real integration",
+            "profile": "real_watchlist",
+            "modes": ["live"],
+            "allowed_external": True,
+            "turns": [{"user_query": "查看团队关注清单"}],
+        }
+    )
+
+    assert case.profile == "real_watchlist"
 
 
 VALID_CASE = """

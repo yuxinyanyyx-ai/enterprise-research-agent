@@ -70,6 +70,10 @@ python -m src.dmf_watchlist.worker
 
 Watchlist API 位于 `/api/watchlists`，支持创建、列表、暂停、恢复、软删除、手动执行、运行历史、事件列表和事件确认。当前为团队共享资源，用户级鉴权和 ACL 由部署网关负责。
 
+Agent 通过现有 LangGraph 的单一 `manage_watchlist` 节点支持六项操作：添加、删除、列表、立即检查、事件列表和事件确认。普通单项读写直接执行，不创建第二套 Workflow 或自主 Tool Loop。立即检查是同步操作，响应时间包含验证码识别、FDA 分页查询和历史入库；每条 Web/CLI 消息会生成稳定请求 ID，用于同一次立即检查重试时的幂等键。
+
+“关注刚才结果”只在当前可信结果中恰好存在一个唯一 DMF 编号时执行；存在多个编号时要求用户明确目标。列表和事件回答最多展示 10 条，完整数据仍可通过 API 获取。v1 不支持批量添加、批量删除、清空、批量确认或消息外发，不会将这些请求降级为单项操作；后续开放此类高影响操作时必须接入 LangGraph `interrupt/resume` 确认。
+
 首次完整查询查到目标 DMF 时只建立关注 baseline，不生成 `added`。首次完整查询未返回目标时计数为 1，第二次完整查询仍未返回时生成 `absent_confirmed`。手动和定时查询具有相同观察语义；失败、部分完成和未执行查询不改变未返回计数。
 
 History 的全局 baseline 与 Watchlist 游标相互独立。`SUCCESS_EMPTY` 仍不推进全局 baseline，但会作为 Watchlist 的一次完整未返回观察。事件状态首版只有 `unread` 和 `acknowledged`，重复确认是幂等操作。

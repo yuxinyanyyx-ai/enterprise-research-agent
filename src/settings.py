@@ -9,6 +9,8 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Mapping
 from urllib.parse import urlparse
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+from email.headerregistry import Address
 
 from dotenv import load_dotenv
 
@@ -127,6 +129,19 @@ class Settings:
 	dmf_watchlist_enabled: bool = False
 	dmf_watchlist_poll_seconds: int = 60
 	database_url: str = f"sqlite:///{(SOURCE_ROOT / 'storage' / 'dmf_history.db').as_posix()}"
+	notification_enabled: bool = False
+	smtp_host: str = ""
+	smtp_port: int = 587
+	smtp_user: str = ""
+	smtp_password: str = field(default="", repr=False)
+	smtp_from_email: str = ""
+	smtp_security: str = "starttls"
+	smtp_timeout_seconds: int = 30
+	notification_weekly_digest_day: int = 0
+	notification_weekly_digest_hour: int = 9
+	notification_timezone: str = "Asia/Taipei"
+	notification_max_retries: int = 3
+	notification_retry_seconds: int = 60
 
 	@property
 	def authorization_headers(self) -> dict[str, str]:
@@ -179,6 +194,36 @@ def load_settings(
 	if dmf_history_enabled and not database_url:
 		raise ConfigurationError("启用 DMF 历史功能时 DATABASE_URL 不能为空")
 
+	notification_enabled = _get_bool(source, "DMF_NOTIFICATION_ENABLED", False)
+	smtp_host = source.get("SMTP_HOST", "").strip()
+	smtp_from_email = source.get("SMTP_FROM_EMAIL", "").strip()
+	smtp_user = source.get("SMTP_USER", "").strip()
+	smtp_password = source.get("SMTP_PASSWORD", "")
+	smtp_security = source.get("SMTP_SECURITY", "starttls").strip().lower()
+	if smtp_security not in {"starttls", "ssl"}:
+		raise ConfigurationError("SMTP_SECURITY must be starttls or ssl")
+	smtp_port = _get_int(source, "SMTP_PORT", 465 if smtp_security == "ssl" else 587)
+	weekly_day = _get_int(source, "DMF_NOTIFICATION_WEEKLY_DAY", 0, minimum=0)
+	weekly_hour = _get_int(source, "DMF_NOTIFICATION_WEEKLY_HOUR", 9, minimum=0)
+	if smtp_port > 65535 or weekly_day > 6 or weekly_hour > 23:
+		raise ConfigurationError("Invalid SMTP port or weekly schedule")
+	notification_timezone = source.get("DMF_NOTIFICATION_TIMEZONE", "Asia/Taipei")
+	try:
+		ZoneInfo(notification_timezone)
+	except (ZoneInfoNotFoundError, ValueError) as exc:
+		raise ConfigurationError("Invalid DMF_NOTIFICATION_TIMEZONE") from exc
+	if notification_enabled:
+		if not dmf_watchlist_enabled or not smtp_host or not smtp_from_email:
+			raise ConfigurationError("Notifications require Watchlist, SMTP_HOST and SMTP_FROM_EMAIL")
+		try:
+			address = Address(addr_spec=smtp_from_email)
+			if not address.username or not address.domain:
+				raise ValueError("Incomplete sender")
+		except ValueError as exc:
+			raise ConfigurationError("Invalid SMTP_FROM_EMAIL") from exc
+		if bool(smtp_user) != bool(smtp_password):
+			raise ConfigurationError("SMTP_USER and SMTP_PASSWORD must be configured together")
+
 	return Settings(
 		mineru_token=token,
 		mineru_base_url=base_url,
@@ -211,6 +256,19 @@ def load_settings(
 			source, "DMF_WATCHLIST_POLL_SECONDS", 60
 		),
 		database_url=database_url,
+		notification_enabled=notification_enabled,
+		smtp_host=smtp_host,
+		smtp_port=smtp_port,
+		smtp_user=smtp_user,
+		smtp_password=smtp_password,
+		smtp_from_email=smtp_from_email,
+		smtp_security=smtp_security,
+		smtp_timeout_seconds=_get_int(source, "SMTP_TIMEOUT_SECONDS", 30),
+		notification_weekly_digest_day=weekly_day,
+		notification_weekly_digest_hour=weekly_hour,
+		notification_timezone=notification_timezone,
+		notification_max_retries=_get_int(source, "DMF_NOTIFICATION_MAX_RETRIES", 3, minimum=0),
+		notification_retry_seconds=_get_int(source, "DMF_NOTIFICATION_RETRY_SECONDS", 60),
 	)
 
 

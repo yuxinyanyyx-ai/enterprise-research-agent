@@ -14,7 +14,11 @@ pytestmark = [pytest.mark.agent_eval, pytest.mark.live_llm, pytest.mark.slow]
 CASE_DIR = Path(__file__).parent / "agent_eval" / "cases"
 LIVE_ENABLED = os.getenv("AGENT_EVAL_LIVE_LLM") == "1"
 MAX_CASES = int(os.getenv("AGENT_EVAL_MAX_CASES", "0"))
-LIVE_CASES = [case for case in load_cases(CASE_DIR) if "live" in case.modes]
+LIVE_CASES = [
+    case
+    for case in load_cases(CASE_DIR)
+    if "live" in case.modes and case.profile == "standard"
+]
 if MAX_CASES > 0:
     LIVE_CASES = LIVE_CASES[:MAX_CASES]
 

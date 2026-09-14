@@ -13,7 +13,7 @@ from uuid import uuid4
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.types import Command
 
-from src.agent import graph as graph_module
+from src.agent.react_graph import build_react_graph
 from src.services.document_dmf_service import DocumentDMFService
 from src.settings import get_settings
 from tests.agent_eval.fakes import (
@@ -21,6 +21,7 @@ from tests.agent_eval.fakes import (
     FakeDMFSearch,
     FakeDocumentExtractor,
     FakeExporter,
+    FakeWatchlistService,
     RecordingLLMFactory,
     ScriptedLLMProvider,
     UnexpectedBoundaryCall,
@@ -71,8 +72,16 @@ class AgentEvalRunner:
         self._temporary_directory = TemporaryDirectory(prefix="agent-eval-")
         self.output_dir = Path(self._temporary_directory.name)
         self.exporter = FakeExporter(self.call_log, self.output_dir)
+        self.watchlist = FakeWatchlistService(self.call_log)
 
     def close(self) -> None:
+        from src.agent import audit_log
+        with audit_log._lock:
+            if audit_log._handler_path and audit_log._handler_path.is_relative_to(self.output_dir):
+                if audit_log._handler is not None:
+                    audit_log._handler.close()
+                audit_log._handler = None
+                audit_log._handler_path = None
         self._temporary_directory.cleanup()
 
     def __enter__(self) -> "AgentEvalRunner":
@@ -100,6 +109,10 @@ class AgentEvalRunner:
             )
         if turn.export_result:
             self.exporter.enqueue(self._fixture_value(case.fixtures[turn.export_result]))
+        if turn.watchlist_result:
+            self.watchlist.enqueue(
+                self._fixture_value(case.fixtures[turn.watchlist_result])
+            )
 
     def _document_state(self, case: AgentCase) -> dict[str, dict[str, Any]]:
         artifacts: dict[str, dict[str, Any]] = {}
@@ -145,19 +158,33 @@ class AgentEvalRunner:
             stack.enter_context(patch("src.agent.nodes.create_apollo_llm", self.llm_factory))
             stack.enter_context(patch("src.tools.dmf_tools.search_dmf_queries", self.dmf))
             stack.enter_context(patch("src.agent.nodes.DocumentDMFService", document_service_factory))
-            stack.enter_context(patch("src.agent.nodes.export_multi_query_result", self.exporter))
-            graph = graph_module.build_research_graph(checkpointer=InMemorySaver())
+            stack.enter_context(patch("src.tools.export_tools.export_multi_query_result", self.exporter))
+            stack.enter_context(patch("src.agent.audit_log.LOG_DIR", self.output_dir / "agent-logs"))
+            stack.enter_context(
+                patch("src.agent.nodes.create_watchlist_service", lambda: self.watchlist)
+            )
+            graph = build_react_graph(checkpointer=InMemorySaver(), llm_factory=self.llm_factory)
 
             for index, turn in enumerate(case.turns):
                 self._enqueue_turn(case, turn)
                 before = {
                     boundary: self.call_log.count(boundary)
-                    for boundary in ("llm", "dmf", "document_extract", "export")
+                    for boundary in (
+                        "llm",
+                        "dmf",
+                        "document_extract",
+                        "export",
+                        "watchlist",
+                    )
                 }
                 if turn.resume is not None:
                     graph_input: Any = Command(resume=turn.resume)
                 else:
-                    graph_input = {"user_query": turn.user_query, "warnings": []}
+                    graph_input = {
+                        "user_query": turn.user_query,
+                        "request_id": f"{case.id}-turn-{index + 1}",
+                        "warnings": [],
+                    }
                     if index == 0:
                         graph_input.update(case.initial_state)
                         if case.documents:
@@ -195,4 +222,5 @@ class AgentEvalRunner:
         self.dmf.assert_exhausted()
         self.document_extractor.assert_exhausted()
         self.exporter.assert_exhausted()
+        self.watchlist.assert_exhausted()
         return result

@@ -3,6 +3,10 @@
 文档查询链路要求 Workflow 的输入变量名为 `markdown`，输出变量名为
 `structured_output`。
 
+Agent 通过静态 `run_document_dmf_workflow` 子图调用该提取服务，保留多文档合并、来源、缓存与人工确认。只提取时不查询；确认或编辑后执行一次批量查询，拒绝则结束。`Command(resume=...)` 始终发给外层 ReAct 并沿用同一线程。
+
+文档子图不导出 Excel，也不运行独立摘要或分析链。正常完成后返回外层，外层按用户要求调用 `export_dmf_excel` 或基于真实结果回答。文档替换或删除会使相关缓存和文档来源活动结果失效。
+
 ## 结构化输出
 
 `structured_output` 必须是对象，并包含 `queries` 数组：

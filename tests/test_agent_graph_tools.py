@@ -1,144 +1,28 @@
-from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
-from langgraph.checkpoint.memory import InMemorySaver
+from langchain_core.messages import AIMessage
 
-from src.agent import graph as graph_module
-from src.agent import nodes
-
-
-def _dmf_result() -> dict:
-    return {
-        "success": True,
-        "message": "全部查询完成",
-        "query_count": 1,
-        "success_count": 1,
-        "failed_count": 0,
-        "total_records": 1,
-        "results": [
-            {
-                "success": True,
-                "query": {"ingredient": "Ibuprofen"},
-                "records": [
-                    {
-                        "dmf_no": "12345",
-                        "applicant_name": "Example Pharma",
-                        "ingredient": "Ibuprofen",
-                        "valid_date": "2027-01-01",
-                    }
-                ],
-            }
-        ],
-    }
+from src.agent.react_graph import build_react_graph
+from tests.test_react_graph import FakeLlm
+from tests.test_react_composition import call, result_data
 
 
-def _intent(data_source: str):
-    def understand(state):
-        requested_outputs = ["result"] if data_source == "dmf" else []
-        if data_source == "dmf" and "导出" in state["user_query"]:
-            requested_outputs.append("export")
-        return {
-            "data_source": data_source,
-            "use_existing_data": False,
-            "query_document_conditions": False,
-            "requested_outputs": requested_outputs,
-            "needs_clarification": False,
-            "dmf_no": "",
-            "applicant_name": "",
-            "ingredients": ["Ibuprofen"],
-            "messages": [HumanMessage(content=state["user_query"])],
-            "tool_rounds": 0,
-            "max_tool_rounds": 8,
-            "last_tool_batch": [],
-            "tool_stop_reason": "",
-            "tool_artifacts": [],
-        }
-
-    return understand
+def test_query_then_export_runs_in_order_without_additional_approval(tmp_path, monkeypatch):
+    calls = []
+    target = tmp_path / "export.xlsx"
+    target.touch()
+    monkeypatch.setattr("src.tools.dmf_tools.search_dmf_queries", lambda **kwargs: calls.append("query") or result_data())
+    monkeypatch.setattr("src.tools.export_tools.export_multi_query_result", lambda *args, **kwargs: calls.append("export") or target)
+    responses = [call("search_dmf", "query", ingredients=["Ibuprofen"]), call("export_dmf_excel", "export"), AIMessage(content="查询并导出完成")]
+    result = build_react_graph(llm_factory=lambda: FakeLlm(responses)).invoke({"user_query": "查询 Ibuprofen 并导出"})
+    assert calls == ["query", "export"]
+    assert "__interrupt__" not in result
+    assert str(target) in result["final_answer"]
 
 
-class ExportToolModel:
-    def bind_tools(self, tools):
-        assert [item.name for item in tools] == ["export_dmf_excel"]
-        return self
-
-    def invoke(self, messages):
-        if any(isinstance(item, ToolMessage) for item in messages):
-            return AIMessage(content="导出处理完成。")
-        return AIMessage(
-            content="",
-            tool_calls=[
-                {
-                    "name": "export_dmf_excel",
-                    "args": {"filename": "agent-export"},
-                    "id": "export-1",
-                    "type": "tool_call",
-                }
-            ],
-        )
-
-
-class SearchToolModel:
-    def bind_tools(self, tools):
-        assert {item.name for item in tools} == {
-            "search_dmf",
-            "extract_document_dmf_params",
-        }
-        return self
-
-    def invoke(self, messages):
-        if any(isinstance(item, ToolMessage) for item in messages):
-            return AIMessage(content="已根据真实工具结果完成查询。")
-        return AIMessage(
-            content="",
-            tool_calls=[
-                {
-                    "name": "search_dmf",
-                    "args": {"ingredients": ["Ibuprofen"]},
-                    "id": "search-1",
-                    "type": "tool_call",
-                }
-            ],
-        )
-
-
-def test_dmf_export_executes_without_approval_and_preserves_fixed_answer(
-    tmp_path,
-    monkeypatch,
-) -> None:
-    output_path = tmp_path / "agent-export.xlsx"
-
-    def fake_export(result, *, filename=None, output_dir=None):
-        assert result == _dmf_result()
-        output_path.write_text("workbook", encoding="utf-8")
-        return output_path
-
-    monkeypatch.setattr(graph_module, "understand_request", _intent("dmf"))
-    monkeypatch.setattr(graph_module, "query_dmf", lambda state: {"dmf_results": _dmf_result()})
-    monkeypatch.setattr(nodes, "export_multi_query_result", fake_export)
-
-    graph = graph_module.build_research_graph(checkpointer=InMemorySaver())
-    completed = graph.invoke(
-        {"user_query": "查询 Ibuprofen 并导出 Excel", "warnings": []},
-        config={"configurable": {"thread_id": "export-direct"}},
-    )
-
-    assert "__interrupt__" not in completed
-    assert "| 12345 | Example Pharma | Ibuprofen | 2027-01-01 |" in completed["final_answer"]
-    assert output_path.exists()
-    assert str(output_path) in completed["final_answer"]
-
-
-def test_general_chat_does_not_call_registered_business_tools(monkeypatch) -> None:
-    class GeneralChatModel:
-        def invoke(self, messages):
-            return AIMessage(content="这是普通交流回答。")
-
-    monkeypatch.setattr(graph_module, "understand_request", _intent("none"))
-    monkeypatch.setattr(nodes, "create_apollo_llm", GeneralChatModel)
-
-    graph = graph_module.build_research_graph()
-    completed = graph.invoke({"user_query": "查一下 Ibuprofen", "warnings": []})
-
-    assert completed["final_answer"] == "这是普通交流回答。"
-    assert completed["tool_artifacts"] == []
-
-
+def test_query_and_export_in_one_batch_have_zero_side_effect(monkeypatch):
+    monkeypatch.setattr("src.tools.dmf_tools.search_dmf_queries", lambda **kwargs: (_ for _ in ()).throw(AssertionError("No query")))
+    monkeypatch.setattr("src.tools.export_tools.export_multi_query_result", lambda *args, **kwargs: (_ for _ in ()).throw(AssertionError("No export")))
+    batch = AIMessage(content="", tool_calls=[*call("search_dmf", "query", ingredients=["Ibuprofen"]).tool_calls, *call("export_dmf_excel", "export").tool_calls])
+    responses = [batch, AIMessage(content="请按顺序执行")]
+    result = build_react_graph(llm_factory=lambda: FakeLlm(responses)).invoke({"user_query": "查询 Ibuprofen 并导出", "dmf_results": result_data(), "result_id": "old"})
+    assert result["tool_artifacts"] == []
+    assert result["react_tool_rounds"] == 1

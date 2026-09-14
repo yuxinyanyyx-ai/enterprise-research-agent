@@ -1,58 +1,83 @@
 cases:
-  - id: CROSS-001
-    description: Analysis reuses the prior DMF result without another search
-    tags: [cross-turn, dmf, analysis]
-    fixtures:
-      new_query_intent:
-        kind: llm
-        value:
-          data_source: dmf
-          requested_outputs: [result]
-          ingredients: [Ibuprofen]
-      existing_analysis_intent:
-        kind: llm
-        value:
-          data_source: dmf
-          use_existing_data: true
-          requested_outputs: [analysis]
-      analysis_text:
-        kind: llm
-        value: 现有结果包含 1 条 Ibuprofen 记录。
-      result:
-        kind: dmf_result
-        value:
-          success: true
-          message: 全部查询完成
+- id: CROSS-001
+  description: Analysis reuses the prior DMF result without another search
+  tags:
+  - cross-turn
+  - dmf
+  - analysis
+  fixtures:
+    result:
+      kind: dmf_result
+      value:
+        success: true
+        message: 全部查询完成
+        query:
+          ingredients:
+          - Ibuprofen
+        query_count: 1
+        success_count: 1
+        failed_count: 0
+        total_records: 1
+        results:
+        - success: true
           query:
-            ingredients: [Ibuprofen]
-          query_count: 1
-          success_count: 1
-          failed_count: 0
-          total_records: 1
-          results:
-            - success: true
-              query: {ingredient: Ibuprofen}
-              records:
-                - dmf_no: "12345"
-                  applicant_name: Example Pharma
-                  ingredient: Ibuprofen
-                  valid_date: "2027-01-01"
-    turns:
-      - user_query: 查询 Ibuprofen
-        scripted_llm: [new_query_intent]
-        dmf_result: result
-        expected:
-          route: query_dmf
-          answer:
-            contains: ["12345"]
-          call_deltas: {llm: 1, dmf: 1, document_extract: 0, export: 0}
-      - user_query: 分析刚才的结果
-        scripted_llm: [existing_analysis_intent, analysis_text]
-        expected:
-          route: build_dmf_answer
-          state:
-            use_existing_data: true
-          answer:
-            contains: [Ibuprofen]
-          call_deltas: {llm: 2, dmf: 0, document_extract: 0, export: 0}
-    expected_calls: {llm: 3, dmf: 1, document_extract: 0, export: 0}
+            ingredient: Ibuprofen
+          records:
+          - dmf_no: '12345'
+            applicant_name: Example Pharma
+            ingredient: Ibuprofen
+            valid_date: '2027-01-01'
+          message: 查询成功
+    react_0_0:
+      kind: llm
+      value:
+        tool_calls:
+        - name: search_dmf
+          args:
+            ingredients:
+            - Ibuprofen
+          id: CROSS-001-0-0
+          type: tool_call
+    react_0_1:
+      kind: llm
+      value:
+        answer_from: tool
+    react_1_0:
+      kind: llm
+      value: 现有结果包含 1 条 Ibuprofen 记录。
+  turns:
+  - user_query: 查询 Ibuprofen
+    scripted_llm:
+    - react_0_0
+    - react_0_1
+    dmf_result: result
+    expected:
+      route: execute_function_tools
+      answer:
+        contains:
+        - '12345'
+      call_deltas:
+        llm: 2
+        dmf: 1
+        document_extract: 0
+        export: 0
+      state: {}
+  - user_query: 分析刚才的结果
+    scripted_llm:
+    - react_1_0
+    expected:
+      route: react_agent
+      state: {}
+      answer:
+        contains:
+        - Ibuprofen
+      call_deltas:
+        llm: 1
+        dmf: 0
+        document_extract: 0
+        export: 0
+  expected_calls:
+    llm: 3
+    dmf: 1
+    document_extract: 0
+    export: 0

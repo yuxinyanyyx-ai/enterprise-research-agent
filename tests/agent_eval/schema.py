@@ -17,6 +17,7 @@ class Fixture(StrictModel):
         "dmf_result",
         "document_extraction",
         "export_result",
+        "watchlist_result",
         "error",
     ]
     value: Any
@@ -42,6 +43,20 @@ class CallExpectation(StrictModel):
     dmf: int | None = Field(default=None, ge=0)
     document_extract: int | None = Field(default=None, ge=0)
     export: int | None = Field(default=None, ge=0)
+    watchlist: int | None = Field(default=None, ge=0)
+
+
+class LLMInputExpectation(StrictModel):
+    call_index: int = Field(default=0, ge=0)
+    call_type: Literal["text", "structured"] | None = None
+    max_messages: int | None = Field(default=None, ge=1)
+    max_chars: int | None = Field(default=None, ge=1)
+    max_estimated_tokens: int | None = Field(default=None, ge=1)
+    message_types: list[str] | None = None
+    contains: list[str] = Field(default_factory=list)
+    not_contains: list[str] = Field(default_factory=list)
+    current_query_verbatim: bool = False
+    tool_pairs: bool = False
 
 
 class TurnExpectation(StrictModel):
@@ -51,6 +66,7 @@ class TurnExpectation(StrictModel):
     answer: AnswerExpectation = Field(default_factory=AnswerExpectation)
     artifact_types: list[str] = Field(default_factory=list)
     call_deltas: CallExpectation = Field(default_factory=CallExpectation)
+    llm_inputs: list[LLMInputExpectation] = Field(default_factory=list)
 
 
 class AgentTurn(StrictModel):
@@ -60,6 +76,7 @@ class AgentTurn(StrictModel):
     dmf_result: str | None = None
     document_extraction: str | None = None
     export_result: str | None = None
+    watchlist_result: str | None = None
     expected: TurnExpectation = Field(default_factory=TurnExpectation)
 
     @model_validator(mode="after")
@@ -76,6 +93,7 @@ class AgentTurn(StrictModel):
                 self.dmf_result,
                 self.document_extraction,
                 self.export_result,
+                self.watchlist_result,
             )
             if name is not None
         )
@@ -86,6 +104,7 @@ class AgentCase(StrictModel):
     id: str = Field(min_length=1, pattern=r"^[A-Za-z0-9][A-Za-z0-9_.-]*$")
     description: str = Field(min_length=1)
     tags: list[str] = Field(default_factory=list)
+    profile: Literal["standard", "real_watchlist"] = "standard"
     modes: set[Literal["deterministic", "live"]] = Field(
         default_factory=lambda: {"deterministic", "live"}
     )
@@ -98,6 +117,13 @@ class AgentCase(StrictModel):
 
     @model_validator(mode="after")
     def validate_references(self) -> "AgentCase":
+        if self.profile == "real_watchlist" and (
+            self.modes != {"live"} or not self.allowed_external
+        ):
+            raise ValueError(
+                "real_watchlist profile requires modes: [live] and allowed_external: true"
+            )
+
         missing = sorted(
             {
                 fixture_name

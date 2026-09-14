@@ -8,6 +8,7 @@ from src.agent import tooling
 from src.tools.registry import (
     ToolContext,
     ToolDefinition,
+    ToolKind,
     ToolRegistry,
     ToolRisk,
 )
@@ -59,6 +60,7 @@ def test_execute_read_only_tool(monkeypatch) -> None:
     assert isinstance(message, ToolMessage)
     assert json.loads(message.content) == {"value": 5}
     assert result["tool_artifacts"][0]["result"] == {"value": 5}
+    assert result["tool_rounds"] == 1
 
 
 def test_executor_injects_trusted_state(monkeypatch) -> None:
@@ -123,6 +125,57 @@ def test_unknown_tool_returns_error_message(monkeypatch) -> None:
     assert "未注册" in message.content
 
 
+def test_invalid_tool_context_returns_error_message(monkeypatch) -> None:
+    @tool("available")
+    def available() -> dict:
+        """Return an available result."""
+        return {"success": True}
+
+    registry = _registry(
+        ToolDefinition(
+            tool=available,
+            risk=ToolRisk.READ_ONLY,
+            contexts=frozenset({ToolContext.GENERAL}),
+        )
+    )
+    monkeypatch.setattr(tooling, "load_builtin_tools", lambda: registry)
+    state = _state(_call("available", {}, "1"))
+    state["tool_context"] = "invalid"
+
+    result = tooling.execute_tools(state)
+
+    assert result["messages"][0].status == "error"
+    assert "不允许" in result["messages"][0].content
+    assert result["tool_rounds"] == 1
+
+
+def test_workflow_handoff_is_not_invoked_by_function_executor(monkeypatch) -> None:
+    invoked = False
+
+    @tool("handoff")
+    def handoff() -> str:
+        """Handoff to a workflow."""
+        nonlocal invoked
+        invoked = True
+        return "unexpected"
+
+    registry = _registry(
+        ToolDefinition(
+            tool=handoff,
+            risk=ToolRisk.LOCAL_WRITE,
+            contexts=frozenset({ToolContext.GENERAL}),
+            kind=ToolKind.WORKFLOW_HANDOFF,
+        )
+    )
+    monkeypatch.setattr(tooling, "load_builtin_tools", lambda: registry)
+
+    result = tooling.execute_tools(_state(_call("handoff", {}, "1")))
+
+    assert invoked is False
+    assert result["messages"][0].status == "error"
+    assert result["tool_rounds"] == 1
+
+
 def test_repeated_batch_stops_loop(monkeypatch) -> None:
     call = _call("missing", {"value": 1}, "1")
     state = _state(call)
@@ -141,3 +194,19 @@ def test_tool_round_limit_has_explainable_reason() -> None:
 
     assert tooling.route_after_tool_agent(state) == "limit"
     assert "8 轮上限" in tooling.mark_tool_limit(state)["tool_stop_reason"]
+
+
+def test_tool_round_limit_blocks_the_batch_after_the_allowed_round() -> None:
+    first = _state(_call("missing", {}, "1"))
+    first["max_tool_rounds"] = 1
+
+    assert tooling.route_after_tool_agent(first) == "execute"
+
+    completed = tooling.execute_tools(first)
+    second = _state(_call("missing", {}, "2"))
+    second.update(completed)
+    second["messages"] = [AIMessage(content="", tool_calls=[_call("missing", {}, "2")])]
+    second["max_tool_rounds"] = 1
+
+    assert completed["tool_rounds"] == 1
+    assert tooling.route_after_tool_agent(second) == "limit"
