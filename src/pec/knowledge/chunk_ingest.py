@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import os
+import re
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
 from src.llm.apollo import describe_image, get_access_token
 from src.pec.knowledge.paths import (
+    INDEX_DIR,
     SUPPORTED_SUFFIXES,
     normalize_source_scope,
     resolve_source_path,
@@ -23,11 +26,70 @@ class ChunkDraft:
     source_ref: str
     folder: str
     loc: str
-    method: str  # text | vision | table
+    method: str  # text | vision | vision_page | table
 
 
 def _min_slide_text() -> int:
     return int(os.getenv("MIN_SLIDE_TEXT_CHARS", "80"))
+
+
+def _vision_mode() -> str:
+    mode = (os.getenv("PEC_PPT_VISION_MODE", "smart") or "smart").strip().lower()
+    return mode if mode in {"smart", "all", "none"} else "smart"
+
+
+def _vision_max_slides() -> int:
+    return max(0, int(os.getenv("PEC_PPT_VISION_MAX_SLIDES", "0")))
+
+
+def _vision_cache_dir() -> Path:
+    return INDEX_DIR / "vision_cache"
+
+
+def _vision_model_name() -> str:
+    return (
+        os.getenv("APOLLO_PEC_VISION_MODEL")
+        or os.getenv("APOLLO_VISION_MODEL")
+        or os.getenv("APOLLO_MODEL")
+        or ""
+    ).strip()
+
+
+def _slide_number(loc: str) -> int:
+    match = re.match(r"Slide\s+(\d+)", loc, re.I)
+    return int(match.group(1)) if match else 0
+
+
+def _vision_cache_file(source_digest: str, slide_no: int) -> Path:
+    version = os.getenv("PEC_PPT_VISION_PROMPT_VERSION", "1").strip()
+    key = hashlib.sha256(
+        f"{source_digest}|{slide_no}|{_vision_model_name()}|{version}".encode()
+    ).hexdigest()
+    return _vision_cache_dir() / f"{key}.json"
+
+
+def _load_cached_vision(source_digest: str, slide_no: int) -> str | None:
+    path = _vision_cache_file(source_digest, slide_no)
+    if not path.is_file():
+        return None
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        text = str(payload.get("text") or "").strip()
+        return text or None
+    except (OSError, ValueError, TypeError):
+        return None
+
+
+def _save_cached_vision(source_digest: str, slide_no: int, text: str) -> None:
+    path = _vision_cache_file(source_digest, slide_no)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        json.dumps(
+            {"source_digest": source_digest, "slide": slide_no, "text": text},
+            ensure_ascii=False,
+        ),
+        encoding="utf-8",
+    )
 
 
 def _missing_dependency(package: str, file_type: str, exc: ImportError) -> RuntimeError:
@@ -56,24 +118,57 @@ def _serialize_table(headers: list[str], row: list[str]) -> str:
     return " | ".join(pairs)
 
 
-def _vision_slide_images(slide, access_token: str) -> str:
+def _slide_needs_vision(slide, body: str, mode: str) -> bool:
+    if mode == "all":
+        return True
+    if mode == "none":
+        return False
     try:
         from pptx.enum.shapes import MSO_SHAPE_TYPE
     except ImportError as exc:
         raise _missing_dependency("python-pptx", "PPTX", exc) from exc
-    parts: list[str] = []
-    for shape in slide.shapes:
-        if shape.shape_type != MSO_SHAPE_TYPE.PICTURE:
-            continue
-        try:
-            blob = shape.image.blob
-            content_type = getattr(shape.image, "content_type", None) or "image/png"
-            desc = describe_image(blob, mime_type=content_type, access_token=access_token)
-            if desc:
-                parts.append(desc)
-        except Exception as exc:
-            parts.append(f"[图片解析失败: {exc}]")
-    return "\n".join(parts).strip()
+    shape_types = {shape.shape_type for shape in slide.shapes}
+    complex_types = {
+        MSO_SHAPE_TYPE.PICTURE,
+        MSO_SHAPE_TYPE.GROUP,
+        MSO_SHAPE_TYPE.CHART,
+        MSO_SHAPE_TYPE.TABLE,
+    }
+    has_complex_shape = bool(shape_types & complex_types)
+    return not body or len(body) < _min_slide_text() or has_complex_shape
+
+
+def _rendered_slide_image(path: Path, source_ref: str, slide_no: int) -> Path | None:
+    # preview_build imports this module for file_sha256; import lazily to avoid a cycle.
+    from src.pec.knowledge.preview_build import get_preview_image
+
+    image, _ = get_preview_image(source_ref, f"Slide {slide_no}")
+    return image
+
+
+def _vision_slide_page(
+    path: Path,
+    source_ref: str,
+    slide_no: int,
+    source_digest: str,
+    access_token: str | None,
+) -> str | None:
+    cached = _load_cached_vision(source_digest, slide_no)
+    if cached:
+        return cached
+    image_path = _rendered_slide_image(path, source_ref, slide_no)
+    if image_path is None:
+        return None
+    token = access_token or get_access_token()
+    text = describe_image(
+        image_path.read_bytes(),
+        mime_type="image/png",
+        access_token=token,
+    ).strip()
+    if text:
+        _save_cached_vision(source_digest, slide_no, text)
+        return text
+    return None
 
 # PPT 是怎么切 Chunk
 # 有两种 Chunk：
@@ -83,7 +178,11 @@ def _vision_slide_images(slide, access_token: str) -> str:
 #   ├── 普通文本 → Slide Chunk
 #   │
 #   └── 表格 → 每一行单独一个 Table Chunk
-def _extract_pptx_chunks(path: Path, source_ref: str, access_token: str) -> list[ChunkDraft]:
+def _extract_pptx_chunks(
+    path: Path,
+    source_ref: str,
+    access_token: str | None = None,
+) -> list[ChunkDraft]:
     try:
         from pptx import Presentation
         from pptx.enum.shapes import MSO_SHAPE_TYPE
@@ -91,6 +190,9 @@ def _extract_pptx_chunks(path: Path, source_ref: str, access_token: str) -> list
         raise _missing_dependency("python-pptx", "PPTX", exc) from exc
     prs = Presentation(str(path))
     min_text = _min_slide_text()
+    vision_mode = _vision_mode()
+    source_digest = file_sha256(path)
+    vision_count = 0
     chunks: list[ChunkDraft] = []
 
     for slide_no, slide in enumerate(prs.slides, start=1):
@@ -121,11 +223,23 @@ def _extract_pptx_chunks(path: Path, source_ref: str, access_token: str) -> list
 
         body = "\n".join(texts).strip()
         method = "text"
-        if len(body) < min_text:
-            vision_text = _vision_slide_images(slide, access_token)
-            if vision_text:
-                body = vision_text if not body else f"{body}\n\n[Vision]\n{vision_text}"
-                method = "vision" if not texts else "text+vision"
+        if _slide_needs_vision(slide, body, vision_mode):
+            max_slides = _vision_max_slides()
+            if max_slides == 0 or vision_count < max_slides:
+                try:
+                    vision_text = _vision_slide_page(
+                        resolved_path := path,
+                        source_ref,
+                        slide_no,
+                        source_digest,
+                        access_token,
+                    )
+                except Exception:
+                    vision_text = None
+                if vision_text:
+                    body = vision_text if not body else f"{body}\n\n[Vision]\n{vision_text}"
+                    method = "vision_page"
+                    vision_count += 1
 
         if not body.strip():
             continue
@@ -268,8 +382,7 @@ def ingest_file(path: Path, *, access_token: str | None = None) -> list[ChunkDra
     suffix = resolved.suffix.lower()
 
     if suffix == ".pptx":
-        token = access_token or get_access_token()
-        return _extract_pptx_chunks(resolved, source_ref, token)
+        return _extract_pptx_chunks(resolved, source_ref, access_token)
     if suffix == ".docx":
         return _extract_docx_chunks(resolved, source_ref)
     if suffix == ".pdf":

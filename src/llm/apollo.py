@@ -281,7 +281,11 @@ def describe_image(
     data_url = f"data:{mime_type};base64,{base64.b64encode(image).decode('ascii')}"
     llm = create_apollo_llm(
         access_token,
-        model=(os.getenv("APOLLO_VISION_MODEL") or model_name()).strip(),
+        model=(
+            os.getenv("APOLLO_PEC_VISION_MODEL")
+            or os.getenv("APOLLO_VISION_MODEL")
+            or model_name()
+        ).strip(),
     )
     response = llm.invoke([
         HumanMessage(content=[

@@ -8,17 +8,19 @@ from threading import RLock
 from typing import Any
 from uuid import uuid4
 
-from fastapi import APIRouter, File, HTTPException, UploadFile, status
+from fastapi import APIRouter, File, HTTPException, Request, UploadFile, status
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse
-from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.types import Command
 from pydantic import BaseModel, Field
 
 from src.agent.react_graph import build_react_graph
+from src.agent.checkpoint import AgentCheckpoint
 from src.dmf_query.constant import OUTPUT_DIR
 from src.mineru.routes.convert import save_uploaded_files
 from src.services.document_dmf_service import DocumentDMFError, DocumentDMFService
+from src.agent_memory.repository import MemoryRepository
+from src.settings import load_settings
 
 
 class MessageRequest(BaseModel):
@@ -30,9 +32,16 @@ class ResumeRequest(BaseModel):
     query: dict[str, Any] | None = None
 
 
+class MemoryRequest(BaseModel):
+    content: dict[str, Any]
+    idempotency_key: str | None = None
+
+
 @dataclass
 class WebSession:
     session_id: str
+    user_id: str = ""
+    tenant_id: str = ""
     documents: dict[str, dict[str, Any]] = field(default_factory=dict)
     awaiting_resume: bool = False
     files: dict[str, Path] = field(default_factory=dict)
@@ -43,17 +52,40 @@ class AgentWebService:
     """Own process-local browser sessions and one checkpointed Agent graph."""
 
     def __init__(self) -> None:
-        self.graph = build_react_graph(checkpointer=InMemorySaver())
+        self.settings = load_settings(require_token=False)
+        self._checkpoint_context = AgentCheckpoint(self.settings)
+        memory_repository = (
+            MemoryRepository(self.settings.database_url)
+            if self.settings.agent_memory_enabled
+            else None
+        )
+        self.memory_repository = memory_repository
+        self.graph = build_react_graph(
+            checkpointer=self._checkpoint_context.__enter__(),
+            memory_repository=memory_repository,
+        )
         self.sessions: dict[str, WebSession] = {}
         self.lock = RLock()
 
-    def create_session(self) -> WebSession:
-        session = WebSession(session_id=uuid4().hex)
+    def create_session(self, *, user_id: str = "", tenant_id: str = "") -> WebSession:
+        if self.settings.agent_trust_proxy_identity and (not user_id or not tenant_id):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="缺少已认证的代理用户身份",
+            )
+        if not self.settings.agent_trust_proxy_identity:
+            user_id = ""
+            tenant_id = ""
+        session = WebSession(
+            session_id=uuid4().hex, user_id=user_id, tenant_id=tenant_id
+        )
         with self.lock:
             self.sessions[session.session_id] = session
         return session
 
-    def get_session(self, session_id: str) -> WebSession:
+    def get_session(
+        self, session_id: str, *, user_id: str = "", tenant_id: str = ""
+    ) -> WebSession:
         with self.lock:
             session = self.sessions.get(session_id)
         if session is None:
@@ -61,7 +93,37 @@ class AgentWebService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Agent 会话不存在或已失效",
             )
+        if session.user_id and (
+            session.user_id != user_id or session.tenant_id != tenant_id
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="无权访问其他用户的 Agent 会话",
+            )
         return session
+
+    def identity_from_headers(self, headers: Any) -> tuple[str, str]:
+        if not self.settings.agent_trust_proxy_identity:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="未启用可信代理身份，不能使用跨会话记忆",
+            )
+        user_id = str(headers.get(self.settings.agent_identity_user_header, "")).strip()
+        tenant_id = str(headers.get(self.settings.agent_identity_tenant_header, "")).strip()
+        if not user_id or not tenant_id:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="缺少已认证的代理用户身份",
+            )
+        return user_id, tenant_id
+
+    def require_memory_repository(self) -> MemoryRepository:
+        if self.memory_repository is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="长期记忆功能未启用",
+            )
+        return self.memory_repository
 
     def invoke(self, session: WebSession, message: str) -> dict[str, Any]:
         with session.lock:
@@ -76,6 +138,10 @@ class AgentWebService:
                     "request_id": uuid4().hex,
                     "document_artifacts": dict(session.documents),
                     "warnings": [],
+                    "memory_scope": {
+                        "user_id": session.user_id,
+                        "tenant_id": session.tenant_id,
+                    },
                 },
                 config=self._config(session),
             )
@@ -226,20 +292,102 @@ async def _append_documents(
 
 
 @router.post("/sessions", status_code=status.HTTP_201_CREATED)
-def create_session() -> dict[str, str]:
-    session = agent_web_service.create_session()
+def create_session(request: Request) -> dict[str, str]:
+    authenticated_user, authenticated_tenant = agent_web_service.identity_from_headers(
+        request.headers
+    ) if agent_web_service.settings.agent_trust_proxy_identity else ("", "")
+    session = agent_web_service.create_session(
+        user_id=authenticated_user or "", tenant_id=authenticated_tenant or ""
+    )
     return {"session_id": session.session_id}
 
 
+@router.get("/memory")
+def list_memory(request: Request) -> dict[str, Any]:
+    user_id, tenant_id = agent_web_service.identity_from_headers(request.headers)
+    repository = agent_web_service.require_memory_repository()
+    return {
+        "memories": [
+            {
+                "memory_key": memory.memory_key,
+                "memory_type": memory.memory_type,
+                "content": memory.content,
+                "version": memory.version,
+                "updated_at": memory.updated_at.isoformat(),
+            }
+            for memory in repository.list_active(
+                tenant_id=tenant_id,
+                user_id=user_id,
+                limit=agent_web_service.settings.agent_memory_max_items,
+            )
+        ]
+    }
+
+
+@router.put("/memory/{memory_key}")
+def remember(
+    memory_key: str, request: MemoryRequest, http_request: Request
+) -> dict[str, Any]:
+    user_id, tenant_id = agent_web_service.identity_from_headers(http_request.headers)
+    memory = agent_web_service.require_memory_repository().remember(
+        tenant_id=tenant_id,
+        user_id=user_id,
+        memory_key=memory_key,
+        content=request.content,
+        idempotency_key=request.idempotency_key,
+        audit_note="explicit_user_api",
+    )
+    return {
+        "memory_key": memory.memory_key,
+        "content": memory.content,
+        "version": memory.version,
+    }
+
+
+@router.delete("/memory/{memory_key}")
+def forget(memory_key: str, request: Request) -> dict[str, Any]:
+    user_id, tenant_id = agent_web_service.identity_from_headers(request.headers)
+    deleted = agent_web_service.require_memory_repository().forget(
+        tenant_id=tenant_id, user_id=user_id, memory_key=memory_key
+    )
+    if not deleted:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="记忆不存在"
+        )
+    return {"status": "deleted", "memory_key": memory_key}
+
+
 @router.post("/sessions/{session_id}/messages")
-def send_message(session_id: str, request: MessageRequest) -> dict[str, Any]:
-    session = agent_web_service.get_session(session_id)
+def send_message(
+    session_id: str,
+    request: MessageRequest,
+    http_request: Request,
+) -> dict[str, Any]:
+    authenticated_user, authenticated_tenant = (
+        agent_web_service.identity_from_headers(http_request.headers)
+        if agent_web_service.settings.agent_trust_proxy_identity
+        else ("", "")
+    )
+    session = agent_web_service.get_session(
+        session_id, user_id=authenticated_user or "", tenant_id=authenticated_tenant or ""
+    )
     return agent_web_service.invoke(session, request.message)
 
 
 @router.post("/sessions/{session_id}/resume")
-def resume_session(session_id: str, request: ResumeRequest) -> dict[str, Any]:
-    session = agent_web_service.get_session(session_id)
+def resume_session(
+    session_id: str,
+    request: ResumeRequest,
+    http_request: Request,
+) -> dict[str, Any]:
+    authenticated_user, authenticated_tenant = (
+        agent_web_service.identity_from_headers(http_request.headers)
+        if agent_web_service.settings.agent_trust_proxy_identity
+        else ("", "")
+    )
+    session = agent_web_service.get_session(
+        session_id, user_id=authenticated_user or "", tenant_id=authenticated_tenant or ""
+    )
     return agent_web_service.resume(session, request)
 
 

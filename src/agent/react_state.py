@@ -10,6 +10,8 @@ class ReactState(TypedDict, total=False):
     """Outer ReAct state with an explicit bridge to the research workflow."""
 
     user_id: str
+    memory_scope: dict[str, str]
+    long_term_memory: list[dict[str, Any]]
     user_query: str
     request_id: str
 

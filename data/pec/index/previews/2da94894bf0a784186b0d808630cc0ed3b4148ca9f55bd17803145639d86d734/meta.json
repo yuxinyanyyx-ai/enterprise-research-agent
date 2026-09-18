@@ -1,0 +1,32 @@
+{
+  "source_ref": "PEC1/Action follow up- Verducatib_PEC_Earlier NDA Submission Discussion-v2.pptx",
+  "digest": "2da94894bf0a784186b0d808630cc0ed3b4148ca9f55bd17803145639d86d734",
+  "file_type": "pptx",
+  "page_count": 4,
+  "pages": [
+    {
+      "no": 1,
+      "file": "slide_001.png",
+      "mode": "powerpoint",
+      "loc": "Slide 1"
+    },
+    {
+      "no": 2,
+      "file": "slide_002.png",
+      "mode": "powerpoint",
+      "loc": "Slide 2"
+    },
+    {
+      "no": 3,
+      "file": "slide_003.png",
+      "mode": "powerpoint",
+      "loc": "Slide 3"
+    },
+    {
+      "no": 4,
+      "file": "slide_004.png",
+      "mode": "powerpoint",
+      "loc": "Slide 4"
+    }
+  ]
+}

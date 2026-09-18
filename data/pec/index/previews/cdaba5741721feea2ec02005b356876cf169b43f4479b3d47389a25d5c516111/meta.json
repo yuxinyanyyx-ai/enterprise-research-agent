@@ -1,0 +1,44 @@
+{
+  "source_ref": "PEC1/20260423 PEC minutes.docx",
+  "digest": "cdaba5741721feea2ec02005b356876cf169b43f4479b3d47389a25d5c516111",
+  "file_type": "docx",
+  "page_count": 6,
+  "pages": [
+    {
+      "no": 1,
+      "file": "page_001.png",
+      "mode": "word",
+      "loc": "Page 1"
+    },
+    {
+      "no": 2,
+      "file": "page_002.png",
+      "mode": "word",
+      "loc": "Page 2"
+    },
+    {
+      "no": 3,
+      "file": "page_003.png",
+      "mode": "word",
+      "loc": "Page 3"
+    },
+    {
+      "no": 4,
+      "file": "page_004.png",
+      "mode": "word",
+      "loc": "Page 4"
+    },
+    {
+      "no": 5,
+      "file": "page_005.png",
+      "mode": "word",
+      "loc": "Page 5"
+    },
+    {
+      "no": 6,
+      "file": "page_006.png",
+      "mode": "word",
+      "loc": "Page 6"
+    }
+  ]
+}

@@ -126,6 +126,12 @@ class Settings:
 	result_retention_hours: int
 	keep_uploaded_files: bool
 	dmf_history_enabled: bool = False
+	agent_memory_enabled: bool = False
+	agent_memory_max_items: int = 8
+	agent_checkpoint_enabled: bool = False
+	agent_trust_proxy_identity: bool = False
+	agent_identity_user_header: str = "X-Authenticated-User"
+	agent_identity_tenant_header: str = "X-Authenticated-Tenant"
 	dmf_watchlist_enabled: bool = False
 	dmf_watchlist_poll_seconds: int = 60
 	database_url: str = f"sqlite:///{(SOURCE_ROOT / 'storage' / 'dmf_history.db').as_posix()}"
@@ -184,6 +190,18 @@ def load_settings(
 		raise ConfigurationError("MINERU_MODEL_VERSION 不能为空")
 
 	dmf_history_enabled = _get_bool(source, "DMF_HISTORY_ENABLED", False)
+	agent_memory_enabled = _get_bool(source, "AGENT_MEMORY_ENABLED", False)
+	agent_memory_max_items = _get_int(source, "AGENT_MEMORY_MAX_ITEMS", 8)
+	agent_checkpoint_enabled = _get_bool(source, "AGENT_CHECKPOINT_ENABLED", False)
+	agent_trust_proxy_identity = _get_bool(source, "AGENT_TRUST_PROXY_IDENTITY", False)
+	agent_identity_user_header = source.get(
+		"AGENT_IDENTITY_USER_HEADER", "X-Authenticated-User"
+	).strip()
+	agent_identity_tenant_header = source.get(
+		"AGENT_IDENTITY_TENANT_HEADER", "X-Authenticated-Tenant"
+	).strip()
+	if agent_trust_proxy_identity and (not agent_identity_user_header or not agent_identity_tenant_header):
+		raise ConfigurationError("代理身份 header 名称不能为空")
 	dmf_watchlist_enabled = _get_bool(source, "DMF_WATCHLIST_ENABLED", False)
 	if dmf_watchlist_enabled and not dmf_history_enabled:
 		raise ConfigurationError("启用 DMF Watchlist 时必须同时启用 DMF 历史功能")
@@ -191,8 +209,10 @@ def load_settings(
 		"DATABASE_URL",
 		f"sqlite:///{(SOURCE_ROOT / 'storage' / 'dmf_history.db').as_posix()}",
 	).strip()
-	if dmf_history_enabled and not database_url:
-		raise ConfigurationError("启用 DMF 历史功能时 DATABASE_URL 不能为空")
+	if (dmf_history_enabled or agent_memory_enabled or agent_checkpoint_enabled) and not database_url:
+		raise ConfigurationError(
+		"启用 DMF 历史、Agent 记忆或持久化 checkpoint 时 DATABASE_URL 不能为空"
+	)
 
 	notification_enabled = _get_bool(source, "DMF_NOTIFICATION_ENABLED", False)
 	smtp_host = source.get("SMTP_HOST", "").strip()
@@ -251,6 +271,12 @@ def load_settings(
 		result_retention_hours=_get_int(source, "RESULT_RETENTION_HOURS", 24),
 		keep_uploaded_files=_get_bool(source, "KEEP_UPLOADED_FILES", False),
 		dmf_history_enabled=dmf_history_enabled,
+		agent_memory_enabled=agent_memory_enabled,
+		agent_memory_max_items=agent_memory_max_items,
+		agent_checkpoint_enabled=agent_checkpoint_enabled,
+		agent_trust_proxy_identity=agent_trust_proxy_identity,
+		agent_identity_user_header=agent_identity_user_header,
+		agent_identity_tenant_header=agent_identity_tenant_header,
 		dmf_watchlist_enabled=dmf_watchlist_enabled,
 		dmf_watchlist_poll_seconds=_get_int(
 			source, "DMF_WATCHLIST_POLL_SECONDS", 60

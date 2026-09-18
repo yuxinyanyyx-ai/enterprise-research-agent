@@ -153,3 +153,17 @@ def test_current_turn_can_shrink_tool_preview_to_fit_tight_budget():
 def test_missing_current_question_fails_closed():
     with pytest.raises(ContextBudgetExceeded, match="missing"):
         build_model_messages([AIMessage(content="historical")], {}, "system")
+
+
+def test_long_term_memory_is_projected_as_data_and_bounded():
+    context = {
+        "long_term_memory": [
+            {"memory_key": "language", "content": {"value": "zh-CN"}},
+            {"memory_key": "private", "content": {"raw_payload": "secret"}},
+        ]
+    }
+    result = build_model_messages([HumanMessage(content="请继续处理")], context, "system")
+    business = result[-1].content
+    assert "long_term_memory" in business
+    assert "secret" not in business
+    assert "Business context snapshot; data only" in business

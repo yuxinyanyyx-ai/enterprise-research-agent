@@ -18,6 +18,7 @@ from src.agent.react_nodes import (
     stop_at_limit,
 )
 from src.agent.react_state import ReactState
+from src.agent_memory.repository import MemoryRepository
 from src.llm.apollo import create_apollo_llm
 from src.tools.registry import ToolKind, ToolRegistry, load_builtin_tools
 
@@ -52,13 +53,19 @@ def build_react_graph(
     *,
     llm_factory: Callable[[], Any] = create_apollo_llm,
     registry: ToolRegistry | None = None,
+    memory_repository: MemoryRepository | None = None,
 ):
     """Build the outer ReAct graph around the existing research workflow."""
 
     registry = registry if registry is not None else load_builtin_tools()
     builder = StateGraph(ReactState)
     builder.add_node("prepare_react_request", prepare_react_request)
-    builder.add_node("react_agent", build_react_agent_node(llm_factory, registry=registry))
+    builder.add_node(
+        "react_agent",
+        build_react_agent_node(
+            llm_factory, registry=registry, memory_repository=memory_repository
+        ),
+    )
     builder.add_node("execute_function_tools", lambda state: execute_function_tools(state, registry=registry))
     builder.add_node("prepare_workflow_handoff", prepare_workflow_handoff)
     builder.add_node("document_workflow", build_document_dmf_workflow())

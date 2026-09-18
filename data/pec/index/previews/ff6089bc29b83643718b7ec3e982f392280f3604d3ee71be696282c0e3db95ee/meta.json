@@ -1,0 +1,26 @@
+{
+  "source_ref": "PEC1/02 Follow up actions.pptx",
+  "digest": "ff6089bc29b83643718b7ec3e982f392280f3604d3ee71be696282c0e3db95ee",
+  "file_type": "pptx",
+  "page_count": 3,
+  "pages": [
+    {
+      "no": 1,
+      "file": "slide_001.png",
+      "mode": "powerpoint",
+      "loc": "Slide 1"
+    },
+    {
+      "no": 2,
+      "file": "slide_002.png",
+      "mode": "powerpoint",
+      "loc": "Slide 2"
+    },
+    {
+      "no": 3,
+      "file": "slide_003.png",
+      "mode": "powerpoint",
+      "loc": "Slide 3"
+    }
+  ]
+}

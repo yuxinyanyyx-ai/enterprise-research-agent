@@ -18,6 +18,7 @@ from src.agent.tooling import (
     execute_tools,
     finalize_general_answer,
 )
+from src.agent_memory.repository import MemoryRepository
 from src.llm.apollo import create_apollo_llm
 from src.tools.registry import ToolContext, ToolKind, ToolRegistry, load_builtin_tools
 
@@ -65,7 +66,12 @@ def prepare_react_request(state: ReactState) -> dict[str, Any]:
     }
 
 
-def build_react_agent_node(llm_factory: Callable[[], Any] = create_apollo_llm, *, registry: ToolRegistry | None = None):
+def build_react_agent_node(
+    llm_factory: Callable[[], Any] = create_apollo_llm,
+    *,
+    registry: ToolRegistry | None = None,
+    memory_repository: MemoryRepository | None = None,
+):
     registry = registry if registry is not None else load_builtin_tools()
     def react_agent(state: ReactState) -> dict[str, Any]:
         definitions = [item for item in registry.for_context(ToolContext.GENERAL)
@@ -78,6 +84,21 @@ def build_react_agent_node(llm_factory: Callable[[], Any] = create_apollo_llm, *
             "active_result_id": state.get("result_id", ""), "active_result": state.get("dmf_results", {}),
             "pending": state.get("domain_pending", {}), "completed_workflows": state.get("completed_workflows", []),
         }
+        memory_scope = state.get("memory_scope") or {}
+        if memory_repository is not None and memory_scope.get("tenant_id") and memory_scope.get("user_id"):
+            context["long_term_memory"] = [
+                {
+                    "memory_key": memory.memory_key,
+                    "memory_type": memory.memory_type,
+                    "content": memory.content,
+                    "updated_at": memory.updated_at.isoformat(),
+                    "context_source": "long_term_memory",
+                }
+                for memory in memory_repository.list_active(
+                    tenant_id=memory_scope["tenant_id"],
+                    user_id=memory_scope["user_id"],
+                )
+            ]
         tools = [item.tool for item in definitions]
         budget = ContextBudget.from_env()
         try:

@@ -1,0 +1,38 @@
+{
+  "source_ref": "PEC1/20260423 PEC minutes-final.pdf",
+  "digest": "4690e7604243269df34cc642dc3f2280b1db45af288d7b404b2c8c54017f86f2",
+  "file_type": "pdf",
+  "page_count": 5,
+  "pages": [
+    {
+      "no": 1,
+      "file": "page_001.png",
+      "mode": "pymupdf",
+      "loc": "Page 1"
+    },
+    {
+      "no": 2,
+      "file": "page_002.png",
+      "mode": "pymupdf",
+      "loc": "Page 2"
+    },
+    {
+      "no": 3,
+      "file": "page_003.png",
+      "mode": "pymupdf",
+      "loc": "Page 3"
+    },
+    {
+      "no": 4,
+      "file": "page_004.png",
+      "mode": "pymupdf",
+      "loc": "Page 4"
+    },
+    {
+      "no": 5,
+      "file": "page_005.png",
+      "mode": "pymupdf",
+      "loc": "Page 5"
+    }
+  ]
+}

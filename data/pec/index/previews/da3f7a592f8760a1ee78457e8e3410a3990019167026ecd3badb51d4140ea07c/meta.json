@@ -1,0 +1,38 @@
+{
+  "source_ref": "PEC1/00 PEC agenda.docx",
+  "digest": "da3f7a592f8760a1ee78457e8e3410a3990019167026ecd3badb51d4140ea07c",
+  "file_type": "docx",
+  "page_count": 5,
+  "pages": [
+    {
+      "no": 1,
+      "file": "page_001.png",
+      "mode": "word",
+      "loc": "Page 1"
+    },
+    {
+      "no": 2,
+      "file": "page_002.png",
+      "mode": "word",
+      "loc": "Page 2"
+    },
+    {
+      "no": 3,
+      "file": "page_003.png",
+      "mode": "word",
+      "loc": "Page 3"
+    },
+    {
+      "no": 4,
+      "file": "page_004.png",
+      "mode": "word",
+      "loc": "Page 4"
+    },
+    {
+      "no": 5,
+      "file": "page_005.png",
+      "mode": "word",
+      "loc": "Page 5"
+    }
+  ]
+}
