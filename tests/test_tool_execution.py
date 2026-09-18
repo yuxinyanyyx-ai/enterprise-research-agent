@@ -53,12 +53,13 @@ def _write_registry(marker: Path) -> ToolRegistry:
             tool=write_marker,
             risk=ToolRisk.LOCAL_WRITE,
             contexts=frozenset({ToolContext.GENERAL}),
+            authorize=lambda state, call: None,
         )
     )
     return registry
 
 
-def test_write_tool_executes_without_approval(tmp_path, monkeypatch) -> None:
+def test_write_tool_with_explicit_policy_executes(tmp_path, monkeypatch) -> None:
     marker = tmp_path / "written.txt"
     monkeypatch.setattr(tooling, "load_builtin_tools", lambda: _write_registry(marker))
     graph = _execution_graph()

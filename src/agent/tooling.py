@@ -14,6 +14,7 @@ from src.tools.registry import (
     ToolContext,
     ToolDefinition,
     ToolKind,
+    ToolRegistry,
     load_builtin_tools,
 )
 
@@ -117,7 +118,7 @@ def _execute_one(
     return _tool_message(call, result), artifact
 
 
-def execute_tools(state: ResearchState) -> dict[str, Any]:
+def execute_tools(state: ResearchState, *, registry: ToolRegistry | None = None) -> dict[str, Any]:
     """Execute the latest AI tool-call batch."""
 
     message_key = _message_key(state)
@@ -147,7 +148,7 @@ def execute_tools(state: ResearchState) -> dict[str, Any]:
             stop_key: reason,
         }
 
-    registry = load_builtin_tools()
+    registry = registry if registry is not None else load_builtin_tools()
     context = _tool_context(state)
     resolved: list[tuple[dict[str, Any], ToolDefinition | None]] = []
     for call in calls:
@@ -167,16 +168,17 @@ def execute_tools(state: ResearchState) -> dict[str, Any]:
     executable: list[tuple[dict[str, Any], ToolDefinition]] = []
     for call, definition in resolved:
         call_id = str(call["id"])
-        if definition is None:
+        problem = "工具未注册或不允许在当前场景使用。" if definition is None else definition.execution_problem(state, call)
+        if problem:
             write_event("tool.rejected", state, call=call, reason="not_allowed")
-            error = {"success": False, "message": "工具未注册或不允许在当前场景使用。"}
+            error = {"success": False, "message": problem}
             immediate_messages[call_id] = _tool_message(call, error, status="error")
             immediate_artifacts[call_id] = {
                 "tool_name": call["name"],
                 "tool_call_id": call["id"],
                 "result": error,
             }
-        else:
+        elif definition is not None:
             executable.append((call, definition))
 
     def run(item: tuple[dict[str, Any], ToolDefinition]):

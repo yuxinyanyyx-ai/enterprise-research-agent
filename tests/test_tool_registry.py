@@ -22,7 +22,10 @@ def test_builtin_tools_are_filtered_by_context() -> None:
         for item in registry.for_context(ToolContext.DMF_EXPORT)
     }
 
-    assert general_names == {"search_dmf", "export_dmf_excel", "run_document_dmf_workflow", "run_watchlist_workflow"}
+    assert general_names == {
+        "search_dmf", "export_dmf_excel", "run_document_dmf_workflow",
+        "run_watchlist_workflow", "search_pec_knowledge",
+    }
     assert post_process_names == {"export_dmf_excel"}
     assert registry.get("export_dmf_excel").risk is ToolRisk.LOCAL_WRITE
     assert registry.get("search_dmf").kind is ToolKind.FUNCTION

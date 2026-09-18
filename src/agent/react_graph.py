@@ -19,10 +19,10 @@ from src.agent.react_nodes import (
 )
 from src.agent.react_state import ReactState
 from src.llm.apollo import create_apollo_llm
-from src.tools.registry import ToolKind, load_builtin_tools
+from src.tools.registry import ToolKind, ToolRegistry, load_builtin_tools
 
 
-def route_after_react_agent(state: ReactState) -> str:
+def route_after_react_agent(state: ReactState, *, registry: ToolRegistry | None = None) -> str:
     messages = state.get("react_messages") or []
     last_message = messages[-1] if messages else None
     calls = last_message.tool_calls if isinstance(last_message, AIMessage) else []
@@ -33,7 +33,7 @@ def route_after_react_agent(state: ReactState) -> str:
     if len(calls) != 1 or calls[0]["name"] in state.get("completed_workflows", []):
         return "policy_error"
 
-    registry = load_builtin_tools()
+    registry = registry if registry is not None else load_builtin_tools()
     kinds: list[ToolKind | None] = []
     for call in calls:
         try:
@@ -51,13 +51,15 @@ def build_react_graph(
     checkpointer=None,
     *,
     llm_factory: Callable[[], Any] = create_apollo_llm,
+    registry: ToolRegistry | None = None,
 ):
     """Build the outer ReAct graph around the existing research workflow."""
 
+    registry = registry if registry is not None else load_builtin_tools()
     builder = StateGraph(ReactState)
     builder.add_node("prepare_react_request", prepare_react_request)
-    builder.add_node("react_agent", build_react_agent_node(llm_factory))
-    builder.add_node("execute_function_tools", execute_function_tools)
+    builder.add_node("react_agent", build_react_agent_node(llm_factory, registry=registry))
+    builder.add_node("execute_function_tools", lambda state: execute_function_tools(state, registry=registry))
     builder.add_node("prepare_workflow_handoff", prepare_workflow_handoff)
     builder.add_node("document_workflow", build_document_dmf_workflow())
     builder.add_node("watchlist_workflow", build_watchlist_workflow())
@@ -71,7 +73,7 @@ def build_react_graph(
     builder.add_edge("prepare_react_request", "react_agent")
     builder.add_conditional_edges(
         "react_agent",
-        route_after_react_agent,
+        lambda state: route_after_react_agent(state, registry=registry),
         {
             "final": "finalize",
             "functions": "execute_function_tools",

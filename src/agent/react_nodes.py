@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import re
 from typing import Any, Callable
 from uuid import uuid4
 
@@ -20,36 +19,19 @@ from src.agent.tooling import (
     finalize_general_answer,
 )
 from src.llm.apollo import create_apollo_llm
-from src.tools.registry import ToolContext, ToolRisk, load_builtin_tools
+from src.tools.registry import ToolContext, ToolKind, ToolRegistry, load_builtin_tools
 
 
-CAPABILITIES = {"search_dmf", "export_dmf_excel", "run_document_dmf_workflow", "run_watchlist_workflow"}
-
-
-def export_available(state: ReactState) -> bool:
-    result = state.get("dmf_results") or {}
-    return bool(state.get("result_id") and isinstance(result.get("results"), list) and result.get("results"))
-
-
-def function_problem(state: ReactState, call) -> str:
+def function_problem(state: ReactState, call, registry: ToolRegistry | None = None) -> str | None:
     name = call["name"]
-    if name not in {"search_dmf", "export_dmf_excel"}:
-        return "当前外层不允许该函数工具。"
-    definition = load_builtin_tools().get(name)
-    if ToolContext.GENERAL not in definition.contexts or (
-        definition.risk is not ToolRisk.READ_ONLY and name != "export_dmf_excel"
-    ):
+    registry = registry if registry is not None else load_builtin_tools()
+    try:
+        definition = registry.get(name)
+    except KeyError:
+        return "工具未注册。"
+    if ToolContext.GENERAL not in definition.contexts or definition.kind is not ToolKind.FUNCTION:
         return "工具不允许在当前场景执行。"
-    query = state.get("user_query", "").casefold()
-    if name == "export_dmf_excel":
-        if not re.search(r"导出|下载|export|download|excel|exel", query):
-            return "只有用户明确要求导出时才能生成 Excel。"
-        return "当前没有可导出的有效查询结果，请先查询。" if not export_available(state) else ""
-    args = call.get("args") or {}
-    values = [args.get("dmf_no", ""), args.get("applicant_name", ""), *(args.get("ingredients") or [])]
-    if not any(values) or any(not isinstance(value, str) or value.casefold() not in query for value in values if value):
-        return "请提供明确的查询条件；文档来源条件必须经文档 Workflow 确认。"
-    return ""
+    return definition.execution_problem(state, call)
 
 
 def prepare_react_request(state: ReactState) -> dict[str, Any]:
@@ -83,11 +65,12 @@ def prepare_react_request(state: ReactState) -> dict[str, Any]:
     }
 
 
-def build_react_agent_node(llm_factory: Callable[[], Any] = create_apollo_llm):
+def build_react_agent_node(llm_factory: Callable[[], Any] = create_apollo_llm, *, registry: ToolRegistry | None = None):
+    registry = registry if registry is not None else load_builtin_tools()
     def react_agent(state: ReactState) -> dict[str, Any]:
-        definitions = [item for item in load_builtin_tools().for_context(ToolContext.GENERAL)
-                       if item.tool.name in CAPABILITIES and item.tool.name not in state.get("completed_workflows", [])
-                       and (item.tool.name != "export_dmf_excel" or export_available(state))]
+        definitions = [item for item in registry.for_context(ToolContext.GENERAL)
+                       if item.tool.name not in state.get("completed_workflows", [])
+                       and item.availability(state)]
         context = {
             "context_source": "checkpoint", "result_source": state.get("result_source", ""),
             "documents": [{"document_id": key, "file_name": value.get("file_name", "")} for key, value in (state.get("document_artifacts") or {}).items()],
@@ -120,39 +103,31 @@ def build_react_agent_node(llm_factory: Callable[[], Any] = create_apollo_llm):
     return react_agent
 
 
-def execute_function_tools(state: ReactState) -> dict[str, Any]:
+def execute_function_tools(state: ReactState, *, registry: ToolRegistry | None = None) -> dict[str, Any]:
+    registry = registry if registry is not None else load_builtin_tools()
     call = state["react_messages"][-1].tool_calls[0]
-    problem = function_problem(state, call)
+    problem = function_problem(state, call, registry)
     if problem:
         return _reject_calls(state, problem)
+    definition = registry.get(call["name"])
     ledger = dict(state.get("function_ledger") or {})
+    state_keys = {*definition.deduplication_state, *(name for _, name in definition.state_arguments)}
     key = json.dumps({"name": call["name"], "args": call.get("args", {}),
-                      "result_id": state.get("result_id", "") if call["name"] == "export_dmf_excel" else ""}, sort_keys=True)
+                      "state": {name: state.get(name) for name in state_keys}}, sort_keys=True, default=str)
     if key in ledger:
-        if call["name"] == "search_dmf":
-            return _reject_calls(state, "本请求已执行相同查询；多次独立查询不会自动合并，请明确当前需要的结果。")
+        if not definition.reuse_result:
+            return _reject_calls(state, definition.repeat_message)
         write_event("tool.reused", state, call=call, reason="request_deduplication")
-        return {"react_messages": [ToolMessage(content=json.dumps(ledger[key], ensure_ascii=False), tool_call_id=call["id"], name=call["name"])],
+        return {"react_messages": [ToolMessage(content=json.dumps(ledger[key], ensure_ascii=False, default=str), tool_call_id=call["id"], name=call["name"])],
                 "react_tool_rounds": state.get("react_tool_rounds", 0) + 1}
     execution_state = {**state, "react_last_tool_batch": []}
-    if call["name"] == "search_dmf":
-        execution_state["dmf_results"] = {}
-    updates = execute_tools(execution_state)
+    updates = execute_tools(execution_state, registry=registry)
     artifacts = updates.get("tool_artifacts") or []
     artifact = next((item for item in reversed(artifacts) if item.get("tool_call_id") == call["id"]), {})
     result = artifact.get("result", {})
     ledger[key] = result
     updates["function_ledger"] = ledger
-    if call["name"] == "search_dmf":
-        valid = isinstance(result, dict) and isinstance(result.get("results"), list)
-        updates.update({"dmf_results": result if valid else {}, "result_id": uuid4().hex if valid else "", "result_source": "query", "domain_pending": {}})
-    failed = isinstance(result, dict) and result.get("success") is False and not (
-        result.get("success_count", 0) or any(item.get("success") or item.get("records") for item in result.get("results", []) if isinstance(item, dict))
-    )
-    if failed:
-        if call["name"] == "search_dmf":
-            updates["result_id"] = ""
-        updates["react_tool_stop_reason"] = result.get("message") or "查询或导出失败。"
+    updates.update(definition.result_adapter(state, result))
     return updates
 
 
@@ -240,7 +215,7 @@ def finalize_react_answer(state: ReactState) -> dict[str, Any]:
     result = finalize_general_answer(state)
     for artifact in state.get("tool_artifacts") or []:
         data = artifact.get("result") or {}
-        if artifact.get("tool_name") == "export_dmf_excel" and data.get("success") and data.get("file_path"):
+        if isinstance(data, dict) and data.get("success") and isinstance(data.get("file_path"), str) and data["file_path"]:
             if data["file_path"] not in result["final_answer"]:
                 result["final_answer"] += "\n" + data["file_path"]
     return result

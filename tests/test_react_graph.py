@@ -13,6 +13,7 @@ from src.agent.react_graph import build_react_graph
 from src.agent import tooling
 from src.schemas.document_dmf import ExtractedDMFQueryBatch
 from src.tools.registry import ToolContext, ToolDefinition, ToolRegistry, ToolRisk
+from src.tools.dmf_tools import apply_dmf_result
 
 
 class FakeBoundModel:
@@ -53,9 +54,9 @@ def test_explicit_single_query_uses_atomic_tool(monkeypatch) -> None:
             tool=search_dmf,
             risk=ToolRisk.READ_ONLY,
             contexts=frozenset({ToolContext.GENERAL}),
+            result_adapter=apply_dmf_result,
         )
     )
-    monkeypatch.setattr(tooling, "load_builtin_tools", lambda: registry)
     responses = [
         AIMessage(
             content="",
@@ -68,7 +69,7 @@ def test_explicit_single_query_uses_atomic_tool(monkeypatch) -> None:
         ),
         AIMessage(content="查询完成"),
     ]
-    graph = build_react_graph(llm_factory=lambda: FakeLlm(responses))
+    graph = build_react_graph(llm_factory=lambda: FakeLlm(responses), registry=registry)
 
     result = graph.invoke({"user_query": "查询 Ibuprofen", "warnings": []})
 
@@ -94,7 +95,6 @@ def test_mixed_atomic_and_workflow_calls_have_no_side_effect(monkeypatch) -> Non
             contexts=frozenset({ToolContext.GENERAL}),
         )
     )
-    monkeypatch.setattr(tooling, "load_builtin_tools", lambda: registry)
     responses = [
         AIMessage(
             content="",
@@ -102,7 +102,7 @@ def test_mixed_atomic_and_workflow_calls_have_no_side_effect(monkeypatch) -> Non
         ),
         AIMessage(content="已纠正"),
     ]
-    graph = build_react_graph(llm_factory=lambda: FakeLlm(responses))
+    graph = build_react_graph(llm_factory=lambda: FakeLlm(responses), registry=registry)
 
     result = graph.invoke({"user_query": "组合请求", "warnings": []})
 

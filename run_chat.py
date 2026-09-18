@@ -83,7 +83,7 @@ def main():
     active_document: dict = {}
 
     print("=" * 60)
-    print("DMF Research Agent")
+    print("Research Agent")
     print("你可以直接输入问题")
     print('输入 /file "文件路径" 上传并解析文档')
     print("输入 /document 查看当前文档，/clear-file 清除当前文档")
@@ -130,6 +130,7 @@ def main():
                 {
                     "user_query": question,
                     "request_id": uuid4().hex,
+                    "react_max_tool_rounds": 2,
                     "document_artifacts": (
                         {active_document["document_id"]: active_document}
                         if active_document

@@ -10,6 +10,7 @@ from src.services.document_dmf_service import DocumentDMFService
 from src.tools.registry import (
 	ToolContext,
 	ToolKind,
+	ToolRegistry,
 	ToolRisk,
 	register_tool,
 )
@@ -43,25 +44,19 @@ def run_document_dmf_workflow() -> str:
 	raise RuntimeError("Workflow handoff 必须由 LangGraph 专用子图路由执行")
 
 
-register_tool(
-	run_document_dmf_workflow,
-	risk=ToolRisk.LOCAL_WRITE,
-	contexts={ToolContext.GENERAL},
-	kind=ToolKind.WORKFLOW_HANDOFF,
-	parallel_safe=False,
-)
-
-
 @tool("run_watchlist_workflow", description="管理单个团队 DMF 关注项、查看事件、配置通知或触发检查。邮件由后台发送，不支持批量操作或立即发信。")
 def run_watchlist_workflow() -> str:
 	"""Declare a statically routed Watchlist handoff."""
 	raise RuntimeError("Workflow handoff 必须由 LangGraph 专用子图路由执行")
 
 
-register_tool(
-	run_watchlist_workflow,
-	risk=ToolRisk.LOCAL_WRITE,
-	contexts={ToolContext.GENERAL},
-	kind=ToolKind.WORKFLOW_HANDOFF,
-	parallel_safe=False,
-)
+def register_workflow_tools(registry: ToolRegistry) -> None:
+	for handoff in (run_document_dmf_workflow, run_watchlist_workflow):
+		register_tool(
+			handoff,
+			registry=registry,
+			risk=ToolRisk.LOCAL_WRITE,
+			contexts={ToolContext.GENERAL},
+			kind=ToolKind.WORKFLOW_HANDOFF,
+			parallel_safe=False,
+		)

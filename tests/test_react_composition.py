@@ -158,5 +158,5 @@ def test_successful_empty_and_partial_results_remain_exportable(monkeypatch, emp
     monkeypatch.setattr("src.tools.dmf_tools.search_dmf_queries", lambda **kwargs: data)
     responses = [call("search_dmf", "query", ingredients=["Ibuprofen"]), AIMessage(content="查询状态已返回")]
     result = build_react_graph(llm_factory=lambda: FakeLlm(responses)).invoke({"user_query": "查询 Ibuprofen"})
-    from src.agent.react_nodes import export_available
+    from src.tools.export_tools import export_available
     assert export_available(result)
