@@ -15,12 +15,16 @@ PEC 查询能力通过普通 Agent Tool `search_pec_knowledge` 注册。索引�
 可选配置：
 
 - `APOLLO_VISION_MODEL`：未配置时使用 `APOLLO_MODEL`
+- `APOLLO_PEC_VISION_MODEL`：PEC 页面 Vision 专用模型，优先级高于 `APOLLO_VISION_MODEL`
 - `APOLLO_RERANK_URL`：可选覆盖；默认使用 `${APOLLO_BASE_URL}/rerank`
 - `APOLLO_VERIFY_SSL`：`true`、`false` 或 CA bundle 路径
 - `PEC_KNOWLEDGE_ROOT`：默认 `data/pec`
 - `PEC_TOPICS_DB`：默认 `<PEC_KNOWLEDGE_ROOT>/index/pec_topics.db`
 - `PREVIEW_ON_INDEX`：默认开启；预览失败不阻断文本索引
 - `RERANK_MIN_SCORE`：默认 `0.4`
+- `PEC_PPT_VISION_MODE`：`smart`（默认）、`all` 或 `none`
+- `PEC_PPT_VISION_MAX_SLIDES`：单个 PPT 最多调用 Vision 的页数，默认 `0` 表示不限制
+- `PEC_PPT_VISION_PROMPT_VERSION`：Vision 缓存版本，提示词变化时递增，默认 `1`
 
 ## 建立索引
 
@@ -35,6 +39,8 @@ python -m src.pec.knowledge.chunk_index status
 索引产物为 `manifest.json`、`chunks.jsonl` 和 `embeddings.npy`。未变化 chunk 会复用已有向量；embedding 模型变化会触发全量重建。更新失败时保留上一份完整快照。
 
 页面预览依赖 PyMuPDF、Pillow，以及可选的 PowerPoint/Word 或 LibreOffice。没有这些系统组件时，文本索引和查询仍可运行。
+
+PPT 视觉抽取按整页 PNG 调用 Vision，而不是对页面内每张图片分别调用。`smart` 模式只处理无文本、文本不足或包含图片/组合图形/图表/原生表格的高风险页面；`all` 模式用于高价值资料或离线召回率对照；`none` 模式只保留原生文本和表格抽取。页面结果按源文件摘要、页码、模型和提示词版本缓存，重复索引不会重复调用未变化页面。单页 Vision 失败时保留原生抽取结果。
 
 ## 构建 Topics 结构化检索
 

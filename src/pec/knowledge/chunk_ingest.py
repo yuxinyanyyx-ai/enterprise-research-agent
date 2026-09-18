@@ -138,8 +138,7 @@ def _slide_needs_vision(slide, body: str, mode: str) -> bool:
     return not body or len(body) < _min_slide_text() or has_complex_shape
 
 
-def _rendered_slide_image(path: Path, source_ref: str, slide_no: int) -> Path | None:
-    # preview_build imports this module for file_sha256; import lazily to avoid a cycle.
+def _rendered_slide_image(source_ref: str, slide_no: int) -> Path | None:
     from src.pec.knowledge.preview_build import get_preview_image
 
     image, _ = get_preview_image(source_ref, f"Slide {slide_no}")
@@ -156,7 +155,7 @@ def _vision_slide_page(
     cached = _load_cached_vision(source_digest, slide_no)
     if cached:
         return cached
-    image_path = _rendered_slide_image(path, source_ref, slide_no)
+    image_path = _rendered_slide_image(source_ref, slide_no)
     if image_path is None:
         return None
     token = access_token or get_access_token()
@@ -228,7 +227,7 @@ def _extract_pptx_chunks(
             if max_slides == 0 or vision_count < max_slides:
                 try:
                     vision_text = _vision_slide_page(
-                        resolved_path := path,
+                        path,
                         source_ref,
                         slide_no,
                         source_digest,
@@ -243,7 +242,7 @@ def _extract_pptx_chunks(
 
         if not body.strip():
             continue
-        if len(body) >= min_text or method in {"vision", "text+vision"}:
+        if len(body) >= min_text or method in {"vision", "vision_page", "text+vision"}:
             chunks.append(
                 ChunkDraft(
                     chunk_id=_make_chunk_id(source_ref, loc, body),

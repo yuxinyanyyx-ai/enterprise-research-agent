@@ -350,11 +350,11 @@ def update_knowledge_index(
                     print(f"    预览生成失败: {exc}")
                     preview_meta = {"enabled": True, "error": str(exc), "pages": []}
 
-                    chunks = _remove_file_chunks(chunks, source_ref)
-                    print(f"  抽取: {source_ref}")
-                    drafts = ingest_file(path)
-                    chunks.extend(chunk_draft_to_dict(draft) for draft in drafts)
-                    new_chunk_count += len(drafts)
+            chunks = _remove_file_chunks(chunks, source_ref)
+            print(f"  抽取: {source_ref}")
+            drafts = ingest_file(path)
+            chunks.extend(chunk_draft_to_dict(draft) for draft in drafts)
+            new_chunk_count += len(drafts)
 
             files_meta[source_ref] = {
                 "sha256": digest,

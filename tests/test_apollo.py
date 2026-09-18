@@ -187,3 +187,23 @@ def test_describe_image_uses_vision_model_and_data_url(monkeypatch) -> None:
     assert seen["model"] == "vision-model"
     image_url = seen["messages"][0].content[1]["image_url"]["url"]
     assert image_url.startswith("data:image/png;base64,")
+
+
+def test_describe_image_prefers_pec_vision_model(monkeypatch) -> None:
+    monkeypatch.setenv("APOLLO_PEC_VISION_MODEL", "pec-vision-model")
+    monkeypatch.setenv("APOLLO_VISION_MODEL", "vision-model")
+    seen = {}
+
+    class FakeLlm:
+        def invoke(self, messages):
+            return type("Response", (), {"content": "content"})()
+
+    monkeypatch.setattr(
+        apollo,
+        "create_apollo_llm",
+        lambda token, *, model=None: seen.update(model=model) or FakeLlm(),
+    )
+
+    apollo.describe_image(b"image", mime_type="image/png", access_token="token")
+
+    assert seen["model"] == "pec-vision-model"
