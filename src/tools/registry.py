@@ -88,6 +88,12 @@ class ToolRegistry:
             if context in definition.contexts
         ]
 
+    def clone(self) -> ToolRegistry:
+        cloned = ToolRegistry()
+        for definition in self._definitions.values():
+            cloned.register(definition)
+        return cloned
+
 
 ToolProvider = Callable[[ToolRegistry], None]
 _builtin_registry: ToolRegistry | None = None

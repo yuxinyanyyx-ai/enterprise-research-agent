@@ -77,11 +77,23 @@ def build_react_agent_node(
         definitions = [item for item in registry.for_context(ToolContext.GENERAL)
                        if item.tool.name not in state.get("completed_workflows", [])
                        and item.availability(state)]
+        active_result = state.get("dmf_results") or {}
+        active_result_summary = {}
+        if isinstance(active_result, dict):
+            active_result_summary = {
+                key: active_result[key]
+                for key in ("success", "status", "message", "total_records", "count")
+                if key in active_result
+            }
+            for key in ("results", "records"):
+                value = active_result.get(key)
+                if isinstance(value, list):
+                    active_result_summary[f"{key}_count"] = len(value)
         context = {
             "context_source": "checkpoint", "result_source": state.get("result_source", ""),
             "documents": [{"document_id": key, "file_name": value.get("file_name", "")} for key, value in (state.get("document_artifacts") or {}).items()],
             "extracted_conditions": state.get("merged_document_query", {}),
-            "active_result_id": state.get("result_id", ""), "active_result": state.get("dmf_results", {}),
+            "active_result_id": state.get("result_id", ""), "active_result": active_result_summary,
             "pending": state.get("domain_pending", {}), "completed_workflows": state.get("completed_workflows", []),
         }
         memory_scope = state.get("memory_scope") or {}
@@ -107,11 +119,15 @@ def build_react_agent_node(
             write_event("context.rejected", state, reason="input_budget_exceeded")
             return {"react_messages": [AIMessage(content="当前请求或必要工具上下文过长，请缩短问题或分批提交。")],
                     "react_tool_stop_reason": "input_budget_exceeded"}
-            write_event("context.prepared", state,
-                    estimated_input_tokens=estimate_input_tokens(messages, [convert_to_openai_tool(tool) for tool in tools]),
-                    input_budget_tokens=budget.input_tokens,
-                    source_message_count=len(state.get("react_messages") or []),
-                    sent_message_count=len(messages))
+        write_event("context.prepared", state,
+                estimated_input_tokens=estimate_input_tokens(messages, [convert_to_openai_tool(tool) for tool in tools]),
+                input_budget_tokens=budget.input_tokens,
+                source_message_count=len(state.get("react_messages") or []),
+                sent_message_count=len(messages),
+                context_view="artifact_index" if any(
+                isinstance(message, ToolMessage) and "artifact_index" in str(message.content)
+                for message in messages
+                ) else "full_or_preview")
         with trace_operation(state, operation="react.model"):
             model = llm_factory().bind_tools(tools)
             response = model.invoke(messages)

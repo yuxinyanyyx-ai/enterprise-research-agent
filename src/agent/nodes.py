@@ -1,12 +1,10 @@
 from __future__ import annotations
 
-import json
 import logging
 import re
-import time
 from typing import Any
 
-from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+from langchain_core.messages import AIMessage
 from langgraph.types import interrupt
 
 from src.agent.audit_log import trace_operation, write_event
@@ -35,20 +33,6 @@ from src.dmf_watchlist.service import (
 
 logger = logging.getLogger(__name__)
 
-AGENT_SYSTEM_PROMPT = """
-你是 DMF Research Agent。
-
-你可以使用提供给你的工具完成用户请求。
-
-规则：
-1. 如果用户需要查询真实 DMF 数据，必须使用 search_dmf 工具。
-2. 普通知识问题、解释性问题和日常交流，不需要调用工具。
-3. 不要根据模型记忆编造 DMF 查询结果。
-4. 如果已经获得工具返回的数据，应根据真实工具结果回答用户。
-5. 如果还需要额外工具信息，可以继续调用工具。
-6. 如果用户要求查询结果你提取不到，应明确说明情况，不要盲目分析。
-7. 明确用户查询，不要乱复用上一轮的查询结果
-"""
 OUTPUT_ORDER = ("result", "summary", "analysis")
 REQUESTED_OUTPUT_ORDER = (*OUTPUT_ORDER, "export")
 DEFAULT_CLARIFICATION = (
@@ -90,11 +74,6 @@ def _notification_summary(row) -> str:
     mode_text = "每周汇总" if mode == "weekly_digest" else "有变化时通知"
     enabled = "开启" if getattr(row, "notification_enabled", False) else "关闭"
     return f"通知：{enabled}；模式：{mode_text}；收件邮箱：{masked}。"
-
-
-def _print_elapsed(name: str, start: float) -> None:
-    elapsed = time.perf_counter() - start
-    print(f"[耗时] {name}: {elapsed:.2f}s")
 
 
 def _normalize_requested_outputs(

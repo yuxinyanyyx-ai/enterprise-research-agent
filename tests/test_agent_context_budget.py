@@ -47,6 +47,57 @@ def test_large_result_preserves_tool_pair_and_full_state():
     assert state == original
 
 
+def test_evidence_projection_preserves_source_completeness_flags():
+    data = {"evidence": [{
+        "evidence_type": "decision", "text": "source text " * 500,
+        "complete": True, "truncated": False,
+    }]}
+    messages = [HumanMessage(content="query"), AIMessage(content="", tool_calls=[
+        {"name": "search_pec_knowledge", "args": {}, "id": "call-1", "type": "tool_call"}
+    ]), ToolMessage(content=json.dumps(data), tool_call_id="call-1", name="search_pec_knowledge")]
+
+    result = build_model_messages(
+        messages, {}, "system",
+        budget=ContextBudget(window_tokens=1600, output_tokens=200, safety_tokens=200),
+    )
+    evidence = json.loads(result[-2].content)["evidence"][0]
+
+    assert evidence["complete"] is True
+    assert evidence["truncated"] is False
+    assert evidence["context_view"] == "preview"
+    assert evidence["context_truncated"] is True
+
+
+def test_small_current_tool_result_is_sent_without_projection():
+    data = {"success": True, "records": [{"dmf_no": "DMF-1", "status": "active"}]}
+    messages = [HumanMessage(content="query"), AIMessage(content="", tool_calls=[
+        {"name": "search_dmf", "args": {}, "id": "call-1", "type": "tool_call"}
+    ]), ToolMessage(content=json.dumps(data), tool_call_id="call-1", name="search_dmf")]
+
+    result = build_model_messages(messages, {}, "system")
+
+    assert json.loads(result[3].content) == data
+
+
+def test_large_artifact_result_uses_reference_when_current_budget_is_tight():
+    data = {"success": True, "records": [{"secret": "hidden " * 200} for _ in range(100)]}
+    artifact_ref = {"artifact_id": "artifact-1", "size_bytes": 100000}
+    messages = [HumanMessage(content="query"), AIMessage(content="", tool_calls=[
+        {"name": "search_dmf", "args": {}, "id": "call-1", "type": "tool_call"}
+    ]), ToolMessage(content=json.dumps(data), tool_call_id="call-1", name="search_dmf",
+                    additional_kwargs={"artifact_ref": artifact_ref})]
+    budget = ContextBudget(window_tokens=1600, output_tokens=200, safety_tokens=200)
+
+    result = build_model_messages(messages, {}, "system", budget=budget)
+    preview = json.loads(result[-2].content)
+
+    assert preview["artifact_ref"] == artifact_ref
+    assert preview["artifact_available"] is True
+    assert preview["context_view"] == "artifact_index"
+    assert preview["read_required"] is True
+    assert "hidden" not in str(preview)
+
+
 @pytest.mark.parametrize("query", ["x" * 100000, "\u4e2d" * 10000], ids=["english", "chinese"])
 def test_oversize_current_question_is_rejected_not_truncated(query):
     with pytest.raises(ContextBudgetExceeded):

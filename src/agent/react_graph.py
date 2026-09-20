@@ -34,7 +34,6 @@ def route_after_react_agent(state: ReactState, *, registry: ToolRegistry | None 
     if len(calls) != 1 or calls[0]["name"] in state.get("completed_workflows", []):
         return "policy_error"
 
-    registry = registry if registry is not None else load_builtin_tools()
     kinds: list[ToolKind | None] = []
     for call in calls:
         try:
@@ -57,7 +56,11 @@ def build_react_graph(
 ):
     """Build the outer ReAct graph around the existing research workflow."""
 
-    registry = registry if registry is not None else load_builtin_tools()
+    registry = (registry if registry is not None else load_builtin_tools()).clone()
+    if memory_repository is not None:
+        from src.tools.memory_tools import register_memory_tools
+
+        register_memory_tools(registry, memory_repository)
     builder = StateGraph(ReactState)
     builder.add_node("prepare_react_request", prepare_react_request)
     builder.add_node(

@@ -1,0 +1,26 @@
+{
+  "source_ref": "MAP 2025 May/202505 MAP meeting minutes-Final.pdf",
+  "digest": "ee69c224a8afa49dd47b4f60eca4617d312632d3306fe4afa84a4a906dc219eb",
+  "file_type": "pdf",
+  "page_count": 3,
+  "pages": [
+    {
+      "no": 1,
+      "file": "page_001.png",
+      "mode": "pymupdf",
+      "loc": "Page 1"
+    },
+    {
+      "no": 2,
+      "file": "page_002.png",
+      "mode": "pymupdf",
+      "loc": "Page 2"
+    },
+    {
+      "no": 3,
+      "file": "page_003.png",
+      "mode": "pymupdf",
+      "loc": "Page 3"
+    }
+  ]
+}

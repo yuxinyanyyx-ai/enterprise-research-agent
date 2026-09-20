@@ -23,13 +23,19 @@ def test_builtin_tools_are_filtered_by_context() -> None:
     }
 
     assert general_names == {
-        "search_dmf", "export_dmf_excel", "run_document_dmf_workflow",
-        "run_watchlist_workflow", "search_pec_knowledge",
+        "search_dmf", "read_tool_artifact", "export_dmf_excel",
+        "run_document_dmf_workflow", "run_watchlist_workflow",
+        "search_pec_knowledge",
     }
     assert post_process_names == {"export_dmf_excel"}
     assert registry.get("export_dmf_excel").risk is ToolRisk.LOCAL_WRITE
     assert registry.get("search_dmf").kind is ToolKind.FUNCTION
     assert registry.get("search_dmf").risk is ToolRisk.READ_ONLY
+    assert registry.get("read_tool_artifact").risk is ToolRisk.READ_ONLY
+    assert "request_id" not in registry.get("read_tool_artifact").tool.args
+    assert registry.get("read_tool_artifact").state_arguments == (
+        ("request_id", "request_id"),
+    )
     assert registry.get("run_document_dmf_workflow").kind is ToolKind.WORKFLOW_HANDOFF
     assert registry.get("run_watchlist_workflow").kind is ToolKind.WORKFLOW_HANDOFF
     with pytest.raises(KeyError):

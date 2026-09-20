@@ -1,0 +1,26 @@
+{
+  "source_ref": "MAP 2025 May/202505 MAP Meeting minutes-draft.docx",
+  "digest": "eb5bcf83e011ba02556f831385732e54cca5522e2a3c86a168b92fb3a526d7a6",
+  "file_type": "docx",
+  "page_count": 3,
+  "pages": [
+    {
+      "no": 1,
+      "file": "page_001.png",
+      "mode": "word",
+      "loc": "Page 1"
+    },
+    {
+      "no": 2,
+      "file": "page_002.png",
+      "mode": "word",
+      "loc": "Page 2"
+    },
+    {
+      "no": 3,
+      "file": "page_003.png",
+      "mode": "word",
+      "loc": "Page 3"
+    }
+  ]
+}

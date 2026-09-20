@@ -1,0 +1,20 @@
+{
+  "source_ref": "PEC2/02. Action items tracking_PEC_Apr 2024.pptx",
+  "digest": "e558d48513af5a318585aa6bb66d763bf82bab16edb60380af405f2813660bad",
+  "file_type": "pptx",
+  "page_count": 2,
+  "pages": [
+    {
+      "no": 1,
+      "file": "slide_001.png",
+      "mode": "powerpoint",
+      "loc": "Slide 1"
+    },
+    {
+      "no": 2,
+      "file": "slide_002.png",
+      "mode": "powerpoint",
+      "loc": "Slide 2"
+    }
+  ]
+}

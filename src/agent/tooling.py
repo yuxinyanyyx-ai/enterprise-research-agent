@@ -9,6 +9,7 @@ from typing import Any
 from langchain_core.messages import AIMessage, ToolMessage
 
 from src.agent.audit_log import trace_operation, write_event
+from src.agent.artifact_store import store_artifact
 from src.agent.state import ResearchState
 from src.tools.registry import (
     ToolContext,
@@ -70,6 +71,7 @@ def _tool_message(
     result: Any,
     *,
     status: str = "success",
+    artifact_ref: dict[str, Any] | None = None,
 ) -> ToolMessage:
     content = json.dumps(result, ensure_ascii=False, default=str)
     return ToolMessage(
@@ -77,6 +79,7 @@ def _tool_message(
         tool_call_id=str(call["id"]),
         name=str(call["name"]),
         status=status,
+        additional_kwargs={"artifact_ref": artifact_ref} if artifact_ref else {},
     )
 
 
@@ -89,10 +92,17 @@ def _execute_one(
     for argument_name, state_name in definition.state_arguments:
         if state_name not in state:
             error = {"success": False, "message": f"缺少工具上下文：{state_name}"}
-            return _tool_message(call, error, status="error"), {
+            artifact_ref = store_artifact(
+                error,
+                request_id=str(state.get("request_id", "")),
+                tool_name=str(call["name"]),
+                tool_call_id=str(call["id"]),
+            )
+            return _tool_message(call, error, status="error", artifact_ref=artifact_ref), {
                 "tool_name": call["name"],
                 "tool_call_id": call["id"],
                 "result": error,
+                "artifact_ref": artifact_ref,
             }
         args[argument_name] = state[state_name]
 
@@ -104,18 +114,32 @@ def _execute_one(
             "message": f"工具执行失败：{exc}",
             "error_type": type(exc).__name__,
         }
-        return _tool_message(call, error, status="error"), {
+        artifact_ref = store_artifact(
+            error,
+            request_id=str(state.get("request_id", "")),
+            tool_name=str(call["name"]),
+            tool_call_id=str(call["id"]),
+        )
+        return _tool_message(call, error, status="error", artifact_ref=artifact_ref), {
             "tool_name": call["name"],
             "tool_call_id": call["id"],
             "result": error,
+            "artifact_ref": artifact_ref,
         }
 
+    artifact_ref = store_artifact(
+        result,
+        request_id=str(state.get("request_id", "")),
+        tool_name=str(call["name"]),
+        tool_call_id=str(call["id"]),
+    )
     artifact = {
         "tool_name": call["name"],
         "tool_call_id": call["id"],
         "result": result,
+        "artifact_ref": artifact_ref,
     }
-    return _tool_message(call, result), artifact
+    return _tool_message(call, result, artifact_ref=artifact_ref), artifact
 
 
 def execute_tools(state: ResearchState, *, registry: ToolRegistry | None = None) -> dict[str, Any]:

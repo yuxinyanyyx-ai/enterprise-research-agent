@@ -1,0 +1,32 @@
+{
+  "source_ref": "PEC2/01. 20240425 PEC Review Meeting agenda.docx",
+  "digest": "a45b6802472472a47c8e7d9eb818e31d7706bd62d9c7439a1a466ee325d56d89",
+  "file_type": "docx",
+  "page_count": 4,
+  "pages": [
+    {
+      "no": 1,
+      "file": "page_001.png",
+      "mode": "word",
+      "loc": "Page 1"
+    },
+    {
+      "no": 2,
+      "file": "page_002.png",
+      "mode": "word",
+      "loc": "Page 2"
+    },
+    {
+      "no": 3,
+      "file": "page_003.png",
+      "mode": "word",
+      "loc": "Page 3"
+    },
+    {
+      "no": 4,
+      "file": "page_004.png",
+      "mode": "word",
+      "loc": "Page 4"
+    }
+  ]
+}

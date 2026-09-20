@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 from langchain_core.messages import AIMessage
@@ -5,6 +6,7 @@ from langchain_core.tools import tool
 from langgraph.graph import END, START, StateGraph
 
 from src.agent import tooling
+from src.agent.artifact_store import load_artifact, store_artifact
 from src.agent.state import ResearchState
 from src.tools.registry import (
     ToolContext,
@@ -61,6 +63,7 @@ def _write_registry(marker: Path) -> ToolRegistry:
 
 def test_write_tool_with_explicit_policy_executes(tmp_path, monkeypatch) -> None:
     marker = tmp_path / "written.txt"
+    monkeypatch.setenv("AGENT_ARTIFACT_DIR", str(tmp_path / "artifacts"))
     monkeypatch.setattr(tooling, "load_builtin_tools", lambda: _write_registry(marker))
     graph = _execution_graph()
 
@@ -70,6 +73,11 @@ def test_write_tool_with_explicit_policy_executes(tmp_path, monkeypatch) -> None
 
     assert marker.read_text(encoding="utf-8") == "ok"
     assert completed["tool_artifacts"][0]["tool_name"] == "write_marker"
+    artifact_ref = completed["tool_artifacts"][0]["artifact_ref"]
+    assert load_artifact(artifact_ref["artifact_id"], request_id="") == {
+        "success": True,
+        "path": str(marker),
+    }
     assert "__interrupt__" not in completed
 
 
@@ -109,3 +117,49 @@ def test_mixed_batch_executes_read_and_write_tools(tmp_path, monkeypatch) -> Non
         "read_value",
         "write_marker",
     ]
+
+
+def test_read_tool_artifact_uses_registered_tool_and_state_request_id(tmp_path, monkeypatch) -> None:
+    monkeypatch.setenv("AGENT_ARTIFACT_DIR", str(tmp_path / "artifacts"))
+    artifact_ref = store_artifact(
+        {"records": [{"id": 1}, {"id": 2}]},
+        request_id="request-1",
+        tool_name="source_tool",
+        tool_call_id="source-1",
+    )
+    graph = _execution_graph()
+
+    completed = graph.invoke({
+        "messages": [AIMessage(content="", tool_calls=[_call(
+            "read_tool_artifact",
+            {
+                "artifact_id": artifact_ref["artifact_id"],
+                "key": "records",
+                "offset": 1,
+                "limit": 1,
+                "request_id": "forged-request",
+            },
+            "read-1",
+        )])],
+        "request_id": "request-1",
+        "tool_context": ToolContext.GENERAL.value,
+        "tool_artifacts": [],
+        "last_tool_batch": [],
+    })
+
+    payload = json.loads(completed["messages"][-1].content)
+    assert payload["success"] is True
+    assert payload["items"] == [{"id": 2}]
+
+    denied = graph.invoke({
+        "messages": [AIMessage(content="", tool_calls=[_call(
+            "read_tool_artifact",
+            {"artifact_id": artifact_ref["artifact_id"]},
+            "read-2",
+        )])],
+        "request_id": "request-2",
+        "tool_context": ToolContext.GENERAL.value,
+        "tool_artifacts": [],
+        "last_tool_batch": [],
+    })
+    assert json.loads(denied["messages"][-1].content)["success"] is False
