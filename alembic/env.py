@@ -8,6 +8,7 @@ from sqlalchemy import engine_from_config, pool
 
 from src.dmf_history.models import Base
 from src.agent_memory import models as memory_models  # noqa: F401
+from src.agent_session import models as session_models  # noqa: F401
 from src.dmf_watchlist import models as watchlist_models  # noqa: F401
 
 config = context.config

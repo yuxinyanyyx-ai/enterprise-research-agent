@@ -36,6 +36,7 @@ class FakeGraph:
 def _new_client(monkeypatch, results: list[dict]) -> tuple[TestClient, FakeGraph]:
     fake_graph = FakeGraph(results)
     monkeypatch.setattr(web_routes.agent_web_service, "graph", fake_graph)
+    web_routes.agent_web_service.session_repository.initialize_schema()
     web_routes.agent_web_service.sessions.clear()
     return TestClient(app), fake_graph
 
@@ -92,6 +93,24 @@ def test_agent_sessions_use_isolated_thread_ids(monkeypatch) -> None:
         config["configurable"]["thread_id"]
         for _, config in graph.calls
     ] == [session_a, session_b]
+
+
+def test_agent_session_is_recovered_from_repository_after_cache_miss(monkeypatch) -> None:
+    client, graph = _new_client(
+        monkeypatch,
+        [{"final_answer": "恢复成功", "tool_artifacts": []}],
+    )
+    session_id = client.post("/api/agent/sessions").json()["session_id"]
+    web_routes.agent_web_service.sessions.clear()
+
+    response = client.post(
+        f"/api/agent/sessions/{session_id}/messages",
+        json={"message": "继续对话"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["answer"] == "恢复成功"
+    assert graph.calls[0][1]["configurable"]["thread_id"] == session_id
 
 
 def test_export_download_is_scoped_to_session_and_directory(tmp_path, monkeypatch):

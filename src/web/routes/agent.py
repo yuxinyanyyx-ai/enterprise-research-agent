@@ -20,6 +20,7 @@ from src.dmf_query.constant import OUTPUT_DIR
 from src.mineru.routes.convert import save_uploaded_files
 from src.services.document_dmf_service import DocumentDMFError, DocumentDMFService
 from src.agent_memory.repository import MemoryRepository
+from src.agent_session.repository import AgentSessionRepository
 from src.settings import load_settings
 
 
@@ -60,9 +61,11 @@ class AgentWebService:
             else None
         )
         self.memory_repository = memory_repository
+        self.session_repository = AgentSessionRepository(self.settings.database_url)
         self.graph = build_react_graph(
             checkpointer=self._checkpoint_context.__enter__(),
             memory_repository=memory_repository,
+            memory_limit=self.settings.agent_memory_max_items,
         )
         self.sessions: dict[str, WebSession] = {}
         self.lock = RLock()
@@ -81,6 +84,16 @@ class AgentWebService:
         )
         with self.lock:
             self.sessions[session.session_id] = session
+        try:
+            self.session_repository.create(
+                session_id=session.session_id,
+                user_id=session.user_id,
+                tenant_id=session.tenant_id,
+            )
+        except Exception:
+            with self.lock:
+                self.sessions.pop(session.session_id, None)
+            raise
         return session
 
     def get_session(
@@ -89,10 +102,26 @@ class AgentWebService:
         with self.lock:
             session = self.sessions.get(session_id)
         if session is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Agent 会话不存在或已失效",
+            persisted = self.session_repository.get(
+                session_id,
+                user_id=user_id,
+                tenant_id=tenant_id,
             )
+            if persisted is None:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Agent 会话不存在或已失效",
+                )
+            session = WebSession(
+                session_id=persisted.session_id,
+                user_id=persisted.user_id,
+                tenant_id=persisted.tenant_id,
+                awaiting_resume=persisted.awaiting_resume,
+            )
+            state = self.graph.get_state(self._config(session)).values
+            session.documents = dict(state.get("document_artifacts") or {})
+            with self.lock:
+                self.sessions[session.session_id] = session
         if session.user_id and (
             session.user_id != user_id or session.tenant_id != tenant_id
         ):
@@ -194,6 +223,12 @@ class AgentWebService:
         interrupts = result.get("__interrupt__") or []
         interrupt_value = interrupts[0].value if interrupts else None
         session.awaiting_resume = interrupt_value is not None
+        self.session_repository.update_awaiting_resume(
+            session.session_id,
+            awaiting_resume=session.awaiting_resume,
+            user_id=session.user_id,
+            tenant_id=session.tenant_id,
+        )
         downloads = self._register_downloads(session, result)
         return {
             "status": "awaiting_confirmation" if interrupt_value else "completed",
@@ -287,6 +322,11 @@ async def _append_documents(
         _ensure_documents_mutable(session)
         for artifact in parsed:
             session.documents[artifact["document_id"]] = artifact
+        if parsed:
+            agent_web_service.graph.update_state(
+                agent_web_service._config(session),
+                {"document_artifacts": dict(session.documents)},
+            )
         documents = _list_documents(session)
     return {"status": "parsed", "documents": documents, "errors": errors}
 
@@ -329,14 +369,19 @@ def remember(
     memory_key: str, request: MemoryRequest, http_request: Request
 ) -> dict[str, Any]:
     user_id, tenant_id = agent_web_service.identity_from_headers(http_request.headers)
-    memory = agent_web_service.require_memory_repository().remember(
-        tenant_id=tenant_id,
-        user_id=user_id,
-        memory_key=memory_key,
-        content=request.content,
-        idempotency_key=request.idempotency_key,
-        audit_note="explicit_user_api",
-    )
+    try:
+        memory = agent_web_service.require_memory_repository().remember(
+            tenant_id=tenant_id,
+            user_id=user_id,
+            memory_key=memory_key,
+            content=request.content,
+            idempotency_key=request.idempotency_key,
+            audit_note="explicit_user_api",
+        )
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)
+        ) from exc
     return {
         "memory_key": memory.memory_key,
         "content": memory.content,
@@ -347,9 +392,14 @@ def remember(
 @router.delete("/memory/{memory_key}")
 def forget(memory_key: str, request: Request) -> dict[str, Any]:
     user_id, tenant_id = agent_web_service.identity_from_headers(request.headers)
-    deleted = agent_web_service.require_memory_repository().forget(
-        tenant_id=tenant_id, user_id=user_id, memory_key=memory_key
-    )
+    try:
+        deleted = agent_web_service.require_memory_repository().forget(
+            tenant_id=tenant_id, user_id=user_id, memory_key=memory_key
+        )
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)
+        ) from exc
     if not deleted:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="记忆不存在"
