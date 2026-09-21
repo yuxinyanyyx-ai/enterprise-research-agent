@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import logging
 import sqlite3
 from pathlib import Path
@@ -25,7 +26,7 @@ logger = logging.getLogger(__name__)
 
 def fetch_full_topics(
     conn: sqlite3.Connection, topics: list[TopicRow]
-) -> dict[tuple[str, int], dict[str, str]]:
+) -> dict[tuple[str, int], dict[str, Any]]:
     if not topics:
         return {}
     where = " OR ".join("(source_file = ? AND topic_id = ?)" for _ in topics)
@@ -34,7 +35,7 @@ def fetch_full_topics(
         params.extend([t.source_file, t.topic_id])
     rows = conn.execute(
         f"SELECT source_file, topic_id, raw_source_text, background, for_endorsement, "
-        f"decision, todo, source FROM topics WHERE {where}",
+        f"decision, todo, source, evidence_chunk_ids FROM topics WHERE {where}",
         params,
     ).fetchall()
     return {
@@ -45,6 +46,7 @@ def fetch_full_topics(
             "decision": r["decision"] or "",
             "follow_up": r["todo"] or "",
             "source": r["source"] or "",
+            "evidence_chunk_ids": json.loads(r["evidence_chunk_ids"] or "[]"),
         }
         for r in rows
     }
@@ -78,6 +80,8 @@ def format_topic_hits(result: dict[str, Any]) -> str:
         )
         if hit.get("source"):
             lines.append(f"- source: {hit['source']}")
+        if hit.get("evidence_chunk_ids"):
+            lines.append(f"- evidence_chunk_ids: {hit['evidence_chunk_ids']}")
         if hit.get("background"):
             lines.append(f"- background: {_preview(hit['background'], 800)}")
         if hit.get("for_endorsement"):
@@ -144,6 +148,7 @@ def search_topics(
             "decision": "",
             "follow_up": "",
             "source": "",
+            "evidence_chunk_ids": [],
         }
         hits = [
             {

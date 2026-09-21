@@ -42,6 +42,10 @@ python -m src.pec.knowledge.chunk_index status
 
 PPT 视觉抽取按整页 PNG 调用 Vision，而不是对页面内每张图片分别调用。`smart` 模式只处理无文本、文本不足或包含图片/组合图形/图表/原生表格的高风险页面；`all` 模式用于高价值资料或离线召回率对照；`none` 模式只保留原生文本和表格抽取。页面结果按源文件摘要、页码、模型和提示词版本缓存，重复索引不会重复调用未变化页面。单页 Vision 失败时保留原生抽取结果。
 
+页面索引会将原生文字、原生表格和视觉页面保存为独立 chunk。视觉 chunk 的 `method` 为 `vision_page`，并保留 `render_mode`、`vision_model`、`vision_prompt_version` 和 `source_digest`；最终检索 evidence 会以 `source_visual` 标识，并携带 `chunk_id`。Topics 只保存 `evidence_chunk_ids`，查询时依据当前 chunk 索引回查来源元数据，不在 Topics 数据库复制 Vision 元数据。
+
+`source_visual` 只能证明证据来自 Vision 抽取 chunk，不能自动证明该事实是 Vision 独有发现。只有人工确认的视觉专属 benchmark 才能将结论标为 `vision_only`；普通情况下使用 `vision_supported`、`native_and_vision` 或 `not_verified`。
+
 ## 构建 Topics 结构化检索
 
 Topics 是轻量结构化补充，不需要人工审核或额外治理流程。先完成 chunk 索引，再从现有 `chunks.jsonl` 按文件分组调用 Apollo LLM 抽取会议主题、决策和行动项，经过 Pydantic 校验后直接生成 SQLite。

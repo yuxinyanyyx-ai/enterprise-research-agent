@@ -25,12 +25,27 @@ DEFAULT_CHUNK_TOP_N = 5
 
 
 def _chunk_evidence(hit) -> dict:
+    method = getattr(hit, "method", "") or "text"
+    evidence_type = {
+        "text": "source_text",
+        "table": "source_table",
+        "vision_page": "source_visual",
+    }.get(method, "source_text")
     return {
         "kind": "chunk",
-        "evidence_type": "source_text",
+        "evidence_type": evidence_type,
+        "chunk_id": getattr(hit, "chunk_id", ""),
+        "method": method,
+        "render_mode": getattr(hit, "render_mode", ""),
+        "vision_model": getattr(hit, "vision_model", ""),
+        "vision_prompt_version": getattr(hit, "vision_prompt_version", ""),
+        "source_digest": getattr(hit, "source_digest", ""),
         "source_file": getattr(hit, "source_ref", ""),
         "location": getattr(hit, "loc", ""),
         "text": getattr(hit, "text", ""),
+        "embed_score": getattr(hit, "embed_score", None),
+        "rerank_score": getattr(hit, "rerank_score", None),
+        "extraction_method": "vision" if method == "vision_page" else "native",
         "complete": True,
         "truncated": False,
     }
@@ -47,6 +62,8 @@ def _topic_evidence(hit: dict, field: str, evidence_type: str) -> dict | None:
         "location": hit.get("source", ""),
         "title": hit.get("title", ""),
         "text": text,
+        "evidence_chunk_ids": hit.get("evidence_chunk_ids", "[]"),
+        "provenance": "topic_extraction",
         "complete": True,
         "truncated": False,
     }

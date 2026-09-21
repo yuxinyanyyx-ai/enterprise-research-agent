@@ -1,6 +1,42 @@
 import pytest
+from types import SimpleNamespace
 
 from src.pec import knowledge_service
+
+
+@pytest.mark.parametrize(
+    "method,expected_type,expected_extraction",
+    [
+        ("text", "source_text", "native"),
+        ("table", "source_table", "native"),
+        ("vision_page", "source_visual", "vision"),
+    ],
+)
+def test_chunk_evidence_preserves_extraction_provenance(
+    method, expected_type, expected_extraction,
+) -> None:
+    evidence = knowledge_service._chunk_evidence(
+        SimpleNamespace(
+            chunk_id="chunk-1",
+            method=method,
+            render_mode="powerpoint" if method == "vision_page" else "",
+            vision_model="vision-model" if method == "vision_page" else "",
+            vision_prompt_version="2" if method == "vision_page" else "",
+            source_digest="digest",
+            source_ref="PEC1/meeting.pptx",
+            loc="Slide 12",
+            text="content",
+            embed_score=0.8,
+            rerank_score=0.9,
+        )
+    )
+
+    assert evidence["evidence_type"] == expected_type
+    assert evidence["extraction_method"] == expected_extraction
+    assert evidence["chunk_id"] == "chunk-1"
+    if method == "vision_page":
+        assert evidence["render_mode"] == "powerpoint"
+        assert evidence["vision_model"] == "vision-model"
 
 
 @pytest.mark.parametrize(

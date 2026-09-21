@@ -27,6 +27,10 @@ class ChunkDraft:
     folder: str
     loc: str
     method: str  # text | vision | vision_page | table
+    render_mode: str = ""
+    vision_model: str = ""
+    vision_prompt_version: str = ""
+    source_digest: str = ""
 
 
 def _min_slide_text() -> int:
@@ -60,16 +64,20 @@ def _slide_number(loc: str) -> int:
     return int(match.group(1)) if match else 0
 
 
-def _vision_cache_file(source_digest: str, slide_no: int) -> Path:
+def _vision_prompt_version() -> str:
+    return os.getenv("PEC_PPT_VISION_PROMPT_VERSION", "1").strip()
+
+
+def _vision_cache_file(source_digest: str, slide_no: int, render_mode: str) -> Path:
     version = os.getenv("PEC_PPT_VISION_PROMPT_VERSION", "1").strip()
     key = hashlib.sha256(
-        f"{source_digest}|{slide_no}|{_vision_model_name()}|{version}".encode()
+        f"{source_digest}|{slide_no}|{render_mode}|{_vision_model_name()}|{version}".encode()
     ).hexdigest()
     return _vision_cache_dir() / f"{key}.json"
 
 
-def _load_cached_vision(source_digest: str, slide_no: int) -> str | None:
-    path = _vision_cache_file(source_digest, slide_no)
+def _load_cached_vision(source_digest: str, slide_no: int, render_mode: str) -> str | None:
+    path = _vision_cache_file(source_digest, slide_no, render_mode)
     if not path.is_file():
         return None
     try:
@@ -80,12 +88,24 @@ def _load_cached_vision(source_digest: str, slide_no: int) -> str | None:
         return None
 
 
-def _save_cached_vision(source_digest: str, slide_no: int, text: str) -> None:
-    path = _vision_cache_file(source_digest, slide_no)
+def _save_cached_vision(
+    source_digest: str,
+    slide_no: int,
+    render_mode: str,
+    text: str,
+) -> None:
+    path = _vision_cache_file(source_digest, slide_no, render_mode)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
         json.dumps(
-            {"source_digest": source_digest, "slide": slide_no, "text": text},
+            {
+                "source_digest": source_digest,
+                "slide": slide_no,
+                "render_mode": render_mode,
+                "vision_model": _vision_model_name(),
+                "vision_prompt_version": _vision_prompt_version(),
+                "text": text,
+            },
             ensure_ascii=False,
         ),
         encoding="utf-8",
@@ -135,14 +155,27 @@ def _slide_needs_vision(slide, body: str, mode: str) -> bool:
         MSO_SHAPE_TYPE.TABLE,
     }
     has_complex_shape = bool(shape_types & complex_types)
-    return not body or len(body) < _min_slide_text() or has_complex_shape
+    layout_shape_types = {
+        MSO_SHAPE_TYPE.AUTO_SHAPE,
+        MSO_SHAPE_TYPE.LINE,
+    }
+    connector_type = getattr(MSO_SHAPE_TYPE, "CONNECTOR", None)
+    if connector_type is not None:
+        layout_shape_types.add(connector_type)
+    layout_shape_count = sum(shape.shape_type in layout_shape_types for shape in slide.shapes)
+    has_layout_complexity = layout_shape_count >= 6 or len(slide.shapes) >= 12
+    return (
+        not body
+        or len(body) < _min_slide_text()
+        or has_complex_shape
+        or has_layout_complexity
+    )
 
 
-def _rendered_slide_image(source_ref: str, slide_no: int) -> Path | None:
+def _rendered_slide_image(source_ref: str, slide_no: int) -> tuple[Path | None, str]:
     from src.pec.knowledge.preview_build import get_preview_image
 
-    image, _ = get_preview_image(source_ref, f"Slide {slide_no}")
-    return image
+    return get_preview_image(source_ref, f"Slide {slide_no}")
 
 
 def _vision_slide_page(
@@ -151,13 +184,17 @@ def _vision_slide_page(
     slide_no: int,
     source_digest: str,
     access_token: str | None,
-) -> str | None:
-    cached = _load_cached_vision(source_digest, slide_no)
-    if cached:
-        return cached
-    image_path = _rendered_slide_image(source_ref, slide_no)
+) -> tuple[str, str] | None:
+    image_result = _rendered_slide_image(source_ref, slide_no)
+    if isinstance(image_result, tuple):
+        image_path, render_mode = image_result
+    else:
+        image_path, render_mode = image_result, ""
     if image_path is None:
         return None
+    cached = _load_cached_vision(source_digest, slide_no, render_mode)
+    if cached:
+        return cached, render_mode
     token = access_token or get_access_token()
     text = describe_image(
         image_path.read_bytes(),
@@ -165,8 +202,8 @@ def _vision_slide_page(
         access_token=token,
     ).strip()
     if text:
-        _save_cached_vision(source_digest, slide_no, text)
-        return text
+        _save_cached_vision(source_digest, slide_no, render_mode, text)
+        return text, render_mode
     return None
 
 # PPT 是怎么切 Chunk
@@ -221,12 +258,23 @@ def _extract_pptx_chunks(
                         )
 
         body = "\n".join(texts).strip()
-        method = "text"
+        if len(body) >= min_text:
+            chunks.append(
+                ChunkDraft(
+                    chunk_id=_make_chunk_id(source_ref, loc, body),
+                    text=body,
+                    source_ref=source_ref,
+                    folder=_folder_name(source_ref),
+                    loc=loc,
+                    method="text",
+                    source_digest=source_digest,
+                )
+            )
         if _slide_needs_vision(slide, body, vision_mode):
             max_slides = _vision_max_slides()
             if max_slides == 0 or vision_count < max_slides:
                 try:
-                    vision_text = _vision_slide_page(
+                    vision_result = _vision_slide_page(
                         path,
                         source_ref,
                         slide_no,
@@ -235,24 +283,23 @@ def _extract_pptx_chunks(
                     )
                 except Exception:
                     vision_text = None
-                if vision_text:
-                    body = vision_text if not body else f"{body}\n\n[Vision]\n{vision_text}"
-                    method = "vision_page"
+                if vision_result:
+                    vision_text, render_mode = vision_result
+                    chunks.append(
+                        ChunkDraft(
+                            chunk_id=_make_chunk_id(source_ref, f"{loc} Vision", vision_text),
+                            text=vision_text,
+                            source_ref=source_ref,
+                            folder=_folder_name(source_ref),
+                            loc=loc,
+                            method="vision_page",
+                            render_mode=render_mode,
+                            vision_model=_vision_model_name(),
+                            vision_prompt_version=_vision_prompt_version(),
+                            source_digest=source_digest,
+                        )
+                    )
                     vision_count += 1
-
-        if not body.strip():
-            continue
-        if len(body) >= min_text or method in {"vision", "vision_page", "text+vision"}:
-            chunks.append(
-                ChunkDraft(
-                    chunk_id=_make_chunk_id(source_ref, loc, body),
-                    text=body,
-                    source_ref=source_ref,
-                    folder=_folder_name(source_ref),
-                    loc=loc,
-                    method=method,
-                )
-            )
     return chunks
 
 

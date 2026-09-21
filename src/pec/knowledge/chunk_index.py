@@ -58,6 +58,10 @@ class ChunkHit:
     loc: str
     method: str
     embed_score: float
+    render_mode: str = ""
+    vision_model: str = ""
+    vision_prompt_version: str = ""
+    source_digest: str = ""
     rerank_score: float | None = None
 
 
@@ -500,6 +504,10 @@ def search_chunks(
                 folder=item.get("folder", ""),
                 loc=item.get("loc", ""),
                 method=item.get("method", ""),
+                render_mode=item.get("render_mode", ""),
+                vision_model=item.get("vision_model", ""),
+                vision_prompt_version=item.get("vision_prompt_version", ""),
+                source_digest=item.get("source_digest", ""),
                 embed_score=embed_score,
                 rerank_score=score,
             )
