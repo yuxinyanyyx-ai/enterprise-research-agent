@@ -44,6 +44,9 @@ class ReactState(TypedDict, total=False):
     react_last_tool_batch: list[str]
     react_tool_stop_reason: str
     tool_artifacts: list[dict[str, Any]]
+    artifact_reads: list[str]
+    artifact_read_disabled: bool
+    published_artifact_refs: dict[str, dict[str, Any]]
 
     workflow_tool_call_id: str
     final_answer: str

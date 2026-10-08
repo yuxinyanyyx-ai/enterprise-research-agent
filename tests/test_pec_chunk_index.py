@@ -168,6 +168,19 @@ def test_single_file_scope_does_not_remove_sibling(tmp_path, monkeypatch) -> Non
     assert "PEC1/second.pdf" not in result["removed"]
 
 
+def test_scan_source_files_ignores_office_lock_files(tmp_path, monkeypatch) -> None:
+    sources, _ = _configure_index(tmp_path, monkeypatch)
+    folder = sources / "PEC1"
+    folder.mkdir()
+    real_file = folder / "03 PEC_TA INFL Apr 2026.pptx"
+    lock_file = folder / "~$03 PEC_TA INFL Apr 2026.pptx"
+    real_file.write_bytes(b"pptx")
+    lock_file.write_bytes(b"lock")
+
+    assert chunk_ingest.scan_source_files("PEC1") == [real_file]
+    assert chunk_ingest.scan_source_files("PEC1/~$03 PEC_TA INFL Apr 2026.pptx") == []
+
+
 def test_search_chunks_maps_cosine_candidates_through_rerank(monkeypatch) -> None:
     chunks = [
         {"chunk_id": "a", "text": "alpha", "source_ref": "PEC1/a.pdf", "folder": "PEC1", "loc": "Page 1", "method": "text"},

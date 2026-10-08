@@ -19,6 +19,8 @@ from src.tools.registry import (
     load_builtin_tools,
 )
 
+READ_TOOL_NAME = "read_tool_artifact"
+
 DEFAULT_MAX_TOOL_ROUNDS = 8
 
 
@@ -72,6 +74,7 @@ def _tool_message(
     *,
     status: str = "success",
     artifact_ref: dict[str, Any] | None = None,
+    result_strategy: str = "artifact",
 ) -> ToolMessage:
     content = json.dumps(result, ensure_ascii=False, default=str)
     return ToolMessage(
@@ -79,7 +82,10 @@ def _tool_message(
         tool_call_id=str(call["id"]),
         name=str(call["name"]),
         status=status,
-        additional_kwargs={"artifact_ref": artifact_ref} if artifact_ref else {},
+        additional_kwargs={
+            **({"artifact_ref": artifact_ref} if artifact_ref else {}),
+            "result_strategy": result_strategy,
+        },
     )
 
 
@@ -92,17 +98,20 @@ def _execute_one(
     for argument_name, state_name in definition.state_arguments:
         if state_name not in state:
             error = {"success": False, "message": f"缺少工具上下文：{state_name}"}
-            artifact_ref = store_artifact(
+            artifact_ref = None if call["name"] == READ_TOOL_NAME else store_artifact(
                 error,
                 request_id=str(state.get("request_id", "")),
                 tool_name=str(call["name"]),
                 tool_call_id=str(call["id"]),
             )
-            return _tool_message(call, error, status="error", artifact_ref=artifact_ref), {
+            return _tool_message(
+                call, error, status="error", artifact_ref=artifact_ref,
+                result_strategy=definition.result_strategy.value,
+            ), {
                 "tool_name": call["name"],
                 "tool_call_id": call["id"],
                 "result": error,
-                "artifact_ref": artifact_ref,
+                **({"artifact_ref": artifact_ref} if artifact_ref else {}),
             }
         args[argument_name] = state[state_name]
 
@@ -114,20 +123,23 @@ def _execute_one(
             "message": f"工具执行失败：{exc}",
             "error_type": type(exc).__name__,
         }
-        artifact_ref = store_artifact(
+        artifact_ref = None if call["name"] == READ_TOOL_NAME else store_artifact(
             error,
             request_id=str(state.get("request_id", "")),
             tool_name=str(call["name"]),
             tool_call_id=str(call["id"]),
         )
-        return _tool_message(call, error, status="error", artifact_ref=artifact_ref), {
+        return _tool_message(
+            call, error, status="error", artifact_ref=artifact_ref,
+            result_strategy=definition.result_strategy.value,
+        ), {
             "tool_name": call["name"],
             "tool_call_id": call["id"],
             "result": error,
-            "artifact_ref": artifact_ref,
+            **({"artifact_ref": artifact_ref} if artifact_ref else {}),
         }
 
-    artifact_ref = store_artifact(
+    artifact_ref = None if call["name"] == READ_TOOL_NAME else store_artifact(
         result,
         request_id=str(state.get("request_id", "")),
         tool_name=str(call["name"]),
@@ -137,9 +149,12 @@ def _execute_one(
         "tool_name": call["name"],
         "tool_call_id": call["id"],
         "result": result,
-        "artifact_ref": artifact_ref,
+        **({"artifact_ref": artifact_ref} if artifact_ref else {}),
     }
-    return _tool_message(call, result, artifact_ref=artifact_ref), artifact
+    return _tool_message(
+        call, result, artifact_ref=artifact_ref,
+        result_strategy=definition.result_strategy.value,
+    ), artifact
 
 
 def execute_tools(state: ResearchState, *, registry: ToolRegistry | None = None) -> dict[str, Any]:
@@ -189,13 +204,27 @@ def execute_tools(state: ResearchState, *, registry: ToolRegistry | None = None)
 
     immediate_messages: dict[str, ToolMessage] = {}
     immediate_artifacts: dict[str, dict[str, Any]] = {}
+    read_history = set(state.get("artifact_reads") or [])
     executable: list[tuple[dict[str, Any], ToolDefinition]] = []
     for call, definition in resolved:
         call_id = str(call["id"])
+        read_key = _fingerprint(call) if call.get("name") == READ_TOOL_NAME else ""
+        if read_key and read_key in read_history:
+            problem = "该 artifact 片段已经读取过，请直接使用已有结果。"
+            error = {"success": False, "message": problem, "duplicate_read": True, "error_code": "duplicate_read"}
+            immediate_messages[call_id] = _tool_message(call, error, status="error")
+            immediate_artifacts[call_id] = {
+                "tool_name": call["name"], "tool_call_id": call["id"], "result": error,
+            }
+            continue
         problem = "工具未注册或不允许在当前场景使用。" if definition is None else definition.execution_problem(state, call)
         if problem:
             write_event("tool.rejected", state, call=call, reason="not_allowed")
             error = {"success": False, "message": problem}
+            if read_key:
+                error["error_code"] = "invalid_reference"
+                write_event("artifact.read_rejected", state, call=call,
+                            artifact_resolution="invalid_reference", error_code="invalid_reference")
             immediate_messages[call_id] = _tool_message(call, error, status="error")
             immediate_artifacts[call_id] = {
                 "tool_name": call["name"],
@@ -204,6 +233,8 @@ def execute_tools(state: ResearchState, *, registry: ToolRegistry | None = None)
             }
         elif definition is not None:
             executable.append((call, definition))
+            if read_key:
+                read_history.add(read_key)
 
     def run(item: tuple[dict[str, Any], ToolDefinition]):
         call, definition = item
@@ -245,6 +276,13 @@ def execute_tools(state: ResearchState, *, registry: ToolRegistry | None = None)
         rounds_key: state.get(rounds_key, 0) + 1,
         batch_key: fingerprints,
         "tool_artifacts": artifacts,
+        "artifact_reads": sorted(read_history),
+        "artifact_read_disabled": bool(state.get("artifact_read_disabled")) or any(
+            artifact.get("tool_name") == READ_TOOL_NAME
+            and isinstance(artifact.get("result"), dict)
+            and artifact["result"].get("success") is False
+            for artifact in artifacts
+        ),
         stop_key: "",
     }
 

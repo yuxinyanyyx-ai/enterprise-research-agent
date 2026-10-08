@@ -23,7 +23,7 @@ def upgrade() -> None:
             sa.Column(
                 "notification_enabled",
                 sa.Boolean(),
-                server_default=sa.text("0"),
+                server_default=sa.false(),
                 nullable=False,
             )
         )

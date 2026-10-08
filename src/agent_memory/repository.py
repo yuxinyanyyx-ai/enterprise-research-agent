@@ -7,6 +7,7 @@ from sqlalchemy import Engine, create_engine, select
 from sqlalchemy.orm import sessionmaker
 
 from .models import UserMemory
+from .policy import normalize_memory_key, validate_memory_content
 
 
 class MemoryRepository:
@@ -54,10 +55,10 @@ class MemoryRepository:
         idempotency_key: str | None = None,
         audit_note: str | None = None,
     ) -> UserMemory:
-        if not tenant_id or not user_id or not memory_key:
+        if not tenant_id or not user_id:
             raise ValueError("tenant_id, user_id and memory_key are required")
-        if not isinstance(content, dict) or not content:
-            raise ValueError("content must be a non-empty object")
+        memory_key = normalize_memory_key(memory_key)
+        content = validate_memory_content(content)
         now = datetime.now(timezone.utc)
         with self.session_factory.begin() as session:
             if idempotency_key:
@@ -103,6 +104,7 @@ class MemoryRepository:
     def forget(
         self, *, tenant_id: str, user_id: str, memory_key: str
     ) -> bool:
+        memory_key = normalize_memory_key(memory_key)
         now = datetime.now(timezone.utc)
         with self.session_factory.begin() as session:
             memory = session.scalar(

@@ -24,7 +24,7 @@ PEC 查询能力通过普通 Agent Tool `search_pec_knowledge` 注册。索引�
 - `RERANK_MIN_SCORE`：默认 `0.4`
 - `PEC_PPT_VISION_MODE`：`smart`（默认）、`all` 或 `none`
 - `PEC_PPT_VISION_MAX_SLIDES`：单个 PPT 最多调用 Vision 的页数，默认 `0` 表示不限制
-- `PEC_PPT_VISION_PROMPT_VERSION`：Vision 缓存版本，提示词变化时递增，默认 `1`
+- `PEC_PPT_VISION_PROMPT_VERSION`：Vision 缓存版本，提示词变化时递增，默认 `2`
 
 ## 建立索引
 
@@ -40,7 +40,9 @@ python -m src.pec.knowledge.chunk_index status
 
 页面预览依赖 PyMuPDF、Pillow，以及可选的 PowerPoint/Word 或 LibreOffice。没有这些系统组件时，文本索引和查询仍可运行。
 
-PPT 视觉抽取按整页 PNG 调用 Vision，而不是对页面内每张图片分别调用。`smart` 模式只处理无文本、文本不足或包含图片/组合图形/图表/原生表格的高风险页面；`all` 模式用于高价值资料或离线召回率对照；`none` 模式只保留原生文本和表格抽取。页面结果按源文件摘要、页码、模型和提示词版本缓存，重复索引不会重复调用未变化页面。单页 Vision 失败时保留原生抽取结果。
+PPT 视觉抽取按整页 PNG 调用 Vision，而不是对页面内每张图片分别调用。`smart` 模式默认跳过封面、章节页、Backup/Thank You、纯标题页、空白页、原生内容完整的普通文字页和原生表格页；只有图片、图表、图片化表格、流程/时间线布局或 native 内容明显缺失时才调用 Vision。短文本、空白内容、原生 `TABLE` 或 shape 数量多不能单独触发。`all` 模式用于高价值资料或离线召回率对照；`none` 模式只保留原生文本和表格抽取。页面结果按源文件摘要、页码、模型和提示词版本缓存，重复索引不会重复调用未变化页面。单页 Vision 失败时保留原生抽取结果。
+
+Vision prompt 只要求输出 native 抽取无法表达的视觉增量，例如图表趋势、图片化表格、流程/时间线关系、颜色或图标状态，以及决定、风险和行动项；不应重复普通标题、Logo、页码、页脚或原生可读表格。生产环境优先使用 `smart` 控制无效调用，`all` 仅作为 benchmark 或明确的高价值文件对照。
 
 页面索引会将原生文字、原生表格和视觉页面保存为独立 chunk。视觉 chunk 的 `method` 为 `vision_page`，并保留 `render_mode`、`vision_model`、`vision_prompt_version` 和 `source_digest`；最终检索 evidence 会以 `source_visual` 标识，并携带 `chunk_id`。Topics 只保存 `evidence_chunk_ids`，查询时依据当前 chunk 索引回查来源元数据，不在 Topics 数据库复制 Vision 元数据。
 

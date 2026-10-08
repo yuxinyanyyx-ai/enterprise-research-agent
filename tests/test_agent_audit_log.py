@@ -35,6 +35,38 @@ def test_trace_pairs_events_without_payloads(audit_directory):
     assert "private-token" not in json.dumps([started, finished])
 
 
+@pytest.mark.parametrize("failure,resolution", [
+    ("missing", "missing"), ("access", "access_denied"),
+    ("corrupt", "corrupt"), ("io", "io_error"), ("id", "invalid_id"),
+])
+def test_artifact_failures_log_classification_not_payload(audit_directory, monkeypatch, failure, resolution):
+    from src.agent.artifact_store import ArtifactAccessError, ArtifactNotFound
+    from src.tools import artifact_tools
+
+    errors = {
+        "missing": ArtifactNotFound("private-artifact-id"),
+        "access": ArtifactAccessError("private-path"),
+        "corrupt": json.JSONDecodeError("invalid", "private-evidence", 0),
+        "io": OSError("private-path"),
+        "id": ValueError("private-artifact-id"),
+    }
+
+    def fail(*args, **kwargs):
+        raise errors[failure]
+
+    monkeypatch.setattr(artifact_tools, "load_artifact", fail)
+    result = artifact_tools.read_tool_artifact.invoke({
+        "artifact_id": "private-artifact-id", "request_id": "request-1",
+        "published_references": {"private-artifact-id": {"tool_call_id": "source-1"}},
+    })
+    event = _events(audit_directory)[-1]
+    assert result["error_code"] == "unavailable"
+    assert event["artifact_resolution"] == resolution
+    assert event["source_tool_call_id"] == "source-1"
+    assert event["request_id"] == "request-1"
+    assert "private-" not in json.dumps(event)
+
+
 def test_exception_is_preserved_without_logging_its_message(audit_directory):
     with pytest.raises(ValueError, match="private@example.com"):
         with audit_log.trace_operation({}):

@@ -65,11 +65,11 @@ def _slide_number(loc: str) -> int:
 
 
 def _vision_prompt_version() -> str:
-    return os.getenv("PEC_PPT_VISION_PROMPT_VERSION", "1").strip()
+    return os.getenv("PEC_PPT_VISION_PROMPT_VERSION", "2").strip()
 
 
 def _vision_cache_file(source_digest: str, slide_no: int, render_mode: str) -> Path:
-    version = os.getenv("PEC_PPT_VISION_PROMPT_VERSION", "1").strip()
+    version = _vision_prompt_version()
     key = hashlib.sha256(
         f"{source_digest}|{slide_no}|{render_mode}|{_vision_model_name()}|{version}".encode()
     ).hexdigest()
@@ -148,13 +148,34 @@ def _slide_needs_vision(slide, body: str, mode: str) -> bool:
     except ImportError as exc:
         raise _missing_dependency("python-pptx", "PPTX", exc) from exc
     shape_types = {shape.shape_type for shape in slide.shapes}
-    complex_types = {
-        MSO_SHAPE_TYPE.PICTURE,
-        MSO_SHAPE_TYPE.GROUP,
-        MSO_SHAPE_TYPE.CHART,
-        MSO_SHAPE_TYPE.TABLE,
-    }
-    has_complex_shape = bool(shape_types & complex_types)
+    normalized_body = re.sub(r"\s+", " ", body).strip().lower()
+    template_terms = (
+        "thank you",
+        "backup",
+        "back-up",
+        "appendix",
+        "目录",
+        "agenda",
+        "contents",
+    )
+    if any(term in normalized_body for term in template_terms):
+        return False
+
+    # Vision should add information that native extraction cannot represent.
+    # A native table or a short title is not, by itself, visual evidence.
+    visual_types = {MSO_SHAPE_TYPE.PICTURE, MSO_SHAPE_TYPE.CHART}
+    has_visual_shape = bool(shape_types & visual_types)
+    group_type = getattr(MSO_SHAPE_TYPE, "GROUP", None)
+    def contains_visual(shape) -> bool:
+        if getattr(shape, "shape_type", None) in visual_types:
+            return True
+        if getattr(shape, "shape_type", None) != group_type:
+            return False
+        return any(contains_visual(child) for child in getattr(shape, "shapes", ()))
+
+    if group_type is not None and group_type in shape_types:
+        has_visual_shape = has_visual_shape or any(contains_visual(shape) for shape in slide.shapes)
+
     layout_shape_types = {
         MSO_SHAPE_TYPE.AUTO_SHAPE,
         MSO_SHAPE_TYPE.LINE,
@@ -163,13 +184,19 @@ def _slide_needs_vision(slide, body: str, mode: str) -> bool:
     if connector_type is not None:
         layout_shape_types.add(connector_type)
     layout_shape_count = sum(shape.shape_type in layout_shape_types for shape in slide.shapes)
-    has_layout_complexity = layout_shape_count >= 6 or len(slide.shapes) >= 12
-    return (
-        not body
-        or len(body) < _min_slide_text()
-        or has_complex_shape
-        or has_layout_complexity
+    connector_count = (
+        sum(shape.shape_type == connector_type for shape in slide.shapes)
+        if connector_type is not None
+        else 0
     )
+    auto_shape_count = sum(
+        shape.shape_type == MSO_SHAPE_TYPE.AUTO_SHAPE for shape in slide.shapes
+    )
+    has_layout_semantics = connector_count >= 2 and auto_shape_count >= 3
+
+    # Do not send blank/template slides to Vision unless they contain a real
+    # image, chart, or diagram whose meaning is not present in native text.
+    return has_visual_shape or has_layout_semantics
 
 
 def _rendered_slide_image(source_ref: str, slide_no: int) -> tuple[Path | None, str]:
@@ -273,6 +300,7 @@ def _extract_pptx_chunks(
         if _slide_needs_vision(slide, body, vision_mode):
             max_slides = _vision_max_slides()
             if max_slides == 0 or vision_count < max_slides:
+                vision_result = None
                 try:
                     vision_result = _vision_slide_page(
                         path,
@@ -282,7 +310,7 @@ def _extract_pptx_chunks(
                         access_token,
                     )
                 except Exception:
-                    vision_text = None
+                    pass
                 if vision_result:
                     vision_text, render_mode = vision_result
                     chunks.append(
@@ -443,10 +471,14 @@ def scan_source_files(scope: str = "") -> list[Path]:
     if not root.exists():
         return []
     if root.is_file():
-        return [root] if root.suffix.lower() in SUPPORTED_SUFFIXES else []
+        return [root] if not root.name.startswith("~$") and root.suffix.lower() in SUPPORTED_SUFFIXES else []
     files: list[Path] = []
     for path in sorted(root.rglob("*")):
-        if path.is_file() and path.suffix.lower() in SUPPORTED_SUFFIXES:
+        if (
+            path.is_file()
+            and not path.name.startswith("~$")
+            and path.suffix.lower() in SUPPORTED_SUFFIXES
+        ):
             files.append(path)
     return files
 

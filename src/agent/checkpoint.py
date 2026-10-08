@@ -26,7 +26,12 @@ class AgentCheckpoint(AbstractContextManager[Any]):
             raise RuntimeError(
                 "AGENT_CHECKPOINT_ENABLED=true requires langgraph-checkpoint-postgres"
             ) from exc
-        self._context = PostgresSaver.from_conn_string(self.settings.database_url)
+        connection_string = self.settings.database_url
+        if connection_string.startswith("postgresql+psycopg://"):
+            connection_string = "postgresql://" + connection_string.removeprefix(
+                "postgresql+psycopg://"
+            )
+        self._context = PostgresSaver.from_conn_string(connection_string)
         self._checkpointer = self._context.__enter__()
         self._checkpointer.setup()
         return self._checkpointer

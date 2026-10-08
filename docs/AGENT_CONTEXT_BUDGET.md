@@ -47,6 +47,54 @@ is not an exact tokenizer or a mathematical upper bound for every model.
   is made. The agent returns a request-to-shorten message. A tool that has already
   completed before this check is not rolled back or automatically replayed.
 
+## Artifact Publication And Recovery
+
+`ToolDefinition.result_strategy` controls presentation, not authorization.
+`artifact` results can become a reference directory when input is too large;
+`inline_compact` results keep bounded evidence inline without `read_required`.
+Stored artifacts contain the complete tool return value, not data discarded by
+the tool itself. In particular, PEC evidence discarded before the service returns
+cannot be recovered from its artifact.
+
+PEC results use a 20,000-byte UTF-8 JSON budget, measured with the same
+`json.dumps(result, ensure_ascii=False, default=str)` serialization as the tool
+message. Only `context_summary` is returned; the duplicate `context` field and
+query echo are removed. The summary is a hit-count overview, not generated prose.
+Evidence retains source, location, type, extraction provenance and text; verbose
+extraction metadata is omitted from the inline view.
+
+There is no fixed 600-character text limit or eight-item limit. Whole evidence
+items are selected in retrieval order while they fit. An oversized first item
+can have its text shortened with `complete=false` and `truncated=true`; oversized
+source metadata is never rewritten to create a misleading citation.
+`evidence_count` counts all built evidence items, `returned_evidence_count` counts
+the included items, and `truncated_evidence_count` counts omitted items (not the
+number of shortened texts). Error responses are bounded and omit backend details.
+The global token budget can still compress the final model view; 20KB is not a
+provider token allowance and does not change the model configuration.
+
+PEC registration removes its search tool after a successful hit, including a
+truncated hit. Empty results permit at most one supplemental search. This is a
+provider-owned availability policy, not a tool-name rule in the budget layer.
+Other failure adapters retain their existing behavior.
+
+The budget builder reports references only from its final adopted directory view.
+Backend metadata (`ToolMessage.additional_kwargs`) is not publication to the
+model. References must match current-request stored tool-call records. The outer
+agent budgets candidate schemas first, then binds the reader only when a valid
+published reference exists. Filtering schemas does not trigger a second projection.
+
+`published_artifact_refs`, `artifact_reads`, and `artifact_read_disabled` are reset
+on each new request, including checkpoint reuse. Reader authorization verifies
+the publication and storage record before IO; storage still verifies request
+ownership. A result strategy alone never grants access.
+
+Expected reader errors return a paired error result and disable further reads for
+the request. The model can answer from existing evidence or report missing facts.
+Unknown execution defects and other tools retain their normal failure policy.
+No empty tool binding is used to force a final answer, and tool-call/result IDs
+remain paired. Existing total-round and duplicate-call guards still apply.
+
 ## Observability And Limits
 
 `context.prepared` audit events record estimated input tokens, configured input

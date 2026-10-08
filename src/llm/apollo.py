@@ -11,6 +11,7 @@ from typing import Any
 
 import httpx
 import requests
+import urllib3
 from dotenv import load_dotenv
 from langchain_core.messages import HumanMessage
 from langchain_openai import ChatOpenAI
@@ -55,6 +56,7 @@ def _ssl_verify_setting() -> bool | str:
     if normalized in {"1", "true", "yes", "on"}:
         return True
     if normalized in {"0", "false", "no", "off"}:
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         return False
 
     ca_bundle = Path(raw_value).expanduser()
@@ -291,7 +293,26 @@ def describe_image(
         HumanMessage(content=[
             {
                 "type": "text",
-                "text": "提取该 PEC 会议页面中的文字、表格、决定和行动项。只描述可见内容，使用简洁中文。",
+                "text": (
+                   "你的任务是为PPT页面建立可检索内容，不要概括或遗漏可读信息。\n"
+                   "输出图片内文字和视觉关系；两类信息分别列出。\n"
+
+                   "图片内文字：\n"
+                   "- 转录图片、截图、扫描件、图片化表格和图表中的可读文字。\n"
+                   "- 图片化表格必须保留表头与字段对应关系，每行单独转录为“表头：值”。\n"
+                   "- 无法辨认的文字标记为[无法辨认]，不要猜测或补全。\n"
+
+                   "视觉关系：\n"
+                   "- 时间轴、pipeline、roadmap中的阶段关系、先后顺序和关键节点位置；\n"
+                   "- Global/China、多泳道、多区域之间的对应关系；\n"
+                   "- 流程图中的箭头方向、步骤关系和依赖关系；\n"
+                   "- 图表中的趋势、比较关系和视觉编码；\n"
+                   "- 颜色、标记、图标仅在承载业务含义时描述。\n"
+
+                   "对于普通标题、页码、Logo、页脚、装饰性元素、状态灯等无业务含义内容不要描述。\n"
+
+                   "如果没有可提取的图片文字或视觉关系，只返回：无视觉增量信息。"
+                ),
             },
             {"type": "image_url", "image_url": {"url": data_url}},
         ])

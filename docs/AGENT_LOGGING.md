@@ -43,6 +43,13 @@ Get-Content .\logs\agent\*.jsonl* | ForEach-Object { $_ | ConvertFrom-Json } |
   model/business operation. `execution_id` pairs the events; `duration_ms` is
   elapsed execution time, not time spent awaiting human confirmation.
 - `tool.rejected`: unknown/disallowed tool, repeated batch, or policy rejection.
+- `artifact.read_rejected`: invalid/unpublished reference rejected before IO.
+- `artifact.read_failed`: expected read failure, with an `error_code`, internal
+  `artifact_resolution` classification, and source `source_tool_call_id` when
+  available. Classifications include `missing`, `access_denied`, `invalid_id`,
+  `corrupt`, `io_error`, `invalid_range`, and `invalid_section`. Complete artifact
+  IDs, storage paths, payloads, and exception messages are not logged. Externally,
+  missing and inaccessible artifacts both use `unavailable`.
 - `loop.stopped`: round limit reached.
 - `workflow.handoff` / `workflow.returned`: entry and return of the named document
   or Watchlist workflow. Return status is `completed`, `needs_clarification`,

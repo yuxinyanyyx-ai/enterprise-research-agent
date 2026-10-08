@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
+import json
 from concurrent.futures import ThreadPoolExecutor
 
 from src.pec.knowledge.chunk_index import (
-    format_hits,
     format_update_result,
     get_index_status,
     search_chunks,
@@ -16,12 +16,12 @@ from src.pec.knowledge.paths import (
     ensure_dirs,
 )
 from src.pec.search_api.engine import (
-    format_topic_hits,
     search_topics,
 )
 
 
 DEFAULT_CHUNK_TOP_N = 5
+MAX_INLINE_RESULT_BYTES = 20_000
 
 
 def _chunk_evidence(hit) -> dict:
@@ -84,6 +84,60 @@ def _build_evidence(chunk_hits: list, topic_hits: list[dict]) -> list[dict]:
                 evidence.append(item)
     evidence.extend(_chunk_evidence(hit) for hit in chunk_hits)
     return evidence
+
+
+def _inline_size(result: dict) -> int:
+    return len(json.dumps(result, ensure_ascii=False, default=str).encode("utf-8"))
+
+
+def _bounded_result(result: dict, evidence: list[dict]) -> dict:
+    fields = {
+        "kind", "evidence_type", "chunk_id", "source_file", "location", "title",
+        "text", "extraction_method", "provenance", "complete", "truncated",
+    }
+    selected: list[dict] = []
+
+    def update(items: list[dict]) -> None:
+        omitted = len(evidence) - len(items)
+        limited = omitted > 0 or any(item.get("truncated") for item in items)
+        result.update({
+            "context_summary": (
+                f"PEC 检索命中 {len(evidence)} 条证据，展示 {len(items)} 条。"
+                + ("受大小限制，部分证据未展示或正文被截断。" if limited else "")
+            ),
+            "evidence": items,
+            "evidence_count": len(evidence),
+            "returned_evidence_count": len(items),
+            "truncated_evidence_count": omitted,
+        })
+
+    update(selected)
+    for item in evidence:
+        candidate = {key: value for key, value in item.items() if key in fields}
+        update([*selected, candidate])
+        if _inline_size(result) <= MAX_INLINE_RESULT_BYTES:
+            selected.append(candidate)
+            continue
+        if selected:
+            continue
+        text = str(candidate.get("text") or "")
+        candidate.update(text="", complete=False, truncated=True)
+        update([candidate])
+        if _inline_size(result) > MAX_INLINE_RESULT_BYTES:
+            continue
+        lower, upper = 0, len(text)
+        while lower < upper:
+            midpoint = (lower + upper + 1) // 2
+            candidate["text"] = text[:midpoint]
+            if _inline_size(result) <= MAX_INLINE_RESULT_BYTES:
+                lower = midpoint
+            else:
+                upper = midpoint - 1
+        if lower:
+            candidate["text"] = text[:lower]
+            selected.append(candidate)
+    update(selected)
+    return result
 
 
 def update_meeting_index_service(
@@ -157,14 +211,12 @@ def search_pec_knowledge_service(
     query = query.strip()
 
     if not query:
-        return {"success": False, "message": "PEC 检索失败：query 不能为空。", "query": ""}
+        return {"success": False, "message": "PEC 检索失败：query 不能为空。"}
 
-    chunk_text = ""
-    topic_text = ""
     chunk_err: str | None = None
     topic_err: str | None = None
 
-    def run_chunks() -> tuple[list, str, str | None]:
+    def run_chunks() -> tuple[list, str | None]:
         try:
             hits = search_chunks(
                 query,
@@ -172,40 +224,19 @@ def search_pec_knowledge_service(
                 folder=folder.strip(),
             )
 
-            return (
-                hits,
-                format_hits(hits),
-                None,
-            )
+            return hits, None
+        except Exception:
+            return [], "chunk 检索不可用。"
 
-        except RuntimeError as exc:
-            return [], str(exc), str(exc)
-
-        except Exception as exc:
-            return (
-                [],
-                f"chunk 检索异常: {exc}",
-                str(exc),
-            )
-
-    def run_topics() -> tuple[list[dict], str, str | None]:
+    def run_topics() -> tuple[list[dict], str | None]:
         try:
             result = search_topics(query)
 
             hits = result.get("hits") or []
 
-            return (
-                hits,
-                format_topic_hits(result),
-                result.get("error"),
-            )
-
-        except Exception as exc:
-            return (
-                [],
-                f"[PEC Topics 检索不可用: {exc}]",
-                str(exc),
-            )
+            return hits, "topics 检索不可用。" if result.get("error") else None
+        except Exception:
+            return [], "topics 检索不可用。"
 
     try:
         # 两套知识库并行查询
@@ -213,30 +244,12 @@ def search_pec_knowledge_service(
             chunk_future = pool.submit(run_chunks)
             topic_future = pool.submit(run_topics)
 
-            chunk_hits, chunk_text, chunk_err = (
+            chunk_hits, chunk_err = (
                 chunk_future.result()
             )
 
-            topic_hits, topic_text, topic_err = (
+            topic_hits, topic_err = (
                 topic_future.result()
-            )
-
-        sections = [
-            "# Retrieved PEC Context",
-            "",
-            "## A. Chunk 向量检索（页码级原文片段）",
-            chunk_text or "（无 chunk 命中）",
-            "",
-            "## B. PEC Topics 结构化检索（case / decision 级）",
-            topic_text or "（无 topic 命中）",
-        ]
-
-        if chunk_err and not chunk_hits:
-            sections.extend(
-                [
-                    "",
-                    f"（chunk 检索提示: {chunk_err}）",
-                ]
             )
 
         available_sources = [
@@ -244,18 +257,13 @@ def search_pec_knowledge_service(
         ]
         success = bool(available_sources)
         evidence = _build_evidence(chunk_hits, topic_hits)
-        return {
+        return _bounded_result({
             "success": success,
             "message": (
                 "PEC 知识检索完成。"
                 if success
                 else "PEC chunk 与 topics 检索均不可用，请检查索引和模型配置。"
             ),
-            "query": query,
-            "context": "\n".join(sections).strip(),
-            "evidence": evidence,
-            "evidence_count": len(evidence),
-            "truncated_evidence_count": 0,
             "decision_found": any(
                 item["evidence_type"] == "decision" for item in evidence
             ),
@@ -263,11 +271,10 @@ def search_pec_knowledge_service(
             "partial": success and len(available_sources) < 2,
             "chunk": {"hit_count": len(chunk_hits), "error": chunk_err or ""},
             "topics": {"hit_count": len(topic_hits), "error": topic_err or ""},
-        }
+        }, evidence)
 
-    except Exception as exc:
+    except Exception:
         return {
             "success": False,
-            "message": f"PEC 检索失败: {exc}",
-            "query": query,
+            "message": "PEC 检索失败，请检查索引和模型配置。",
         }

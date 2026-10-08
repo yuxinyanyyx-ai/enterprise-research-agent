@@ -35,7 +35,9 @@ def test_builtin_tools_are_filtered_by_context() -> None:
     assert "request_id" not in registry.get("read_tool_artifact").tool.args
     assert registry.get("read_tool_artifact").state_arguments == (
         ("request_id", "request_id"),
+        ("published_references", "published_artifact_refs"),
     )
+    assert "published_references" not in registry.get("read_tool_artifact").tool.args
     assert registry.get("run_document_dmf_workflow").kind is ToolKind.WORKFLOW_HANDOFF
     assert registry.get("run_watchlist_workflow").kind is ToolKind.WORKFLOW_HANDOFF
     with pytest.raises(KeyError):

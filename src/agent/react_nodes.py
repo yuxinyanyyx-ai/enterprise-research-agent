@@ -8,12 +8,14 @@ from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, Tool
 from langchain_core.utils.function_calling import convert_to_openai_tool
 
 from src.agent.audit_log import trace_operation, write_event
+from src.agent.artifact_store import published_artifact_refs
 from src.agent.context_budget import ContextBudget, ContextBudgetExceeded, build_model_messages, estimate_input_tokens
 from src.agent.prompts import REACT_SYSTEM_PROMPT
 from src.agent.react_state import ReactState
 from src.agent.domain_workflows import COMMON_INPUTS, DOCUMENT_FIELDS, WATCHLIST_FIELDS
 from src.schemas.workflow import WorkflowResult
 from src.agent.tooling import (
+    READ_TOOL_NAME,
     DEFAULT_MAX_TOOL_ROUNDS,
     execute_tools,
     finalize_general_answer,
@@ -60,6 +62,9 @@ def prepare_react_request(state: ReactState) -> dict[str, Any]:
         "react_tool_stop_reason": "",
         "workflow_tool_call_id": "",
         "tool_artifacts": [],
+        "artifact_reads": [],
+        "artifact_read_disabled": False,
+        "published_artifact_refs": {},
         "final_answer": "",
         "workflow_input": {}, "workflow_output": {}, "workflow_status": "", "workflow_name": "",
         "operation_ledger": {}, "completed_workflows": [], "function_ledger": {},
@@ -71,12 +76,15 @@ def build_react_agent_node(
     *,
     registry: ToolRegistry | None = None,
     memory_repository: MemoryRepository | None = None,
+    memory_limit: int = 8,
 ):
     registry = registry if registry is not None else load_builtin_tools()
     def react_agent(state: ReactState) -> dict[str, Any]:
         definitions = [item for item in registry.for_context(ToolContext.GENERAL)
                        if item.tool.name not in state.get("completed_workflows", [])
-                       and item.availability(state)]
+                       and (item.availability(state) or (
+                           item.tool.name == READ_TOOL_NAME and not state.get("artifact_read_disabled")
+                       ))]
         active_result = state.get("dmf_results") or {}
         active_result_summary = {}
         if isinstance(active_result, dict):
@@ -109,16 +117,26 @@ def build_react_agent_node(
                 for memory in memory_repository.list_active(
                     tenant_id=memory_scope["tenant_id"],
                     user_id=memory_scope["user_id"],
+                    limit=memory_limit,
                 )
             ]
         tools = [item.tool for item in definitions]
         budget = ContextBudget.from_env()
+        publications = {}
         try:
-            messages = build_model_messages(state.get("react_messages") or [], context, REACT_SYSTEM_PROMPT, tools=tools, budget=budget)
+            messages = build_model_messages(
+                state.get("react_messages") or [], context, REACT_SYSTEM_PROMPT,
+                tools=tools, budget=budget, artifact_publications=publications,
+            )
         except ContextBudgetExceeded:
             write_event("context.rejected", state, reason="input_budget_exceeded")
             return {"react_messages": [AIMessage(content="当前请求或必要工具上下文过长，请缩短问题或分批提交。")],
                     "react_tool_stop_reason": "input_budget_exceeded"}
+        published = published_artifact_refs({
+            **state, "published_artifact_refs": {**published_artifact_refs(state), **publications},
+        })
+        binding_state = {**state, "published_artifact_refs": published}
+        tools = [item.tool for item in definitions if item.availability(binding_state)]
         write_event("context.prepared", state,
                 estimated_input_tokens=estimate_input_tokens(messages, [convert_to_openai_tool(tool) for tool in tools]),
                 input_budget_tokens=budget.input_tokens,
@@ -135,7 +153,7 @@ def build_react_agent_node(
             write_event("tool.selected", state, call=call,
                         round=state.get("react_tool_rounds", 0),
                         argument_count=len(call.get("args") or {}))
-        return {"react_messages": [response]}
+        return {"react_messages": [response], "published_artifact_refs": published}
 
     return react_agent
 
@@ -145,6 +163,11 @@ def execute_function_tools(state: ReactState, *, registry: ToolRegistry | None =
     call = state["react_messages"][-1].tool_calls[0]
     problem = function_problem(state, call, registry)
     if problem:
+        if call["name"] == READ_TOOL_NAME:
+            return {
+                **_reject_calls(state, "artifact 引用不可用。请依据已有证据回答。", error_code="invalid_reference"),
+                "artifact_read_disabled": True,
+            }
         return _reject_calls(state, problem)
     definition = registry.get(call["name"])
     ledger = dict(state.get("function_ledger") or {})
@@ -153,6 +176,11 @@ def execute_function_tools(state: ReactState, *, registry: ToolRegistry | None =
                       "state": {name: state.get(name) for name in state_keys}}, sort_keys=True, default=str)
     if key in ledger:
         if not definition.reuse_result:
+            if call["name"] == READ_TOOL_NAME:
+                return {
+                    **_reject_calls(state, definition.repeat_message, error_code="duplicate_read"),
+                    "artifact_read_disabled": True,
+                }
             return _reject_calls(state, definition.repeat_message)
         write_event("tool.reused", state, call=call, reason="request_deduplication")
         return {"react_messages": [ToolMessage(content=json.dumps(ledger[key], ensure_ascii=False, default=str), tool_call_id=call["id"], name=call["name"])],
@@ -224,16 +252,22 @@ def policy_error(state: ReactState) -> dict[str, Any]:
     return _reject_calls(state, "每轮只能调用一个允许的工具，且不能重复已完成的 Workflow。")
 
 
-def _reject_calls(state: ReactState, reason: str) -> dict[str, Any]:
+def _reject_calls(state: ReactState, reason: str, *, error_code: str = "") -> dict[str, Any]:
     messages = state.get("react_messages") or []
     last_message = messages[-1] if messages else None
     calls = last_message.tool_calls if isinstance(last_message, AIMessage) else []
     for call in calls:
         write_event("tool.rejected", state, call=call, reason="policy_error")
+        if call["name"] == READ_TOOL_NAME and error_code:
+            write_event("artifact.read_rejected", state, call=call,
+                        artifact_resolution=error_code, error_code=error_code)
     return {
         "react_messages": [
             ToolMessage(
-                content=json.dumps({"success": False, "message": reason}, ensure_ascii=False),
+                content=json.dumps({
+                    "success": False, "message": reason,
+                    **({"error_code": error_code} if error_code else {}),
+                }, ensure_ascii=False),
                 tool_call_id=str(call["id"]),
                 name=str(call["name"]),
                 status="error",

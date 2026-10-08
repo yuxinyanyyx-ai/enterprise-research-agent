@@ -28,7 +28,11 @@ def _authorize_scope(state: ToolState, _call: dict[str, Any]) -> str | None:
     return None
 
 
-def register_memory_tools(registry: ToolRegistry, repository: MemoryRepository) -> None:
+def register_memory_tools(
+    registry: ToolRegistry, repository: MemoryRepository, *, memory_limit: int = 8
+) -> None:
+    if memory_limit < 1:
+        raise ValueError("memory_limit must be positive")
     @tool(
         "remember_user_memory",
         description="保存当前认证用户明确要求记住的结构化偏好。只保存语言、称谓、输出格式等偏好，不保存凭据或完整对话。",
@@ -66,6 +70,7 @@ def register_memory_tools(registry: ToolRegistry, repository: MemoryRepository) 
         memories = repository.list_active(
             tenant_id=tenant_id,
             user_id=user_id,
+            limit=memory_limit,
         )
         return {
             "success": True,

@@ -1,4 +1,5 @@
 
+import os
 import time
 from pathlib import Path
 from typing import Callable
@@ -10,6 +11,13 @@ from langgraph.types import Command
 from src.agent.react_graph import build_react_graph
 from src.schemas.document_dmf import DocumentArtifact
 from src.services.document_dmf_service import DocumentDMFService
+
+
+def _react_max_tool_rounds() -> int:
+    value = int(os.getenv("AGENT_REACT_MAX_TOOL_ROUNDS", "8"))
+    if value < 1:
+        raise ValueError("AGENT_REACT_MAX_TOOL_ROUNDS must be positive")
+    return value
 
 
 def _file_command_path(question: str) -> Path:
@@ -130,7 +138,7 @@ def main():
                 {
                     "user_query": question,
                     "request_id": uuid4().hex,
-                    "react_max_tool_rounds": 2,
+                    "react_max_tool_rounds": _react_max_tool_rounds(),
                     "document_artifacts": (
                         {active_document["document_id"]: active_document}
                         if active_document

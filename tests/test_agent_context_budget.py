@@ -79,6 +79,40 @@ def test_small_current_tool_result_is_sent_without_projection():
     assert json.loads(result[3].content) == data
 
 
+def test_metadata_or_result_body_alone_does_not_publish_reference():
+    from langchain_openai.chat_models.base import _convert_message_to_dict
+
+    reference = {"artifact_id": "saved-but-unpublished"}
+    data = {"evidence": [{"text": "fact"}], "artifact_ref": reference, "context_view": "artifact_index"}
+    message = ToolMessage(content=json.dumps(data), tool_call_id="call-1", name="source",
+                          additional_kwargs={"artifact_ref": reference})
+    publications = {"stale": {}}
+    messages = [HumanMessage(content="query"), AIMessage(content="", tool_calls=[
+        {"name": "source", "args": {}, "id": "call-1", "type": "tool_call"}
+    ]), message]
+    result = build_model_messages(messages, {}, "system", artifact_publications=publications)
+    wire = _convert_message_to_dict(result[-2])
+    assert publications == {}
+    assert "additional_kwargs" not in wire
+    assert "artifact_ref" not in wire
+    assert wire["tool_call_id"] == "call-1"
+
+
+def test_empty_compact_evidence_view_is_explicit_and_does_not_publish():
+    from src.agent.context_budget import _tool_view
+
+    data = {"evidence": [{"text": "source fact", "complete": True, "truncated": False}]}
+    message = ToolMessage(content=json.dumps(data), tool_call_id="call-1", name="source",
+                          additional_kwargs={"artifact_ref": {"artifact_id": "audit-only"}, "result_strategy": "inline_compact"})
+    publications = {}
+    preview = json.loads(_tool_view(message, 0, 64, publications).content)
+    assert preview["evidence"] == []
+    assert preview["context_list_totals"]["evidence"] == 1
+    assert preview["context_truncated"] is True
+    assert publications == {}
+    assert json.loads(message.content) == data
+
+
 def test_large_artifact_result_uses_reference_when_current_budget_is_tight():
     data = {"success": True, "records": [{"secret": "hidden " * 200} for _ in range(100)]}
     artifact_ref = {"artifact_id": "artifact-1", "size_bytes": 100000}
@@ -88,7 +122,8 @@ def test_large_artifact_result_uses_reference_when_current_budget_is_tight():
                     additional_kwargs={"artifact_ref": artifact_ref})]
     budget = ContextBudget(window_tokens=1600, output_tokens=200, safety_tokens=200)
 
-    result = build_model_messages(messages, {}, "system", budget=budget)
+    publications = {}
+    result = build_model_messages(messages, {}, "system", budget=budget, artifact_publications=publications)
     preview = json.loads(result[-2].content)
 
     assert preview["artifact_ref"] == artifact_ref
@@ -96,6 +131,65 @@ def test_large_artifact_result_uses_reference_when_current_budget_is_tight():
     assert preview["context_view"] == "artifact_index"
     assert preview["read_required"] is True
     assert "hidden" not in str(preview)
+    assert publications == {"artifact-1": preview["artifact_ref"]}
+
+
+def test_inline_compact_result_stays_inline_when_budget_is_tight():
+    data = {"success": True, "evidence": [{"text": "fact " * 200} for _ in range(100)]}
+    artifact_ref = {"artifact_id": "artifact-pec", "size_bytes": 100000}
+    messages = [HumanMessage(content="query"), AIMessage(content="", tool_calls=[
+        {"name": "search_pec_knowledge", "args": {}, "id": "call-pec", "type": "tool_call"}
+    ]), ToolMessage(
+        content=json.dumps(data), tool_call_id="call-pec", name="search_pec_knowledge",
+        additional_kwargs={"artifact_ref": artifact_ref, "result_strategy": "inline_compact"},
+    )]
+
+    publications = {}
+    result = build_model_messages(
+        messages, {}, "system",
+        budget=ContextBudget(window_tokens=1600, output_tokens=200, safety_tokens=200),
+        artifact_publications=publications,
+    )
+    preview = json.loads(result[-2].content)
+
+    assert preview["context_view"] == "inline_compact"
+    assert "read_required" not in preview
+    assert "artifact_index" not in preview.get("context_view", "")
+    assert publications == {}
+    assert preview["evidence"]
+
+
+@pytest.mark.parametrize("unit", ["x", "\u4e2d"], ids=["ascii", "chinese"])
+@pytest.mark.parametrize("tight", [False, True], ids=["normal", "tight"])
+def test_pec_20kb_service_result_stays_bounded_in_model_view(unit, tight):
+    from src.agent.tooling import _tool_message
+    from src.pec.knowledge_service import _bounded_result
+
+    data = _bounded_result({"success": True}, [{
+        "text": unit * 30000, "evidence_type": "source_text",
+        "source_file": "meeting.pptx", "location": "Slide 1",
+        "complete": True, "truncated": False,
+    }])
+    call = {"name": "search_pec_knowledge", "args": {}, "id": "pec-1", "type": "tool_call"}
+    tool_message = _tool_message(call, data, result_strategy="inline_compact",
+                                 artifact_ref={"artifact_id": "audit-only"})
+    messages = [HumanMessage(content="question"), AIMessage(content="", tool_calls=[call]), tool_message]
+    budget = ContextBudget(window_tokens=2500, output_tokens=200, safety_tokens=200) if tight else ContextBudget()
+    publications = {}
+    result = build_model_messages(messages, {}, "system", budget=budget, artifact_publications=publications)
+    sent = result[-2]
+    payload = json.loads(sent.content)
+    assert len(sent.content.encode("utf-8")) <= 20000
+    assert estimate_input_tokens(result) <= budget.input_tokens
+    assert sent.tool_call_id == call["id"]
+    assert publications == {}
+    assert "read_required" not in payload
+    if not tight and unit == "x":
+        assert sent.content == tool_message.content
+    else:
+        assert payload["context_view"] == "inline_compact"
+        assert payload["context_truncated"] is True
+    assert tool_message.content == json.dumps(data, ensure_ascii=False, default=str)
 
 
 @pytest.mark.parametrize("query", ["x" * 100000, "\u4e2d" * 10000], ids=["english", "chinese"])

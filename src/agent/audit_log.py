@@ -40,6 +40,7 @@ def write_event(event: str, state, *, call=None, **details) -> None:
             "round", "argument_count", "operation", "decision",
             "estimated_input_tokens", "input_budget_tokens", "source_message_count", "sent_message_count",
             "context_view", "emergency_fallback",
+            "artifact_resolution", "source_tool_call_id", "error_code",
         }
         payload.update({key: value for key, value in details.items() if key in allowed})
         message = json.dumps(payload, ensure_ascii=True)

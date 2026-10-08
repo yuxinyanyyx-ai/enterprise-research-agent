@@ -64,3 +64,22 @@ def load_artifact(artifact_id: str, *, request_id: str) -> Any:
     if isinstance(payload, dict) and payload.get("__artifact_request_id") == request_id:
         return payload.get("value")
     raise ArtifactAccessError("Artifact is not available for this request")
+
+
+def published_artifact_refs(state) -> dict[str, dict[str, Any]]:
+    request_id = state.get("request_id")
+    published = state.get("published_artifact_refs") or {}
+    if not request_id:
+        return {}
+    references = {}
+    for artifact in state.get("tool_artifacts") or []:
+        reference = artifact.get("artifact_ref") or {}
+        artifact_id = reference.get("artifact_id")
+        if (
+            artifact_id and reference.get("request_id") == request_id
+            and reference.get("tool_call_id") == artifact.get("tool_call_id")
+            and reference.get("tool_name") == artifact.get("tool_name")
+            and published.get(artifact_id) == reference
+        ):
+            references[artifact_id] = reference
+    return references

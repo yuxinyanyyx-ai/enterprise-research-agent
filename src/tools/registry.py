@@ -26,6 +26,11 @@ class ToolContext(StrEnum):
     DMF_EXPORT = "dmf_export"
 
 
+class ToolResultStrategy(StrEnum):
+    ARTIFACT = "artifact"
+    INLINE_COMPACT = "inline_compact"
+
+
 ToolState = Mapping[str, Any]
 ToolCall = Mapping[str, Any]
 
@@ -47,6 +52,7 @@ class ToolDefinition:
     contexts: frozenset[ToolContext]
     kind: ToolKind = ToolKind.FUNCTION
     parallel_safe: bool = False
+    result_strategy: ToolResultStrategy = ToolResultStrategy.ARTIFACT
     state_arguments: tuple[tuple[str, str], ...] = ()
     availability: Callable[[ToolState], bool] = always_available
     authorize: Callable[[ToolState, ToolCall], str | None] | None = None
@@ -108,6 +114,7 @@ def register_tool(
     contexts: set[ToolContext],
     kind: ToolKind = ToolKind.FUNCTION,
     parallel_safe: bool = False,
+    result_strategy: ToolResultStrategy = ToolResultStrategy.ARTIFACT,
     state_arguments: dict[str, str] | None = None,
     availability: Callable[[ToolState], bool] = always_available,
     authorize: Callable[[ToolState, ToolCall], str | None] | None = None,
@@ -123,6 +130,7 @@ def register_tool(
             contexts=frozenset(contexts),
             kind=kind,
             parallel_safe=parallel_safe,
+            result_strategy=result_strategy,
             state_arguments=tuple((state_arguments or {}).items()),
             availability=availability,
             authorize=authorize,

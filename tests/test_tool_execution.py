@@ -42,6 +42,16 @@ def _call(name: str, args: dict, call_id: str) -> dict:
     }
 
 
+def _published_state(reference):
+    return {
+        "published_artifact_refs": {reference["artifact_id"]: reference},
+        "tool_artifacts": [{
+            "tool_name": reference["tool_name"], "tool_call_id": reference["tool_call_id"],
+            "artifact_ref": reference,
+        }],
+    }
+
+
 def _write_registry(marker: Path) -> ToolRegistry:
     @tool("write_marker")
     def write_marker(content: str) -> dict:
@@ -143,7 +153,7 @@ def test_read_tool_artifact_uses_registered_tool_and_state_request_id(tmp_path, 
         )])],
         "request_id": "request-1",
         "tool_context": ToolContext.GENERAL.value,
-        "tool_artifacts": [],
+        **_published_state(artifact_ref),
         "last_tool_batch": [],
     })
 
@@ -163,3 +173,52 @@ def test_read_tool_artifact_uses_registered_tool_and_state_request_id(tmp_path, 
         "last_tool_batch": [],
     })
     assert json.loads(denied["messages"][-1].content)["success"] is False
+
+
+def test_large_artifact_without_key_returns_directory_and_read_has_no_artifact_ref(tmp_path, monkeypatch) -> None:
+    monkeypatch.setenv("AGENT_ARTIFACT_DIR", str(tmp_path / "artifacts"))
+    artifact_ref = store_artifact(
+        {"evidence": [{"text": "x" * 500} for _ in range(20)]},
+        request_id="request-1",
+        tool_name="search_pec_knowledge",
+        tool_call_id="source-1",
+    )
+    graph = _execution_graph()
+
+    completed = graph.invoke({
+        "messages": [AIMessage(content="", tool_calls=[_call(
+            "read_tool_artifact", {"artifact_id": artifact_ref["artifact_id"]}, "read-1"
+        )])],
+        "request_id": "request-1", "tool_context": ToolContext.GENERAL.value,
+        **_published_state(artifact_ref), "last_tool_batch": [],
+    })
+
+    payload = json.loads(completed["messages"][-1].content)
+    assert payload["read_mode"] == "directory"
+    assert payload["available_sections"]["evidence"] == {"type": "list", "length": 20}
+    assert completed["tool_artifacts"][-1].get("artifact_ref") is None
+
+
+def test_repeated_artifact_read_is_rejected_without_second_io(tmp_path, monkeypatch) -> None:
+    monkeypatch.setenv("AGENT_ARTIFACT_DIR", str(tmp_path / "artifacts"))
+    artifact_ref = store_artifact(
+        {"records": [{"id": 1}]}, request_id="request-1", tool_name="source", tool_call_id="source-1"
+    )
+    graph = _execution_graph()
+    args = {"artifact_id": artifact_ref["artifact_id"], "key": "records", "offset": 0, "limit": 1}
+    first = graph.invoke({
+        "messages": [AIMessage(content="", tool_calls=[_call("read_tool_artifact", args, "read-1")])],
+        "request_id": "request-1", "tool_context": ToolContext.GENERAL.value,
+        **_published_state(artifact_ref), "last_tool_batch": [],
+    })
+    second = graph.invoke({
+        "messages": [AIMessage(content="", tool_calls=[_call("read_tool_artifact", args, "read-2")])],
+        "request_id": "request-1", "tool_context": ToolContext.GENERAL.value,
+        "tool_artifacts": first["tool_artifacts"], "artifact_reads": first["artifact_reads"],
+        "published_artifact_refs": first["published_artifact_refs"],
+        "last_tool_batch": [],
+    })
+
+    payload = json.loads(second["messages"][-1].content)
+    assert payload["duplicate_read"] is True
+    assert second["tool_artifacts"][-1].get("artifact_ref") is None
