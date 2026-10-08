@@ -44,7 +44,7 @@ def _read_failure(request_id, source_call_id, error_code, resolution, message):
     "read_tool_artifact",
     description=(
         "读取之前工具调用保存的完整结果。大结果优先按顶层列表字段分段读取；"
-        "artifact_id 来自工具返回的 artifact_ref。"
+        "artifact_id 来自当前业务上下文的 artifact_refs。"
     ),
 )
 def read_tool_artifact(

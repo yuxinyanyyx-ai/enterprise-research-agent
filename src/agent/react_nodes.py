@@ -9,7 +9,7 @@ from langchain_core.utils.function_calling import convert_to_openai_tool
 
 from src.agent.audit_log import trace_operation, write_event
 from src.agent.artifact_store import published_artifact_refs
-from src.agent.context_budget import ContextBudget, ContextBudgetExceeded, build_model_messages, estimate_input_tokens
+from src.agent.context_budget import ContextBudget, ContextBudgetExceeded, ToolMessagePairingError, build_model_messages, estimate_input_tokens, filter_sensitive_fields
 from src.agent.prompts import REACT_SYSTEM_PROMPT
 from src.agent.react_state import ReactState
 from src.agent.domain_workflows import COMMON_INPUTS, DOCUMENT_FIELDS, WATCHLIST_FIELDS
@@ -71,6 +71,38 @@ def prepare_react_request(state: ReactState) -> dict[str, Any]:
     }
 
 
+def _message_result(message: ToolMessage) -> Any:
+    try:
+        return json.loads(message.content) if isinstance(message.content, str) else message.content
+    except (ValueError, TypeError):
+        return message.content
+
+
+def _current_result_is_visible(state: ReactState, current: list, active_result: dict) -> bool:
+    if not active_result:
+        return False
+    for message in current:
+        if not isinstance(message, ToolMessage):
+            continue
+        payload = _message_result(message)
+        if message.name == "search_dmf" and state.get("result_source") == "query":
+            trusted_source = any(
+                artifact.get("tool_name") == message.name
+                and artifact.get("tool_call_id") == message.tool_call_id
+                and filter_sensitive_fields(artifact.get("result")) == active_result
+                for artifact in state.get("tool_artifacts", [])
+            )
+            if trusted_source and filter_sensitive_fields(payload) == active_result:
+                return True
+        if (message.name == "run_document_dmf_workflow" and state.get("result_source") == "document"
+            and state.get("workflow_name") == message.name
+                and message.tool_call_id == state.get("workflow_tool_call_id") and isinstance(payload, dict)
+            and isinstance(payload.get("data"), dict)
+            and filter_sensitive_fields(payload["data"].get("dmf_results")) == active_result):
+            return True
+    return False
+
+
 def build_react_agent_node(
     llm_factory: Callable[[], Any] = create_apollo_llm,
     *,
@@ -80,30 +112,20 @@ def build_react_agent_node(
 ):
     registry = registry if registry is not None else load_builtin_tools()
     def react_agent(state: ReactState) -> dict[str, Any]:
-        definitions = [item for item in registry.for_context(ToolContext.GENERAL)
-                       if item.tool.name not in state.get("completed_workflows", [])
-                       and (item.availability(state) or (
-                           item.tool.name == READ_TOOL_NAME and not state.get("artifact_read_disabled")
-                       ))]
-        active_result = state.get("dmf_results") or {}
-        active_result_summary = {}
-        if isinstance(active_result, dict):
-            active_result_summary = {
-                key: active_result[key]
-                for key in ("success", "status", "message", "total_records", "count")
-                if key in active_result
-            }
-            for key in ("results", "records"):
-                value = active_result.get(key)
-                if isinstance(value, list):
-                    active_result_summary[f"{key}_count"] = len(value)
+        active_result = filter_sensitive_fields(state.get("dmf_results") or {})
+        source_messages = state.get("react_messages") or []
+        boundary = next((index for index in range(len(source_messages) - 1, -1, -1)
+                         if isinstance(source_messages[index], HumanMessage)), len(source_messages))
+        current = source_messages[boundary:]
         context = {
             "context_source": "checkpoint", "result_source": state.get("result_source", ""),
             "documents": [{"document_id": key, "file_name": value.get("file_name", "")} for key, value in (state.get("document_artifacts") or {}).items()],
             "extracted_conditions": state.get("merged_document_query", {}),
-            "active_result_id": state.get("result_id", ""), "active_result": active_result_summary,
+            "active_result_id": state.get("result_id", ""),
             "pending": state.get("domain_pending", {}), "completed_workflows": state.get("completed_workflows", []),
         }
+        if not _current_result_is_visible(state, current, active_result):
+            context["active_result"] = active_result
         memory_scope = state.get("memory_scope") or {}
         if memory_repository is not None and memory_scope.get("tenant_id") and memory_scope.get("user_id"):
             context["long_term_memory"] = [
@@ -120,32 +142,49 @@ def build_react_agent_node(
                     limit=memory_limit,
                 )
             ]
-        tools = [item.tool for item in definitions]
+        candidate_refs = {
+            reference["artifact_id"]: reference
+            for artifact in state.get("tool_artifacts", [])
+            if (reference := artifact.get("artifact_ref") or {}).get("artifact_id")
+            and any(isinstance(message, ToolMessage) and message.tool_call_id == artifact.get("tool_call_id")
+                    and message.name == artifact.get("tool_name")
+                    and message.additional_kwargs.get("artifact_ref") == reference
+                    and message.additional_kwargs.get("result_strategy", "artifact") != "inline_compact"
+                    and filter_sensitive_fields(_message_result(message)) == filter_sensitive_fields(artifact.get("result"))
+                    for message in current)
+        }
+        published = published_artifact_refs({
+            **state, "published_artifact_refs": {**(state.get("published_artifact_refs") or {}), **candidate_refs},
+        })
+        if published:
+            context["artifact_refs"] = [
+                {key: reference[key] for key in ("artifact_id", "tool_name", "tool_call_id", "size_bytes", "sha256")
+                 if key in reference}
+                for reference in published.values()
+            ]
+        binding_state = {**state, "published_artifact_refs": published}
+        tools = [item.tool for item in registry.for_context(ToolContext.GENERAL)
+                 if item.tool.name not in state.get("completed_workflows", []) and item.availability(binding_state)]
         budget = ContextBudget.from_env()
-        publications = {}
         try:
             messages = build_model_messages(
                 state.get("react_messages") or [], context, REACT_SYSTEM_PROMPT,
-                tools=tools, budget=budget, artifact_publications=publications,
+                tools=tools, budget=budget,
             )
+        except ToolMessagePairingError:
+            write_event("context.rejected", state, reason="invalid_tool_pairing")
+            return {"react_messages": [AIMessage(content="工具调用与返回结果不匹配，本次操作已停止。请重新发起请求。")],
+                    "react_tool_stop_reason": "invalid_tool_pairing"}
         except ContextBudgetExceeded:
             write_event("context.rejected", state, reason="input_budget_exceeded")
             return {"react_messages": [AIMessage(content="当前请求或必要工具上下文过长，请缩短问题或分批提交。")],
                     "react_tool_stop_reason": "input_budget_exceeded"}
-        published = published_artifact_refs({
-            **state, "published_artifact_refs": {**published_artifact_refs(state), **publications},
-        })
-        binding_state = {**state, "published_artifact_refs": published}
-        tools = [item.tool for item in definitions if item.availability(binding_state)]
         write_event("context.prepared", state,
                 estimated_input_tokens=estimate_input_tokens(messages, [convert_to_openai_tool(tool) for tool in tools]),
                 input_budget_tokens=budget.input_tokens,
                 source_message_count=len(state.get("react_messages") or []),
                 sent_message_count=len(messages),
-                context_view="artifact_index" if any(
-                isinstance(message, ToolMessage) and "artifact_index" in str(message.content)
-                for message in messages
-                ) else "full_or_preview")
+                context_view="full_safe")
         with trace_operation(state, operation="react.model"):
             model = llm_factory().bind_tools(tools)
             response = model.invoke(messages)

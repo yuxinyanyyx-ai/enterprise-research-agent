@@ -1,7 +1,7 @@
 import json
 
 import pytest
-from langchain_core.messages import AIMessage, ToolMessage
+from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 from langchain_core.tools import tool
 from langchain_openai.chat_models.base import _convert_message_to_dict
 from langgraph.checkpoint.memory import InMemorySaver
@@ -58,7 +58,7 @@ def test_graph_publishes_before_read_and_recovers_after_read_failure(monkeypatch
     @tool("lookup_records")
     def lookup_records() -> dict:
         """Look up records."""
-        return {"success": True, "records": [{"text": "source fact " * 500} for _ in range(50)]}
+        return {"success": True, "records": [{"text": "source fact " * 2} for _ in range(50)]}
 
     def register_source(registry):
         register_tool(lookup_records, registry=registry, risk=ToolRisk.READ_ONLY, contexts={ToolContext.GENERAL})
@@ -90,8 +90,15 @@ def test_graph_publishes_before_read_and_recovers_after_read_failure(monkeypatch
                 return _call("lookup_records", "source-1")
             if self.step == 2:
                 payload = json.loads(next(message.content for message in messages if isinstance(message, ToolMessage)))
-                assert payload["context_view"] == "artifact_index"
-                self.reference = payload["artifact_ref"]
+                assert payload["records"] == [{"text": "source fact " * 2} for _ in range(50)]
+                assert "context_truncated" not in payload
+                assert "read_required" not in payload
+                assert payload == {"success": True, "records": [{"text": "source fact " * 2} for _ in range(50)]}
+                context = json.loads(messages[-1].content.split("\n", 1)[1])
+                assert len(context["artifact_refs"]) == 1
+                self.reference = context["artifact_refs"][0]
+                assert "request_id" not in self.reference
+                assert "storage" not in self.reference
                 if failure:
                     (tmp_path / f"{self.reference['artifact_id']}.json").unlink()
                 return _call("read_tool_artifact", "read-1", artifact_id=self.reference["artifact_id"], key="records", limit=1)
@@ -113,7 +120,8 @@ def test_graph_publishes_before_read_and_recovers_after_read_failure(monkeypatch
     assert ("read_tool_artifact" not in model.bound_names[-1]) is failure
     assert result["artifact_read_disabled"] is failure
     assert not result["react_tool_stop_reason"]
-    assert result["published_artifact_refs"] == {model.reference["artifact_id"]: model.reference}
+    full_reference = result["tool_artifacts"][0]["artifact_ref"]
+    assert result["published_artifact_refs"] == {model.reference["artifact_id"]: full_reference}
     assert result["final_answer"] == "Evidence-based answer with limitations."
 
 
@@ -174,3 +182,78 @@ def test_reader_injected_publications_are_not_model_parameters():
     schema = artifact_tools.read_tool_artifact.tool_call_schema.model_fields
     assert "request_id" not in schema
     assert "published_references" not in schema
+
+
+@pytest.mark.parametrize("mode", ["current", "altered", "historical", "wrong-name", "body-only", "inline-compact", "foreign"])
+def test_publication_requires_current_authentic_source_body(monkeypatch, tmp_path, mode):
+    monkeypatch.setenv("AGENT_ARTIFACT_DIR", str(tmp_path))
+    data = {"records": [{"dmf_no": "original"}]}
+    reference = store_artifact(data, request_id="request", tool_name="source", tool_call_id="source-1")
+    state = {"request_id": "request", "react_tool_context": "general", **_published_state(reference)}
+    state["published_artifact_refs"] = {}
+    state["tool_artifacts"][0]["result"] = data
+    payload = data if mode != "altered" else {"records": [{"dmf_no": "altered"}]}
+    name = "source" if mode != "wrong-name" else "other_source"
+    state["react_messages"] = [HumanMessage(content="query"), _call(name, "source-1"),
+                               ToolMessage(content=json.dumps(payload), name=name, tool_call_id="source-1",
+                                           additional_kwargs={"artifact_ref": reference})]
+    if mode == "historical":
+        state["react_messages"].append(HumanMessage(content="next query"))
+    elif mode == "body-only":
+        state["react_messages"][-1] = ToolMessage(content=json.dumps({**data, "artifact_ref": reference}),
+                                                name=name, tool_call_id="source-1")
+        state["tool_artifacts"][0]["result"] = {**data, "artifact_ref": reference}
+    elif mode == "inline-compact":
+        state["react_messages"][-1].additional_kwargs["result_strategy"] = "inline_compact"
+    elif mode == "foreign":
+        state["request_id"] = "other-request"
+
+    class Model:
+        def bind_tools(self, tools):
+            assert ("read_tool_artifact" in {item.name for item in tools}) is (mode == "current")
+            return self
+
+        def invoke(self, messages):
+            context = json.loads(messages[-1].content.split("\n", 1)[1])
+            assert ("artifact_refs" in context) is (mode == "current")
+            if mode == "current":
+                assert context["artifact_refs"][0]["artifact_id"] == reference["artifact_id"]
+                assert "request_id" not in context["artifact_refs"][0]
+            sent = next((message for message in messages if isinstance(message, ToolMessage)), None)
+            if sent is not None:
+                wire = _convert_message_to_dict(sent)
+                assert "additional_kwargs" not in wire
+                assert wire["content"] == state["react_messages"][-1].content
+            return AIMessage(content="done")
+
+    registry = build_builtin_registry((artifact_tools.register_artifact_tools,))
+    result = react_nodes.build_react_agent_node(registry=registry, llm_factory=Model)(state)
+    assert result["published_artifact_refs"] == ({reference["artifact_id"]: reference} if mode == "current" else {})
+    assert state["published_artifact_refs"] == {}
+
+
+@pytest.mark.parametrize("mode", ["full", "directory", "page"])
+def test_authorized_reader_keeps_existing_full_directory_and_page_contract(monkeypatch, tmp_path, mode):
+    monkeypatch.setenv("AGENT_ARTIFACT_DIR", str(tmp_path))
+    data = {"records": [{"text": "x" * (1000 if mode == "directory" else 20)} for _ in range(12)]}
+    reference = store_artifact(data, request_id="request", tool_name="source", tool_call_id="source-1")
+    arguments = {"artifact_id": reference["artifact_id"]}
+    if mode == "page":
+        arguments.update(key="records", offset=10, limit=2)
+    state = {"request_id": "request", "tool_context": "general", **_published_state(reference),
+             "messages": [_call("read_tool_artifact", "read-1", **arguments)]}
+    registry = build_builtin_registry((artifact_tools.register_artifact_tools,))
+    result = tooling.execute_tools(state, registry=registry)
+    payload = json.loads(result["messages"][0].content)
+    assert payload["success"] is True
+    if mode == "full":
+        assert payload["read_mode"] == "full"
+        assert payload["value"] == data
+    elif mode == "directory":
+        assert payload["read_mode"] == "directory"
+        assert payload["available_sections"]["records"] == {"type": "list", "length": 12}
+        assert "value" not in payload
+    else:
+        assert payload["items"] == data["records"][10:12]
+        assert payload["total"] == 12
+        assert payload["next_offset"] is None

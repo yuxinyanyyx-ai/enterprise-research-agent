@@ -1,7 +1,7 @@
 cases:
 - id: CTX-001
-  description: Active results expose a bounded preview while retaining full checkpoint data
-  tags: [context, preview]
+  description: Active results expose every safe record while retaining full checkpoint data
+  tags: [context, complete]
   modes: [deterministic]
   initial_state:
     result_id: active-result
@@ -38,8 +38,9 @@ cases:
       - max_estimated_tokens: 11904
         message_types: [system, human, system]
         current_query_verbatim: true
-        contains: [context_truncated, context_list_totals, active-result, '12345']
-        not_contains: [HIDDEN-RECORD-11, HIDDEN-RECORD-12]
+        tool_pairs: true
+        contains: [active-result, '12345', HIDDEN-RECORD-11, HIDDEN-RECORD-12]
+        not_contains: [context_truncated, context_list_totals]
       call_deltas: {llm: 1, dmf: 0, export: 0}
 
 - id: CTX-002

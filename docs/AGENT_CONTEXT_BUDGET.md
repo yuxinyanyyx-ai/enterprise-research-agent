@@ -28,18 +28,25 @@ is not an exact tokenizer or a mathematical upper bound for every model.
 - The current user message stays verbatim, including whitespace. It is never
   silently truncated or replaced by a summary.
 - Current-turn tool calls keep their IDs, arguments, order and corresponding
-  tool results. Tool-result *content* may become a bounded JSON preview.
+  tool results. Every tool result and required business context is sent in full
+  after recursive sensitive-key filtering, or the model call is rejected.
 - Older complete conversational turns are included newest-first until the
   remaining budget is exhausted. Historical tool calls/results are excluded;
   retained user/assistant text is explicitly labelled as historical.
-- Previews retain result structure where possible, use `context_truncated` and
-  `context_list_totals`, and omit `raw_payload` and internal source paths.
-  They progressively reduce list/string limits when the required input is large.
-- Tool previews include `context_source`. The business snapshot includes existing
-  `result_source` and `active_result_id`; no new persistent provenance schema is
-  introduced. Source labels are metadata, not an authorization/security boundary.
-- Complete `dmf_results` remain in state for export and cross-turn reuse. Do not
-  compute full-result statistics from a truncated model preview.
+- The builder does not shorten strings, cap lists or dictionary keys, limit
+  nesting depth, reorder evidence, or create preview/truncation markers. Exact
+  sensitive keys such as `raw_payload`, credentials and internal source paths
+  are removed without mutating checkpoint state. Arbitrary string text is not
+  redacted by this key filter.
+- The business snapshot keeps `result_source` and `active_result_id`. Its active
+  result body is omitted only when a trusted current-turn tool message supplies
+  the same complete safe result. Counts, result IDs, partial artifact reads or
+  untrusted messages cannot establish this equivalence. On a new turn, the full
+  safe active result is restored from checkpoint because historical tools are
+  not sent. Source labels alone are not an authorization/security boundary.
+- Complete `dmf_results` remain in state for export and cross-turn reuse. Export
+  can continue only when required model input fits; an oversized result stops
+  further model-driven export rather than substituting a preview.
 - Domain intent parsing preserves the current query and required business
   parameters intact, including pending notification addresses. Only its recent
   conversation is budget-trimmed. Oversize required parameters trigger clarification.
@@ -50,8 +57,12 @@ is not an exact tokenizer or a mathematical upper bound for every model.
 ## Artifact Publication And Recovery
 
 `ToolDefinition.result_strategy` controls presentation, not authorization.
-`artifact` results can become a reference directory when input is too large;
-`inline_compact` results keep bounded evidence inline without `read_required`.
+`artifact` results remain complete. Explicit trusted references are sent in the
+existing Business Context, not inserted into tool-result bodies. Results never
+become a directory as a budget fallback.
+`inline_compact` results remain exactly as returned after safe filtering and do
+not publish reader references. References and available schemas count toward the
+same input budget; overflow prevents publication and any subsequent model call.
 Stored artifacts contain the complete tool return value, not data discarded by
 the tool itself. In particular, PEC evidence discarded before the service returns
 cannot be recovered from its artifact.
@@ -70,19 +81,27 @@ source metadata is never rewritten to create a misleading citation.
 `evidence_count` counts all built evidence items, `returned_evidence_count` counts
 the included items, and `truncated_evidence_count` counts omitted items (not the
 number of shortened texts). Error responses are bounded and omit backend details.
-The global token budget can still compress the final model view; 20KB is not a
-provider token allowance and does not change the model configuration.
+The builder does not apply a second evidence limit. The global token budget may
+reject a complete PEC return value; 20KB is not a provider token allowance and
+does not change the model configuration. These service-owned limits are unchanged.
 
 PEC registration removes its search tool after a successful hit, including a
 truncated hit. Empty results permit at most one supplemental search. This is a
 provider-owned availability policy, not a tool-name rule in the budget layer.
 Other failure adapters retain their existing behavior.
 
-The budget builder reports references only from its final adopted directory view.
+The budget builder only filters data, validates tool pairs, checks the complete
+input budget, and selects historical turns. It has no Artifact publication or
+tool-body rewriting logic. The outer node uses existing State and stored records
+to put verified minimal references in the Business Context `artifact_refs` list.
 Backend metadata (`ToolMessage.additional_kwargs`) is not publication to the
-model. References must match current-request stored tool-call records. The outer
-agent budgets candidate schemas first, then binds the reader only when a valid
-published reference exists. Filtering schemas does not trigger a second projection.
+model. References must match current-request stored tool-call records and a
+current message containing the authentic complete safe source result. Tool
+bodies remain unchanged except for sensitive-key filtering. Publication is
+persisted only after successful model invocation. Available tools are selected
+once with the verified reference set, and their schemas are included in the same
+budget check before binding and invocation. No clipping or automatic read fallback
+occurs. There are no additional persistent context fields or caches.
 
 `published_artifact_refs`, `artifact_reads`, and `artifact_read_disabled` are reset
 on each new request, including checkpoint reuse. Reader authorization verifies
@@ -113,10 +132,12 @@ python -m pytest -q tests/test_agent_context_budget.py tests/test_agent_context_
 ```
 
 Coverage includes 30-turn history, Chinese/English oversize queries, tool schema
-and argument budgets, error results, many documents/conditions, preview fallback,
-1,000-record same-turn and cross-turn export, long-history document resume, and
-report privacy. Existing small-result DMF and workflow cases remain regression
-checks.
+and argument/reference budgets, full error results or rejection, complete deep
+structures and many documents/conditions, same-turn deduplication, cross-turn
+recovery, in-budget full export and 1,000-record same/cross-turn rejection,
+authorized artifact full/directory/page reading, long-history document resume,
+and report privacy. Existing small-result DMF and workflow cases remain regression
+checks. No token allowances are increased to make these cases pass.
 
 Deterministic YAML expectations can use `llm_inputs`:
 
@@ -129,7 +150,7 @@ expected:
     current_query_verbatim: true
     tool_pairs: true
     message_types: [system, human, ai, tool, system]
-    contains: [context_source]
+    contains: [result_source]
     not_contains: [raw_payload]
 ```
 

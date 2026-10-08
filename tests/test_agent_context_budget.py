@@ -5,8 +5,175 @@ import pytest
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 
 from src.agent.context_budget import (
-    ContextBudget, ContextBudgetExceeded, build_model_messages, build_structured_messages, estimate_input_tokens, estimate_tokens,
+    ContextBudget, ContextBudgetExceeded, ToolMessagePairingError, build_model_messages, build_structured_messages, estimate_input_tokens, estimate_tokens, filter_sensitive_fields,
 )
+
+
+@pytest.mark.parametrize("payload", [
+    {"records": [{"dmf_no": str(index)} for index in range(20)]},
+    {"description": "complete text " * 60},
+    {f"field_{index}": index for index in range(40)},
+    {"a": {"b": {"c": {"d": {"e": {"f": {"g": {"h": {"value": "deep fact"}}}}}}}}},
+    {"evidence": [{"evidence_type": "background", "text": "first"},
+                  {"evidence_type": "decision", "text": "second", "complete": False}]},
+], ids=["long-list", "long-text", "many-keys", "deep-object", "evidence-order"])
+def test_in_budget_business_content_has_no_projection_limits(payload):
+    messages = [HumanMessage(content="  query  "), AIMessage(content="", tool_calls=[
+        {"name": "source", "args": {}, "id": "full", "type": "tool_call"}
+    ]), ToolMessage(content=json.dumps(payload), tool_call_id="full", name="source")]
+    context = {"active_result": payload}
+    original = copy.deepcopy((messages, context))
+    result = build_model_messages(messages, context, "system")
+    assert json.loads(result[-2].content) == payload
+    assert json.loads(result[-1].content.split("\n", 1)[1]) == context
+    assert result[1].content == "  query  "
+    assert (messages, context) == original
+
+
+def test_visible_artifact_reference_overhead_can_reject_complete_input():
+    reference = {"artifact_id": "stored", "request_id": "request", "tool_name": "source",
+                 "tool_call_id": "full", "sha256": "a" * 64, "size_bytes": 20, "storage": "filesystem"}
+    messages = [HumanMessage(content="query"), AIMessage(content="", tool_calls=[
+        {"name": "source", "args": {}, "id": "full", "type": "tool_call"}
+    ]), ToolMessage(content='{"records": [1, 2]}', tool_call_id="full", name="source",
+                    additional_kwargs={"artifact_ref": reference})]
+    baseline = build_model_messages(messages, {}, "system")
+    budget = ContextBudget(window_tokens=estimate_input_tokens(baseline) + 20, output_tokens=10, safety_tokens=10)
+    assert build_model_messages(messages, {}, "system", budget=budget) == baseline
+    original = copy.deepcopy(messages)
+    context = {"artifact_refs": [reference]}
+    original_context = copy.deepcopy(context)
+    with pytest.raises(ContextBudgetExceeded):
+        build_model_messages(messages, context, "system", budget=budget)
+    assert context == original_context
+    assert messages == original
+
+
+def test_context_reference_does_not_overwrite_business_reference():
+    reference = {"artifact_id": "stored", "tool_name": "source", "tool_call_id": "full"}
+    payload = {"records": [1], "artifact_ref": {"artifact_id": "business-value"}}
+    messages = [HumanMessage(content="query"), AIMessage(content="", tool_calls=[
+        {"name": "source", "args": {}, "id": "full", "type": "tool_call"}
+    ]), ToolMessage(content=json.dumps(payload), tool_call_id="full", name="source",
+                    additional_kwargs={"artifact_ref": reference})]
+    context = {"artifact_refs": [reference]}
+    original = copy.deepcopy((messages, context))
+    result = build_model_messages(messages, context, "system")
+    assert json.loads(result[-2].content) == payload
+    assert json.loads(result[-1].content.split("\n", 1)[1]) == context
+    assert (messages, context) == original
+
+
+def test_small_tool_and_business_context_share_safe_filter_without_mutation():
+    data = {"success": True, "token_count": 42, "records": [{
+        "dmf_no": "DMF-1", "status": "active", "description": "full business text",
+        "Raw_Payload": "private-raw", "Authorization": "private-auth",
+        "nested": {"accessToken": "private-token", "set-cookie": "private-cookie",
+                   "source_path": "private-path", "api_key": "private-key"},
+    }]}
+    reference = {"artifact_id": "audit-only"}
+    messages = [HumanMessage(content="query"), AIMessage(content="", tool_calls=[
+        {"name": "search_dmf", "args": {}, "id": "safe", "type": "tool_call"}
+    ]), ToolMessage(content=json.dumps(data), tool_call_id="safe", name="search_dmf", status="error",
+                    additional_kwargs={"artifact_ref": reference})]
+    context = {"active_result": data}
+    original = copy.deepcopy((messages, context))
+    result = build_model_messages(messages, context, "system")
+
+    filtered = filter_sensitive_fields(data)
+    assert json.loads(result[3].content) == filtered
+    assert json.loads(result[-1].content.split("\n", 1)[1])["active_result"] == filtered
+    assert filtered["records"][0]["description"] == "full business text"
+    assert filtered["token_count"] == 42
+    assert filtered["records"][0]["status"] == "active"
+    assert "private-" not in str(result)
+    assert result[3].tool_call_id == "safe"
+    assert result[3].status == "error"
+    assert result[3].additional_kwargs == messages[2].additional_kwargs
+    assert "artifact_refs" not in json.loads(result[-1].content.split("\n", 1)[1])
+    assert (messages, context) == original
+    filtered["records"][0]["nested"]["new"] = "changed"
+    assert (messages, context) == original
+
+
+@pytest.mark.parametrize("key", [
+    "raw_payload", "SOURCE_PATH", "markdownPath", "authorization", "Cookie", "Set-Cookie",
+    "password", "secret", "token", "api_key", "credential", "credentials", "client_secret",
+    "access_token", "refreshToken", "private-key", "verifyCode", "captcha", "captcha_code",
+])
+def test_sensitive_filter_handles_nested_key_aliases(key):
+    data = {"rows": [{key: "private", "token_count": 2, "status": "active"}]}
+    original = copy.deepcopy(data)
+    assert filter_sensitive_fields(data) == {"rows": [{"token_count": 2, "status": "active"}]}
+    assert data == original
+
+
+def test_tool_pairs_allow_reordered_results_and_sequential_batches():
+    calls = [{"name": "tool", "args": {}, "id": call_id, "type": "tool_call"} for call_id in ("one", "two")]
+    messages = [HumanMessage(content="query"), AIMessage(content="", tool_calls=calls),
+                ToolMessage(content="second", tool_call_id="two"), ToolMessage(content="first", tool_call_id="one"),
+                AIMessage(content="", tool_calls=[{"name": "tool", "args": {}, "id": "three", "type": "tool_call"}]),
+                ToolMessage(content="third", tool_call_id="three")]
+    original = copy.deepcopy(messages)
+    result = build_model_messages(messages, {}, "system")
+    assert [message.tool_call_id for message in result if isinstance(message, ToolMessage)] == ["two", "one", "three"]
+    assert messages == original
+
+
+@pytest.mark.parametrize("content", [
+    "plain tool response", "{not valid json",
+    [{"type": "text", "text": "business content", "metadata": {"Authorization": "private-auth"}}],
+], ids=["plain-text", "malformed-json", "content-blocks"])
+def test_safe_tool_content_formats_preserve_protocol_and_source(content):
+    messages = [HumanMessage(content="query"), AIMessage(content="", tool_calls=[
+        {"name": "tool", "args": {}, "id": "formats", "type": "tool_call"}
+    ]), ToolMessage(content=content, tool_call_id="formats", name="tool")]
+    original = copy.deepcopy(messages)
+    result = build_model_messages(messages, {}, "system")
+    assert result[3].content == filter_sensitive_fields(content)
+    assert result[3].tool_call_id == "formats"
+    assert messages == original
+
+
+def test_tool_filter_does_not_publish_untrusted_artifact():
+    data = {"success": True, "records": [{"dmf_no": "DMF-1", "raw_payload": "private-raw"}]}
+    message = ToolMessage(content=json.dumps(data), tool_call_id="safe", name="tool",
+                          additional_kwargs={"artifact_ref": {"artifact_id": "audit-only"}})
+    messages = [HumanMessage(content="query"), AIMessage(content="", tool_calls=[
+        {"name": "tool", "args": {}, "id": "safe", "type": "tool_call"}
+    ]), message]
+    sent = build_model_messages(messages, {}, "system")
+    result = json.loads(sent[-2].content)
+    assert result["records"] == [{"dmf_no": "DMF-1"}]
+    assert "context_truncated" not in result
+    assert "artifact_ref" not in result
+    assert "artifact_refs" not in json.loads(sent[-1].content.split("\n", 1)[1])
+    assert json.loads(message.content) == data
+
+
+@pytest.mark.parametrize("mode", ["orphan", "duplicate-result", "missing", "duplicate-id", "empty-id", "interrupted", "reused-id"])
+def test_invalid_current_tool_pairs_are_rejected(mode):
+    call = {"name": "tool", "args": {}, "id": "one", "type": "tool_call"}
+    messages = [HumanMessage(content="query"), AIMessage(content="", tool_calls=[call]),
+                ToolMessage(content="result", tool_call_id="one")]
+    if mode == "orphan":
+        messages.pop(1)
+    elif mode == "duplicate-result":
+        messages.append(ToolMessage(content="again", tool_call_id="one"))
+    elif mode == "missing":
+        messages.pop()
+    elif mode == "duplicate-id":
+        messages[1] = AIMessage(content="", tool_calls=[call, call])
+    elif mode == "empty-id":
+        messages[1] = AIMessage(content="", tool_calls=[{**call, "id": ""}])
+    elif mode == "interrupted":
+        messages.insert(2, AIMessage(content="premature answer"))
+    else:
+        messages.extend([AIMessage(content="", tool_calls=[call]), ToolMessage(content="again", tool_call_id="one")])
+    original = copy.deepcopy(messages)
+    with pytest.raises(ToolMessagePairingError):
+        build_model_messages(messages, {}, "system")
+    assert messages == original
 
 
 def test_history_budget_preserves_current_question_and_checkpoint():
@@ -33,21 +200,15 @@ def test_large_result_preserves_tool_pair_and_full_state():
         {"name": "search_dmf", "args": {"ingredients": ["Ibuprofen"]}, "id": "call-1", "type": "tool_call"}
     ]), ToolMessage(content=json.dumps(data), tool_call_id="call-1", name="search_dmf")]
     state = {"active_result": data}
-    original = copy.deepcopy(state)
-    result = build_model_messages(messages, state, "system")
-    assert [message.type for message in result] == ["system", "human", "ai", "tool", "system"]
-    assert result[2].tool_calls == messages[1].tool_calls
-    assert result[3].tool_call_id == "call-1"
-    preview = json.loads(result[3].content)
-    assert preview["context_truncated"] is True
-    assert preview["total_records"] == 1000
-    assert preview["context_source"] == "search_dmf"
-    assert "secret" not in str(result)
-    assert len(preview["results"][0]["records"]) <= 10
-    assert state == original
+    original = copy.deepcopy((state, messages))
+    with pytest.raises(ContextBudgetExceeded, match="Complete current context"):
+        build_model_messages(messages, state, "system")
+    assert (state, messages) == original
+    assert len(state["active_result"]["results"][0]["records"]) == 1000
+    assert messages[1].tool_calls[0]["id"] == messages[2].tool_call_id
 
 
-def test_evidence_projection_preserves_source_completeness_flags():
+def test_evidence_preserves_complete_source_text_and_flags():
     data = {"evidence": [{
         "evidence_type": "decision", "text": "source text " * 500,
         "complete": True, "truncated": False,
@@ -56,16 +217,15 @@ def test_evidence_projection_preserves_source_completeness_flags():
         {"name": "search_pec_knowledge", "args": {}, "id": "call-1", "type": "tool_call"}
     ]), ToolMessage(content=json.dumps(data), tool_call_id="call-1", name="search_pec_knowledge")]
 
-    result = build_model_messages(
-        messages, {}, "system",
-        budget=ContextBudget(window_tokens=1600, output_tokens=200, safety_tokens=200),
-    )
+    result = build_model_messages(messages, {}, "system")
     evidence = json.loads(result[-2].content)["evidence"][0]
 
     assert evidence["complete"] is True
     assert evidence["truncated"] is False
-    assert evidence["context_view"] == "preview"
-    assert evidence["context_truncated"] is True
+    assert evidence == data["evidence"][0]
+    with pytest.raises(ContextBudgetExceeded):
+        build_model_messages(messages, {}, "system",
+                             budget=ContextBudget(window_tokens=1600, output_tokens=200, safety_tokens=200))
 
 
 def test_small_current_tool_result_is_sent_without_projection():
@@ -79,42 +239,41 @@ def test_small_current_tool_result_is_sent_without_projection():
     assert json.loads(result[3].content) == data
 
 
-def test_metadata_or_result_body_alone_does_not_publish_reference():
+def test_metadata_and_result_body_do_not_create_reference_context():
     from langchain_openai.chat_models.base import _convert_message_to_dict
 
     reference = {"artifact_id": "saved-but-unpublished"}
     data = {"evidence": [{"text": "fact"}], "artifact_ref": reference, "context_view": "artifact_index"}
     message = ToolMessage(content=json.dumps(data), tool_call_id="call-1", name="source",
                           additional_kwargs={"artifact_ref": reference})
-    publications = {"stale": {}}
     messages = [HumanMessage(content="query"), AIMessage(content="", tool_calls=[
         {"name": "source", "args": {}, "id": "call-1", "type": "tool_call"}
     ]), message]
-    result = build_model_messages(messages, {}, "system", artifact_publications=publications)
+    result = build_model_messages(messages, {}, "system")
     wire = _convert_message_to_dict(result[-2])
-    assert publications == {}
+    assert "artifact_refs" not in json.loads(result[-1].content.split("\n", 1)[1])
+    assert json.loads(wire["content"]) == data
     assert "additional_kwargs" not in wire
     assert "artifact_ref" not in wire
     assert wire["tool_call_id"] == "call-1"
 
 
-def test_empty_compact_evidence_view_is_explicit_and_does_not_publish():
-    from src.agent.context_budget import _tool_view
-
+def test_compact_evidence_is_preserved_and_does_not_publish():
     data = {"evidence": [{"text": "source fact", "complete": True, "truncated": False}]}
     message = ToolMessage(content=json.dumps(data), tool_call_id="call-1", name="source",
                           additional_kwargs={"artifact_ref": {"artifact_id": "audit-only"}, "result_strategy": "inline_compact"})
-    publications = {}
-    preview = json.loads(_tool_view(message, 0, 64, publications).content)
-    assert preview["evidence"] == []
-    assert preview["context_list_totals"]["evidence"] == 1
-    assert preview["context_truncated"] is True
-    assert publications == {}
+    messages = [HumanMessage(content="query"), AIMessage(content="", tool_calls=[
+        {"name": "source", "args": {}, "id": "call-1", "type": "tool_call"}
+    ]), message]
+    result = build_model_messages(messages, {}, "system")
+    payload = json.loads(result[-2].content)
+    assert payload == data
+    assert "artifact_refs" not in json.loads(result[-1].content.split("\n", 1)[1])
     assert json.loads(message.content) == data
 
 
-def test_large_artifact_result_uses_reference_when_current_budget_is_tight():
-    data = {"success": True, "records": [{"secret": "hidden " * 200} for _ in range(100)]}
+def test_large_artifact_result_is_rejected_without_reference_fallback():
+    data = {"success": True, "records": [{"description": "hidden " * 200} for _ in range(100)]}
     artifact_ref = {"artifact_id": "artifact-1", "size_bytes": 100000}
     messages = [HumanMessage(content="query"), AIMessage(content="", tool_calls=[
         {"name": "search_dmf", "args": {}, "id": "call-1", "type": "tool_call"}
@@ -122,19 +281,13 @@ def test_large_artifact_result_uses_reference_when_current_budget_is_tight():
                     additional_kwargs={"artifact_ref": artifact_ref})]
     budget = ContextBudget(window_tokens=1600, output_tokens=200, safety_tokens=200)
 
-    publications = {}
-    result = build_model_messages(messages, {}, "system", budget=budget, artifact_publications=publications)
-    preview = json.loads(result[-2].content)
-
-    assert preview["artifact_ref"] == artifact_ref
-    assert preview["artifact_available"] is True
-    assert preview["context_view"] == "artifact_index"
-    assert preview["read_required"] is True
-    assert "hidden" not in str(preview)
-    assert publications == {"artifact-1": preview["artifact_ref"]}
+    original = copy.deepcopy(messages)
+    with pytest.raises(ContextBudgetExceeded):
+        build_model_messages(messages, {}, "system", budget=budget)
+    assert messages == original
 
 
-def test_inline_compact_result_stays_inline_when_budget_is_tight():
+def test_inline_compact_result_is_rejected_when_budget_is_tight():
     data = {"success": True, "evidence": [{"text": "fact " * 200} for _ in range(100)]}
     artifact_ref = {"artifact_id": "artifact-pec", "size_bytes": 100000}
     messages = [HumanMessage(content="query"), AIMessage(content="", tool_calls=[
@@ -144,19 +297,13 @@ def test_inline_compact_result_stays_inline_when_budget_is_tight():
         additional_kwargs={"artifact_ref": artifact_ref, "result_strategy": "inline_compact"},
     )]
 
-    publications = {}
-    result = build_model_messages(
-        messages, {}, "system",
-        budget=ContextBudget(window_tokens=1600, output_tokens=200, safety_tokens=200),
-        artifact_publications=publications,
-    )
-    preview = json.loads(result[-2].content)
-
-    assert preview["context_view"] == "inline_compact"
-    assert "read_required" not in preview
-    assert "artifact_index" not in preview.get("context_view", "")
-    assert publications == {}
-    assert preview["evidence"]
+    original = copy.deepcopy(messages)
+    with pytest.raises(ContextBudgetExceeded):
+        build_model_messages(
+            messages, {}, "system",
+            budget=ContextBudget(window_tokens=1600, output_tokens=200, safety_tokens=200),
+        )
+    assert messages == original
 
 
 @pytest.mark.parametrize("unit", ["x", "\u4e2d"], ids=["ascii", "chinese"])
@@ -175,20 +322,20 @@ def test_pec_20kb_service_result_stays_bounded_in_model_view(unit, tight):
                                  artifact_ref={"artifact_id": "audit-only"})
     messages = [HumanMessage(content="question"), AIMessage(content="", tool_calls=[call]), tool_message]
     budget = ContextBudget(window_tokens=2500, output_tokens=200, safety_tokens=200) if tight else ContextBudget()
-    publications = {}
-    result = build_model_messages(messages, {}, "system", budget=budget, artifact_publications=publications)
+    if tight or unit != "x":
+        with pytest.raises(ContextBudgetExceeded):
+            build_model_messages(messages, {}, "system", budget=budget)
+        assert tool_message.content == json.dumps(data, ensure_ascii=False, default=str)
+        return
+    result = build_model_messages(messages, {}, "system", budget=budget)
     sent = result[-2]
     payload = json.loads(sent.content)
     assert len(sent.content.encode("utf-8")) <= 20000
     assert estimate_input_tokens(result) <= budget.input_tokens
     assert sent.tool_call_id == call["id"]
-    assert publications == {}
+    assert "artifact_refs" not in json.loads(result[-1].content.split("\n", 1)[1])
     assert "read_required" not in payload
-    if not tight and unit == "x":
-        assert sent.content == tool_message.content
-    else:
-        assert payload["context_view"] == "inline_compact"
-        assert payload["context_truncated"] is True
+    assert sent.content == tool_message.content
     assert tool_message.content == json.dumps(data, ensure_ascii=False, default=str)
 
 
@@ -264,35 +411,35 @@ def test_large_tool_errors_remain_valid_and_bounded(content):
     messages = [HumanMessage(content="query"), AIMessage(content="", tool_calls=[
         {"name": "search_dmf", "args": {}, "id": "failed", "type": "tool_call"}
     ]), ToolMessage(content=content, tool_call_id="failed", name="search_dmf", status="error")]
-    result = build_model_messages(messages, {}, "system")
-    payload = json.loads(result[-2].content)
-    assert payload["context_truncated"] is True
-    assert result[-2].status == "error"
-    assert estimate_input_tokens(result) <= ContextBudget().input_tokens
-    if "success" in payload:
-        assert payload["success"] is False
+    original = copy.deepcopy(messages)
+    with pytest.raises(ContextBudgetExceeded):
+        build_model_messages(messages, {}, "system")
+    assert messages == original
+    assert messages[-1].status == "error"
 
 
-def test_many_documents_and_conditions_have_explicit_preview_counts():
+def test_many_documents_and_conditions_are_complete_or_rejected():
     context = {"documents": [{"document_id": f"doc-{index}", "file_name": "sample.pdf"} for index in range(100)],
                "extracted_conditions": {"queries": [{"ingredient": "Ibuprofen"} for _ in range(100)]},
                "pending": {"document": {"queries": [{"ingredient": "Ibuprofen"} for _ in range(100)]}}}
+    original = copy.deepcopy(context)
     result = build_model_messages([HumanMessage(content="query")], context, "system")
-    projected = json.loads(result[-1].content.split("\n", 1)[1])
-    assert projected["context_list_totals"]["documents"] == 100
-    assert projected["extracted_conditions"]["context_list_totals"]["queries"] == 100
-    assert projected["pending"]["document"]["context_truncated"] is True
-    assert len(context["documents"]) == 100
+    assert json.loads(result[-1].content.split("\n", 1)[1]) == context
+    with pytest.raises(ContextBudgetExceeded):
+        build_model_messages([HumanMessage(content="query")], context, "system",
+                             budget=ContextBudget(window_tokens=1600, output_tokens=200, safety_tokens=200))
+    assert context == original
 
 
-def test_current_turn_can_shrink_tool_preview_to_fit_tight_budget():
+def test_current_turn_rejects_tool_result_instead_of_shrinking():
     messages = [HumanMessage(content="query"), AIMessage(content="", tool_calls=[
         {"name": "tool", "args": {}, "id": "id", "type": "tool_call"}
     ]), ToolMessage(content=json.dumps({"records": [{"description": "long " * 100} for _ in range(100)]}), tool_call_id="id")]
     budget = ContextBudget(window_tokens=1600, output_tokens=200, safety_tokens=200)
-    result = build_model_messages(messages, {}, "system", budget=budget)
-    assert estimate_input_tokens(result) <= budget.input_tokens
-    assert len(json.loads(result[-2].content)["records"]) < 10
+    original = copy.deepcopy(messages)
+    with pytest.raises(ContextBudgetExceeded):
+        build_model_messages(messages, {}, "system", budget=budget)
+    assert messages == original
 
 
 def test_missing_current_question_fails_closed():
