@@ -223,7 +223,7 @@ class RealWatchlistEvalRunner:
         get_configured_history_repository.cache_clear()
 
     def _upgrade_database(self) -> None:
-        config = Config(str(PROJECT_ROOT / "alembic.ini"))
+        config = Config()
         config.set_main_option("script_location", str(PROJECT_ROOT / "alembic"))
         config.set_main_option("sqlalchemy.url", self.database_url.replace("%", "%%"))
         command.upgrade(config, "head")
