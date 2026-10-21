@@ -53,7 +53,11 @@ def test_graph_publishes_before_read_and_recovers_after_read_failure(monkeypatch
     monkeypatch.setenv("AGENT_CONTEXT_WINDOW_TOKENS", "5000")
     monkeypatch.setenv("AGENT_CONTEXT_OUTPUT_TOKENS", "500")
     monkeypatch.setenv("AGENT_CONTEXT_SAFETY_TOKENS", "500")
-    monkeypatch.setattr(react_nodes, "REACT_SYSTEM_PROMPT", "Use tool evidence to answer.")
+    monkeypatch.setattr(
+        react_nodes,
+        "build_system_prompt",
+        lambda active_skill_ids, **kwargs: "Use tool evidence to answer.",
+    )
 
     @tool("lookup_records")
     def lookup_records() -> dict:

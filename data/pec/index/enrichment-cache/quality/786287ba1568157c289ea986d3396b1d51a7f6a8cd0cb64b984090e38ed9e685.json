@@ -1,0 +1,1 @@
+{"topics": [], "reports": [], "excluded": [{"fact_id": "F0001", "reason": "noise", "detail": "仅为会议议程条目（TA MHEH Update，9:45，20 min），无任何讨论内容、风险、背书请求、委员会决议或跟进行动，属于纯标题/日程安排噪音。"}], "coverage": "原始证据仅包含 MAP 会议议程表格行，记录 TA MHEH Update 的发言人和时间安排，无实质内容可提取；整题筛除。", "unresolved": []}

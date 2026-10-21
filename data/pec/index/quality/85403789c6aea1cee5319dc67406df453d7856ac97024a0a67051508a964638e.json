@@ -1,0 +1,783 @@
+{
+  "source_ref": "PEC-Dec 2025/PEC-Dec 2025/0405. CRM Portfolio Update_20251215.pptx",
+  "source_digest": "c6fc5dd68ad912da317d6b6d6d938bd7205db238c2eaa66dd32944d50447ea20",
+  "reports": [
+    {
+      "topics": [
+        {
+          "title": "Jardiance (Empagliflozin) HFrEF & HFpEF China Local NIS Studies (1245-0291 / 1245-0313)",
+          "background": [
+            {
+              "text": "两项中国本地NIS研究（HFrEF 1245-0291，HFpEF 1245-0313）均处于IEC批准状态，入组因VBP和药物切换情况出现延迟，数据库总入组截至2025年11月为1450例。HAI于1月20日发出，5月14日收到反馈。每月与PI召开会议跟进数据库入组情况。",
+              "quote": "Current database enrolment delay: due to VBP, and drug switch situation\nHAI was sent on Jan 20th, feedback on May 14th\nMonthly meeting with PI to go through: latest database enrolment, issues etc. Total 1450 as of Nov2025.",
+              "evidence_id": "chunk-80a4aa865c63"
+            },
+            {
+              "text": "数据库现有患者1790例，HFrEF/HFpEF诊断记录不清晰，药物处方和实验室检测数据为非结构化数据，随访数据缺失。",
+              "quote": "Available patients: 1,790 in the database;\nUnclear diagnosis record of HFrEF/HFpEF;\nUnstructured data including drug prescription and lab test ;\nLack of follow-up data",
+              "evidence_id": "chunk-7e5cdebe68a7"
+            },
+            {
+              "text": "PI合作态度消极，持续沟通中。",
+              "quote": "Negative collaboration",
+              "evidence_id": "chunk-890c90233202"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": [
+            {
+              "text": "督促PI提供最新数据并审查CDE提交文件内容，现场核查数据库，发现若干问题，持续与PI沟通。",
+              "quote": "Urge PI to provide the data and review the content of CDE file\nCheck the database on-site",
+              "evidence_id": "chunk-829944f8e2fa"
+            },
+            {
+              "text": "与PI沟通改善数据库质量：改善HFrEF和HFpEF诊断记录，对非结构化数据进行进一步数据整理，改善随访记录；下次现场访视预计本周内。",
+              "quote": "Communicate with PI to improve database quality:\nImprove diagnosis record of HFrEF and HFpEF\nNeed further data curation for unstructured data\nImprove follow-up visit record",
+              "evidence_id": "chunk-7e5cdebe68a7"
+            },
+            {
+              "text": "计划现场访视，沟通CDE提交文件、可行性分析及最新数据库入组情况；下一里程碑为2026年1月可行性分析1。",
+              "quote": "Plan to make an onsite visit to communicate the CDE submission file, feasibility analysis  and  latest database enrolment",
+              "evidence_id": "chunk-80a4aa865c63"
+            }
+          ]
+        },
+        {
+          "title": "Metalyse TENACITY China晚时间窗适应症开发（1123-0060）",
+          "background": [
+            {
+              "text": "BUPC（2025年12月11日）决定：批准全球TENACITY试验加速（提前5个月）及200例中国姐妹试验，但仍取决于完成30%成本削减评估；非正式沟通显示全球团队将优先为中国姐妹试验提供预算。",
+              "quote": "The decision from BUPC (11 Dec 2025)\nApproval for the acceleration (by 5 months) of global Tenacity trial and the China sister trial involving 200 patients remains contingent upon the completion of a 30% cost reduction assessment – Based on informal communications, the global team will prioritize the budget for the China sister trial",
+              "evidence_id": "chunk-dec2f6ef8d67"
+            },
+            {
+              "text": "全球建议直接提交CTA，不进行Pre-IND（担忧：CDE可能不给出明确反馈，甚至要求全功效试验）。中国姐妹试验的监管策略待CN RA同意。",
+              "quote": "Global recommends submitting the CTA directly, without pre-IND. (concerns: CDE may not give clear feedback; even mandate a full-power trial). The regulatory strategy for the China sister trial is pending CN RA agreement.",
+              "evidence_id": "chunk-dec2f6ef8d67"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [
+            {
+              "text": "BUPC（2025年12月11日）有条件批准：全球TENACITY加速5个月及中国200例姐妹试验获批，但须完成30%成本削减评估。",
+              "quote": "Approval for the acceleration (by 5 months) of global Tenacity trial and the China sister trial involving 200 patients remains contingent upon the completion of a 30% cost reduction assessment",
+              "evidence_id": "chunk-dec2f6ef8d67"
+            }
+          ],
+          "todo": [
+            {
+              "text": "完成30%成本削减评估以解锁BUPC批准条件。",
+              "quote": "remains contingent upon the completion of a 30% cost reduction assessment",
+              "evidence_id": "chunk-dec2f6ef8d67"
+            },
+            {
+              "text": "CN RA就中国姐妹试验监管策略（是否直接提交CTA）达成一致。",
+              "quote": "The regulatory strategy for the China sister trial is pending CN RA agreement.",
+              "evidence_id": "chunk-dec2f6ef8d67"
+            }
+          ]
+        },
+        {
+          "title": "Survodutide MASH Ph III LIVERAGE™ (1404-0044) 招募红灯——中国大陆、台湾、香港",
+          "background": [
+            {
+              "text": "1404-0044 LIVERAGE全球招募截至2025年12月1日：总筛选3629例，随机226例，筛选失败2690例，SFR=92.25%；第一部分总样本量700例，TCM样本量约84例（12%）。",
+              "quote": "1404-0044 LiverageTM dated on 01Dec2025 (Global recruitment status)\nTotal Screened = 3629\nTotal Randomized = 226\nTotal SF=2690\nSFR=92.25%",
+              "evidence_id": "chunk-e7b17c10d711"
+            },
+            {
+              "text": "中国大陆截至2025年12月1日：总筛选168例，随机8例，筛选失败105例，SFR=92.92%；计划随机17例（11月）。主要挑战：竞争激烈、高筛选失败率、站点表现低（激活后超5周无筛选）。红灯自2025年8月起。",
+              "quote": "By 1 Dec, CN has screened 168 (+27), randomized 8 (+4) [17 as planned for Nov], screen failed 105, in screening 56;\nMain challenges for China including intensive competition, high SF rate, site performance low (no scr. >5 weeks since activation)",
+              "evidence_id": "chunk-3d557190f7ea"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": [
+            {
+              "text": "【Action 1】Elena负责：全球正式发布EAP/药物券详细方案（含药物补偿时长）；截止2025年12月中旬。状态：EC已背书药物券提案，在可行国家提供1年Survo；下一步与全球试验团队讨论ICF措辞和时间线。",
+              "quote": "Need immediate action for formal release and detailed plan of EAP/Drug Voucher (e.g. the duration of drug compensation) from global",
+              "evidence_id": "chunk-15c265922454"
+            },
+            {
+              "text": "【Action 2】Elena和Luiza负责：支持进展至肝脏结局事件患者的全球方案；截止2025年12月底。状态：议题已列入2026年1月13日下次全球-中国对接会。",
+              "quote": "Solid global plan to support the Patients who progress to liver outcome events",
+              "evidence_id": "chunk-519d7d1cd9a0"
+            },
+            {
+              "text": "【Action 3】David和Katarina Vajdova负责：尽快实施集中病理培训；截止2025年12月底。状态：培训计划于12月17日进行。",
+              "quote": "A centralized pathological training to be implemented ASAP",
+              "evidence_id": "chunk-8cbdafca9824"
+            },
+            {
+              "text": "【Action 4】Luiza负责：集中病理培训完成后，建立本地与中央病理学家就活检差异病例进行一对一科学讨论平台（仅供教育目的）；截止2025年12月2日。状态：培训完成后Luiza将跟进中央病理学家。",
+              "quote": "A direct case-by-case scientific discussion platform between local and central pathologists on biopsy cases with discrepancy for educational purpose only",
+              "evidence_id": "chunk-77e6c3e93061"
+            },
+            {
+              "text": "【Action 5】David负责：推动PXL团队向站点交付增加后的中国研究者费用和患者补贴草案合同；截止2025年11月底。状态：PXL团队已完成口头沟通。",
+              "quote": "Push Parexel(PXL) team to have the draft contract delivered to the sites of the increased CN Investigator Fee (IF)s and pt stipends",
+              "evidence_id": "chunk-e8abcbd32394"
+            },
+            {
+              "text": "【Action 6】David负责：推动PXL团队完成增加后的中国研究者费用和患者补贴的站点合同实施；截止2026年1月底。状态：进行中。",
+              "quote": "Push Parexel(PXL) team to have the site contract implementation of the increased CN Investigator Fee (IF)s and pt stipends",
+              "evidence_id": "chunk-4f230025664d"
+            },
+            {
+              "text": "【Action 7】Luiza负责：从患者角度区分Lilly SYNERGY-Outcome试验的全球叙述；截止2025年12月中旬。状态：叙述已由研究医生撰写并经中国团队评论。",
+              "quote": "Global narrative on differentiation of Lilly SYNERGY-Outcome trial from the patient perspective",
+              "evidence_id": "chunk-6bce0dbea4f5"
+            },
+            {
+              "text": "【Action 8】Wei/Emma负责：拜访香港威尔斯亲王医院Vincent Wong教授，探索可在中国大陆实施的经验；截止2025年12月底。状态：12月3日已完成访问，总结已分享给中国和全球团队。",
+              "quote": "Visit Prof. Vincent Wong of Prince of Wales Hospital to explore any experience could be implemented in China Mainland",
+              "evidence_id": "chunk-b4c49e66b905"
+            }
+          ]
+        },
+        {
+          "title": "Survodutide 肥胖症开发计划（SYNCHRONIZE系列试验）——患者保留与CDE临床药理反馈",
+          "background": [
+            {
+              "text": "SYNCHRONIZE-1（肥胖无T2DM，N=726）、SYNCHRONIZE-2（肥胖有T2DM，N=755）、SYNCHRONIZE-CVOT（肥胖伴CV风险，N=5534）及SYNCHRONIZE-CN（中国，N=307）均在进行中。患者保留仍是重点，沟通计划正在制定中。",
+              "evidence_id": "chunk-0f76e344b320",
+              "quote": "Patient retention is still the focus\nCommunication plan are under development"
+            },
+            {
+              "text": "中国各试验提前终止率（截止2025年12月4日）：SYNCHRONIZE-1中国N=64，提前终止14例（21.8%）；SYNCHRONIZE-2中国N=77，提前终止20例（26%）；SYNCHRONIZE-CVOT中国N=174，提前终止53例（30%）；SYNCHRONIZE-CN N=306，提前终止57例（18.6%）；全球SYNCHRONIZE-1 N=725，提前终止258例（35.6%），PSD 74例（10.21%）。",
+              "evidence_id": "chunk-6b1d8d13b119",
+              "quote": "SYNCHRONIZE-1 | col_2: Global | N: 725 | Discontinued prematurely\nn (%): 258 (35.6%) | PSD*\nn (%): 74(10.21%)"
+            },
+            {
+              "text": "CDE临床药理对新提案（BE研究仅在最高和最低规格进行以支持PFS到Pen的桥接是否足够）给出最终反馈；BI临床药理评估认为无问题，考虑到剂量比例PK特征及所有规格PFS与PEN之间相同的浓度比。",
+              "evidence_id": "chunk-0f76e344b320",
+              "quote": "Final feedback from CDE Clin-Pharm on new proposal of BE studies for supporting bridging PFS to Pen (whether conducting BE studies only on the highest and lowest strength is sufficient to support bridging for all strengths). BI Clin-Pharm evaluated as no problem considering dose proportional PK profile and same concentration ratio for all strength between PFS and PEN."
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": [
+            {
+              "text": "制定患者保留沟通计划（owner：原文未说明；due：原文未说明；status：under development；completed：N）。",
+              "evidence_id": "chunk-0f76e344b320",
+              "quote": "Patient retention is still the focus\nCommunication plan are under development"
+            }
+          ]
+        },
+        {
+          "title": "Survodutide MASH NIT相关FDA会议及本地启动",
+          "background": [
+            {
+              "text": "全球已向FDA提交HAI（NIT相关问题），FDA会议计划于2026年1月9日；本地启动会计划于2025年12月底。",
+              "evidence_id": "chunk-375585f6bbc3",
+              "quote": "Global submitted HAI on NIT related questions to FDA, meeting is planned on 9th Jan, 2026. Local kick-off is planned in late Dec."
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": [
+            {
+              "text": "本地启动会（Local kick-off）于2025年12月底举行（owner：原文未说明；due：late Dec 2025；status：planned；completed：原文未说明）。",
+              "evidence_id": "chunk-375585f6bbc3",
+              "quote": "Local kick-off is planned in late Dec."
+            }
+          ]
+        },
+        {
+          "title": "VicaEmpa CKD Ph III EASi-KIDNEY (1378-0006) 招募红灯",
+          "background": [
+            {
+              "text": "VicaEmpa CKD Ph III（1378-0006）红灯自2025年4月起。FSS于2025年8月24日，但尚无患者随机化，较原始时间线（2025年4月30日）延迟约4个月。13个站点激活，38例患者筛选，无患者随机化。LSR仍计划于2026年8月30日。全球也出现延迟，除台湾（88例）外，东亚国家尚无患者随机化。",
+              "evidence_id": "chunk-684c5cdcd7c0",
+              "quote": "FSS(First Subject Screen) took place on 24th Aug, 2025, while no subject was randomized yet. Overall delay is ~ 4 months vs. original timeline(30th Apr, 2025)\n13 sites activated with 38 patients screened, while no patient randomized yet\nLSR(Last Subject Randomised) was still scheduled on 30th Aug, 2026\nA global delay also occurred, and except Taiwan(88), no East Asian countries has randomized patients yet"
+            },
+            {
+              "text": "时间线持续延迟，剩余招募窗口缩短；预期受试者和终点事件减少，可能影响中国亚组结果和适应症批准。",
+              "evidence_id": "chunk-684c5cdcd7c0",
+              "quote": "Continuously delayed timeline, and shortened recruitment window left\nFewer subjects and endpoint events are expected,  potentially impacting Chinese subgroup result and indication approval"
+            },
+            {
+              "text": "VicaEmpa CKD开发计划：Ph III 1378-0006（FSS 2025年6月，DBL 2027年1月，批准2029年1月）；Ph II 1378-0023（FSS 2025年8月，DBL 2027年9月，批准2028年8月）。22例患者随机化，26个站点启动，中国12例患者随机化。CTP3.0于2025年11月24日通过HAI提交。",
+              "evidence_id": "chunk-8b3bdf4f37c9",
+              "quote": "22 patients randomised，26 sites initiated\n12 patients randomized in China\nCTP3.0 submitted on 24 Nov through HAI"
+            },
+            {
+              "text": "Oxford当前计划：让招募持续至至少1100例患者随机化；预计整体延迟长达6个月，这也为中国增加了招募时间。",
+              "evidence_id": "chunk-5261aa203ac1",
+              "quote": "The current plan by Oxford is to let recruitment continue until at least 1,100 patients are randomized.\nAccording to Martina, it is expected the overall delay will be as long as 6 months, this also adds time for China for recruitment"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": [
+            {
+              "text": "与CTL持续每月定期对接以监控试验进展；全球医学和全球品牌团队已知晓当前情况并将关注延迟问题。owner：原文未说明；due/timeline：持续进行；status：ongoing；completed：N。",
+              "evidence_id": "chunk-684c5cdcd7c0",
+              "quote": "Monthly regular catch-up with CTL is ongoing to monitor trial progress\nGlobal Medical and global brand team have been fully informed, and aware of the current situation, and will also look into the delay issue."
+            }
+          ]
+        },
+        {
+          "title": "Avenciguat (sGCa.) GN Ph III (1366-0015) RoFD待定红灯",
+          "background": [
+            {
+              "text": "Avenciguat GN开发计划：全球1366-0015 Ph III，最终CTA包2026年1月5日，CTA提交-批准2026年5月2日-6月5日，全球FSS-LSS 2026年4月9日-2028年7月6日，fSIV-LSS 2026年5月8日-2028年7月6日，加速批准NDA提交-批准2028年10月24日-2029年6月26日。中国：最终患者分配确认：中国大陆76例，台湾21例，香港8例，共105例GN患者。CTA准备中，计划2026年2月5日提交。",
+              "quote": "RoFD still pending; avenciguat townhall meeting scheduled on 19 Dec for update on HPBU EC meeting\nCTA under preparation with planned submission on 05-Feb-2026\nFinal patient allocation confirmed: China mainland 76, Taiwan 21, Hongkong 8",
+              "evidence_id": "chunk-7d73b5c91239"
+            },
+            {
+              "text": "前置部分试验启动活动（CTP开发、供应商设置和站点选择）以在RoFD发布后尽快加速试验启动。",
+              "quote": "Front-loading of certain trial start-up activities including CTP development, vendor setup and site selection to accelerate the trial initiation as soon as RoFD is released",
+              "evidence_id": "chunk-d8762d497153"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": [
+            {
+              "text": "2025年12月19日举行Avenciguat townhall会议，更新HPBU EC会议情况。",
+              "quote": "avenciguat townhall meeting scheduled on 19 Dec for update on HPBU EC meeting",
+              "evidence_id": "chunk-7d73b5c91239"
+            },
+            {
+              "text": "CTA准备中，计划2026年2月5日提交。",
+              "quote": "CTA under preparation with planned submission on 05-Feb-2026",
+              "evidence_id": "chunk-7d73b5c91239"
+            }
+          ]
+        },
+        {
+          "title": "BI 764198 (TRPC6i) pFSGS Ph III (1434-0017) 中国开发进展",
+          "background": [
+            {
+              "text": "RoFD于2025年11月18日获得背书，BTD申请于2025年11月26日获批（全球首个）。",
+              "evidence_id": "chunk-17e8e3157c9a",
+              "quote": "RoFD endorsed on 18 Nov\nBTD application approved on 26 Nov (global first)"
+            },
+            {
+              "text": "CTA于2025年10月17日提交；2025年12月10日收到临床质询。",
+              "evidence_id": "chunk-17e8e3157c9a",
+              "quote": "CTA submission occurred on 17 Oct; clinical queries received on 10 Dec"
+            },
+            {
+              "text": "广东省人民医院已获得全球首个EC批准；中国Ph I PK研究（1434-0025）高层设计已获global CPS委员会批准。",
+              "evidence_id": "chunk-17e8e3157c9a",
+              "quote": "Global first EC approval received at 广东省人民医院\nChina Ph I PK study high level design received approval from global CPS committee"
+            },
+            {
+              "text": "2026年里程碑计划包括TRPC6i Ph III in pFSGS (1434-0017) First Site Initiation。",
+              "evidence_id": "chunk-d2211715614b",
+              "quote": "TRPC6i Ph III in pFSGS (1434-0017)"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": [
+            {
+              "text": "回应2025年12月10日收到的CTA临床质询（owner、due date及完成状态原文未说明）。",
+              "evidence_id": "chunk-17e8e3157c9a",
+              "quote": "clinical queries received on 10 Dec"
+            }
+          ]
+        },
+        {
+          "title": "BI 764198 (TRPC6i) 足细胞病 Ph II (1434-0027) CTA提交",
+          "background": [
+            {
+              "text": "TRPC6i足细胞病Ph II（1434-0027）：Pre-IND最终反馈于2025年11月28日收到，CDE坚持其初始立场（pMN诊断仅凭活检，Alport综合征诊断仅凭基因测序）。团队立即采取行动将变更纳入正在进行的本地CTP修订，未推迟目标CTA提交日期。CTA提交按计划于2025年12月12日进行。中国患者分配：大陆10例，台湾4例，共14例（全球N=132）。",
+              "quote": "Pre-IND final feedback received on 28 Nov. CDE insisted their initial position about diagnosis of pMN with biopsy only and diagnosis of Alport Syndrome with gene sequencing only.\nTeam took immediate action to incorporate the changes in the ongoing local CTP amendment without shifting the target CTA submission date.\nCTA submission occurred as planned on 12 Dec",
+              "evidence_id": "chunk-3ba016ad91c2"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": []
+        }
+      ],
+      "reports": [
+        {
+          "topic_index": 0,
+          "passed": [],
+          "corrected": [],
+          "not_applicable": []
+        },
+        {
+          "topic_index": 1,
+          "passed": [],
+          "corrected": [],
+          "not_applicable": []
+        },
+        {
+          "topic_index": 2,
+          "passed": [],
+          "corrected": [],
+          "not_applicable": []
+        },
+        {
+          "topic_index": 3,
+          "passed": [
+            1,
+            2,
+            3,
+            6,
+            7,
+            8,
+            9,
+            13,
+            15,
+            16,
+            17
+          ],
+          "corrected": [
+            {
+              "check": 4,
+              "detail": "F0004（MASH NIT/FDA HAI）属于不同适应症（MASH vs 肥胖症），已拆分为独立议题，不应混入肥胖症议题背景。"
+            },
+            {
+              "check": 11,
+              "detail": "原稿将肥胖症SYNCHRONIZE系列与MASH NIT内容合并为一题；按适应症拆分为两个独立议题。"
+            },
+            {
+              "check": 14,
+              "detail": "todo中补充了owner（原文未说明）、due（原文未说明）、status（under development）、completed（N）字段说明，原稿仅有简短描述。"
+            }
+          ],
+          "not_applicable": [
+            {
+              "check": 5,
+              "detail": "议题含患者保留风险、CDE反馈及提前终止率数据，非低信息量条目。"
+            },
+            {
+              "check": 10,
+              "detail": "无pending/TBD字段需核查。"
+            },
+            {
+              "check": 12,
+              "detail": "同一asset（Survodutide）肥胖症适应症下多个SYNCHRONIZE研究共享同一患者保留议题，合并有据；MASH已拆出。"
+            }
+          ]
+        },
+        {
+          "topic_index": 4,
+          "passed": [
+            1,
+            2,
+            3,
+            6,
+            7,
+            8,
+            9,
+            13,
+            16,
+            17
+          ],
+          "corrected": [
+            {
+              "check": 14,
+              "detail": "todo补充了owner（原文未说明）、due（late Dec 2025）、status（planned）、completed（原文未说明）字段说明。"
+            }
+          ],
+          "not_applicable": [
+            {
+              "check": 4,
+              "detail": "含FDA HAI提交及本地启动行动，非噪音。"
+            },
+            {
+              "check": 5,
+              "detail": "含监管互动和具体行动，非低信息量。"
+            },
+            {
+              "check": 10,
+              "detail": "无pending/TBD字段需核查。"
+            },
+            {
+              "check": 11,
+              "detail": "单一适应症（MASH），无需进一步拆分。"
+            },
+            {
+              "check": 12,
+              "detail": "单一议题，无合并问题。"
+            },
+            {
+              "check": 15,
+              "detail": "本地启动会尚未完成（planned），无已完成事项误标问题。"
+            }
+          ]
+        },
+        {
+          "topic_index": 5,
+          "passed": [
+            1,
+            2,
+            3,
+            4,
+            6,
+            7,
+            8,
+            9,
+            11,
+            12,
+            13,
+            17,
+            18
+          ],
+          "corrected": [
+            {
+              "check": 14,
+              "detail": "todo 原文未注明 owner 和 due date，已在 text 中补注「owner：原文未说明；due/timeline：持续进行；status：ongoing；completed：N」以满足完整性要求。"
+            },
+            {
+              "check": 5,
+              "detail": "议题含执行风险（中国亚组结果和适应症批准受影响）及跟进行动，不属于低信息量，保留。"
+            }
+          ],
+          "not_applicable": [
+            {
+              "check": 10,
+              "detail": "无 pending/TBD 字段，不适用。"
+            },
+            {
+              "check": 15,
+              "detail": "todo 为持续进行中事项，无已完成条目需核查。"
+            },
+            {
+              "check": 16,
+              "detail": "无 for_endorsement 和 decision 字段内容，请求与决议均为空，无需核查反推。"
+            }
+          ]
+        },
+        {
+          "topic_index": 6,
+          "passed": [],
+          "corrected": [],
+          "not_applicable": []
+        },
+        {
+          "topic_index": 7,
+          "passed": [
+            1,
+            2,
+            4,
+            6,
+            8,
+            9,
+            11,
+            12,
+            13,
+            16,
+            17
+          ],
+          "corrected": [
+            {
+              "check": 3,
+              "detail": "原稿 background 为空，遗漏了 RoFD 背书、BTD 批准、CTA 提交、EC 批准、PK 研究批准等实质背景信息，已从 chunk-17e8e3157c9a 和 chunk-d2211715614b 补入。"
+            },
+            {
+              "check": 7,
+              "detail": "RoFD endorsed on 18 Nov 是 global/local proposal approval，不属于 PEC/CEC 委员会决议，已移至 background；BTD approved on 26 Nov 同为监管流程状态，亦置于 background。"
+            },
+            {
+              "check": 14,
+              "detail": "todo 中 owner、due date、completed 状态原文均未说明，已在 text 中注明「原文未说明」。"
+            },
+            {
+              "check": 18,
+              "detail": "chunk-d2211715614b 中 2026 年 FSI 里程碑与本议题直接相关，原稿未引用，已补入 background。"
+            }
+          ],
+          "not_applicable": [
+            {
+              "check": 5,
+              "detail": "议题含监管风险（CTA 临床质询待回应）及行动项，不属于低信息量条目。"
+            },
+            {
+              "check": 10,
+              "detail": "todo 对象明确（CTA 临床质询），无 pending/TBD 需要具体化的情形。"
+            },
+            {
+              "check": 15,
+              "detail": "todo 事项尚未完成（质询待回应），无已完成状态需核查。"
+            }
+          ]
+        },
+        {
+          "topic_index": 8,
+          "passed": [],
+          "corrected": [],
+          "not_applicable": []
+        }
+      ],
+      "excluded": [
+        {
+          "fact_id": "F0001",
+          "reason": "progress_only",
+          "detail": "仅报告全球招募数字（筛选/随机/SFR），无风险讨论、委员会请求、决议或行动项。"
+        },
+        {
+          "fact_id": "F0002",
+          "reason": "progress_only",
+          "detail": "仅报告中国招募数字，无风险讨论、委员会请求、决议或行动项。"
+        },
+        {
+          "fact_id": "F0003",
+          "reason": "progress_only",
+          "detail": "仅报告台湾招募数字，无风险讨论、委员会请求、决议或行动项。"
+        },
+        {
+          "fact_id": "F0004",
+          "reason": "progress_only",
+          "detail": "仅报告香港招募数字及1例ETD，无风险讨论、委员会请求、决议或行动项。"
+        },
+        {
+          "fact_id": "F0001",
+          "reason": "progress_only",
+          "detail": "1378-0018 招募数据（339 vs 197 中国，3607 vs 3559 全球）及 IM 日期，仅为进度更新，无风险、请求、决议或行动。"
+        },
+        {
+          "fact_id": "F0002",
+          "reason": "progress_only",
+          "detail": "1378-0020 招募数据（11 vs 1 中国，268 vs 117 全球），仅为进度更新，无风险、请求、决议或行动。"
+        },
+        {
+          "fact_id": "F0001",
+          "reason": "progress_only",
+          "detail": "该议题仅记录 EASi-PROTKT（1378-0041）的招募进展数据（中国28例 vs 计划12例，全球479例 vs 计划100例）及时间线里程碑，无风险讨论、阻塞、背书请求、委员会决策或跟进行动，属于纯进度汇报，应过滤。"
+        }
+      ],
+      "coverage": "本议题质检引用未通过，保留抽取初稿；本议题质检结果未被采纳，保留抽取初稿；本议题质检引用未通过，保留抽取初稿；四条事实均为纯招募进度数字（全球/中国/台湾/香港），无执行风险、监管风险、背书请求、委员会决议或跟进行动，整题按 progress_only 过滤。；原稿将肥胖症SYNCHRONIZE患者保留/CDE反馈与MASH NIT/FDA HAI两个不同适应症内容合并为一题；质检按适应症拆分为两个独立议题，所有原始事实（F0001–F0005）均保留，无内容丢失。todo字段补充了完整的owner/due/status/completed说明（原文未说明处明确注明）。；所有5条原始事实（F0001–F0005）均保留并映射至对应字段；todo 补充了 owner/due/status/completed 注记；无内容被丢弃。；两条事实均为纯招募进度数字，无讨论、风险、阻塞、背书请求、委员会决策或跟进行动，整题作为 progress_only 筛除。；原始议题仅含一条招募进度事实（F0001），无实质讨论、风险、请求或决议，整题作为 progress_only 过滤；证据文档中其余内容（Metalyse、Jardiance NIS、CRM TA 成就等）均属其他议题，不在本候选范围内。；本议题质检引用未通过，保留抽取初稿；议题覆盖 chunk-17e8e3157c9a（核心进展与行动）及 chunk-d2211715614b（2026 FSI 里程碑），其余 slides 均与本议题无关，未引用。原稿遗漏的 background 事实已全部补入；for_endorsement 和 decision 原文确无相关内容，保持为空。；本议题质检结果未被采纳，保留抽取初稿",
+      "unresolved": [
+        "本议题质检引用未通过，保留抽取初稿",
+        "本议题质检结果未被采纳，保留抽取初稿",
+        "本议题质检引用未通过，保留抽取初稿",
+        "F0003引用的quote仅为全球SYNCHRONIZE-1数据行，而text描述了中国各试验的提前终止率；原始chunk-6b1d8d13b119仅提供了表格片段，中国分组数据的逐字引述在现有evidence_markdown中不完整，建议核查原始幻灯片30完整表格。",
+        "todo 的具体负责人（owner）原文未说明，仅知为 CTL 对接方。",
+        "本议题质检引用未通过，保留抽取初稿",
+        "CTA 临床质询的回应 owner 及 due date 原文未说明，无法补全。",
+        "本议题质检结果未被采纳，保留抽取初稿"
+      ]
+    },
+    {
+      "topics": [
+        {
+          "title": "BI 764198 (TRPC6i) – Study 1434-0027/1434-0019: Phase II Basket Trial in Proteinuric Glomerular Diseases – Development Plan & Pre-IND Timeline",
+          "background": [
+            {
+              "text": "Study 1434-0027 is a potential Phase 2 multi-center, randomized, double-blind, placebo-controlled basket trial evaluating BI 764198 in proteinuric glomerular diseases with podocyte involvement. Key inclusion criteria include eGFR ≥25, optimized SoC, and biopsy-proven disease.",
+              "evidence_id": "chunk-79e8e3349384",
+              "quote": "Potential phase 2, multi-center, randomized, double-blind, placebo-controlled basket trial to evaluate BI 764198 in proteinuric glomerular diseases with podocyte involvement"
+            },
+            {
+              "text": "Global study 1434-0019 Ph II timeline: pre-IND submission planned 19 Dec 2025, feedback by 30 Jan 2026 (30 WD Type I HAI); CTA submission/approval 17 May–14 Aug 2026; FSS–LSS 16 Jun 2026–26 Jul 2027; key results 4 May 2028. China study 1434-0019 Ph II: fSIV–LSS 17 Nov 2026–26 Jul 2027.",
+              "evidence_id": "chunk-1dc8837e541a",
+              "quote": "Pre-IND under preparation with planned submission on 19 Dec. The review will follow the Type I HAI for 30 WD."
+            },
+            {
+              "text": "Prof. Dai, Yi (北京协和) and Prof. Hong, Siqi (重庆儿科医院) nominated to participate in Asia-centric ad-board meeting in Mar 2026.",
+              "evidence_id": "chunk-1dc8837e541a",
+              "quote": "Prof. Dai, Yi (北京协和) and Prof. Hong, Siqi (重庆儿科医院) are nominated to participate in the Asia-centric ad-board meeting in Mar 2026"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": [
+            {
+              "text": "Pre-IND submission planned for 19 Dec 2025; review feedback expected by 30 Jan 2026 (30 WD Type I HAI). Owner: 原文未说明。Status: in progress as of 11/26/25.",
+              "evidence_id": "chunk-1dc8837e541a",
+              "quote": "pre-IND sub\n11/26/25"
+            },
+            {
+              "text": "Confirm participation of nominated KOLs (Prof. Dai, Yi and Prof. Hong, Siqi) in Asia-centric ad-board meeting in Mar 2026. Owner: 原文未说明. Due: Mar 2026. Status: nominated, confirmation pending.",
+              "evidence_id": "chunk-1dc8837e541a",
+              "quote": "Prof. Dai, Yi (北京协和) and Prof. Hong, Siqi (重庆儿科医院) are nominated to participate in the Asia-centric ad-board meeting in Mar 2026"
+            }
+          ]
+        },
+        {
+          "title": "BI 3034701 (GGY2Ra.) – Study 1507-0002: Obesity Phase II Development Plan",
+          "background": [
+            {
+              "text": "PoC was achieved in Phase I; Ph I results not yet released. Phase II design is under re-discussion for acceleration (Ph II/III seamless, shortened maintenance dose period, reduced dose groups). Recruitment window is only 2 months (could be longer if new CTA process implemented).",
+              "quote": "PoC was achieved; the Ph I results are not released yet",
+              "evidence_id": "chunk-d35e3e75fe4d"
+            },
+            {
+              "text": "China Pre-IND submission was cancelled because global team does not allow inclusion of actual Ph I data in HAI BB before press release, and safety margin is narrow and difficult to explain to CDE without actual data.",
+              "quote": "China Pre-IND submission was cancelled because\nGlobal team doesn’t allow inclusion of any actual Ph I data in HAI BB before press release\nSafety margin is narrow and difficult to explain to CDE without actual data",
+              "evidence_id": "chunk-d35e3e75fe4d"
+            },
+            {
+              "text": "Global 1507-0002 Ph II timeline: Ph II pre-IND sub–feedback 30 Nov 2025–28 Feb 2026; Final CTA package 13 Feb 2026; Ph II CTA sub–app 13 Mar–12 Jun 2026; Ph II FSS–LSS 6 Jul–17 Nov 2026; China fSIV–LSS 11 Sep–17 Nov 2026; key results 27 Dec 2027. PoC release 26 Nov 2025; Ph I readout for PoC 14 Nov 2025.",
+              "quote": "key results\n12/27/27",
+              "evidence_id": "chunk-d35e3e75fe4d"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": [
+            {
+              "text": "Mitigation strategy for China Pre-IND to be planned once Ph I data is released.",
+              "quote": "Mitigation strategy is to be planned once the data is released",
+              "evidence_id": "chunk-d35e3e75fe4d"
+            },
+            {
+              "text": "China development proposal shared with global team for further discussion; China Leading PI candidate under final discussion.",
+              "quote": "China development proposal shared with global team for further discussion\nChina Leading PI candidate under final discussion",
+              "evidence_id": "chunk-d35e3e75fe4d"
+            }
+          ]
+        },
+        {
+          "title": "BI 7703711 (SIRPα antagonist) – Study 1501-0005: MASH Cirrhosis Phase 2b Planning",
+          "background": [
+            {
+              "text": "Phase 2a is on track with no safety signal seen yet. Go-criteria updated: 20% threshold for Pro-C3. Ph2b (1501-0005) planning: operation module changed from Hybrid trial to in-housing module; draft TDO communication and country feasibility initiated; Pre-IND for Ph2b not planned by global team. China approval base case: Nov 2034.",
+              "quote": "Phase 2a:  On track. No safety signal seen yet. Go-criteria  has been updated:   A 20% Threshold for Pro-C3",
+              "evidence_id": "chunk-8357e4c69252"
+            },
+            {
+              "text": "Prof. Hong You attended virtual 1:1 consultancy meeting and provided comments on Ph2b design on 2 Dec. Prof. Minghua Zheng recommended by local team to attend in-person global advisory board meeting in Q1 2026.",
+              "quote": "Prof. Hong You attended the virtual 1:1 consultancy meeting and provided valuable comments on phase 2b design on 2nd Dec;\n3) Prof. Minghua Zheng is recommended by local team to attend the in-person global advisory board meeting in Q1 2026.",
+              "evidence_id": "chunk-5d1900e16e99"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": [
+            {
+              "text": "Monitor global Ph2a results and Ph2b planning.",
+              "quote": "To monitor the global Ph2a results and Ph2b planning",
+              "evidence_id": "chunk-8357e4c69252"
+            },
+            {
+              "text": "Country and site allocation feedback due by 21 Jan 2026; continue to follow with global on involving Chinese experts in Ph2b planning.",
+              "quote": "Country and site allocation feedback by 21-Jan-2026\nContinue to follow with global on involving Chinese experts opinion in the planning of Phase 2b.",
+              "evidence_id": "chunk-5d1900e16e99"
+            }
+          ]
+        },
+        {
+          "title": "BI 3802876 (FAP/TRAILR2 bispecific antibody) – MASH Cirrhosis: Asian Phase 1 and China Integration Plan",
+          "background": [
+            {
+              "text": "Phase I in healthy volunteers showed a slight increase in hs-cTNT indicating cardiovascular concerns. Global Phase 2a (US and Canada only) to be initiated Dec 2025 to demonstrate anti-fibrosis effect and assess benefit-risk in MASH cirrhosis. China approval base case: Aug 2037.",
+              "quote": "A slight increase in hs-cTNT indicating cardiovascular concerns was observed in Phase I among healthy volunteers.\nA Phase 2a trial (US and Canada only) will be initiated to demonstrate the anti-fibrosis effect and to assess the benefit-risk profile in MASH cirrhosis patients.",
+              "evidence_id": "chunk-77713f4b56b9"
+            },
+            {
+              "text": "Joint Asian Phase 1 proposal with integrated timeline by China and Japan was endorsed by global team. Global team confirmed to deliver essential documents to support China and Japan HA interaction.",
+              "quote": "The joint Asian Phase 1 proposal with integrated timeline by China and Japan  was endorsed by global team.\n\nGlobal team confirmed to deliver essential documents to support China and Japan HA interaction.",
+              "evidence_id": "chunk-60ee2ceaa516"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [
+            {
+              "text": "Joint Asian Phase 1 proposal (China and Japan) endorsed by global team.",
+              "quote": "The joint Asian Phase 1 proposal with integrated timeline by China and Japan  was endorsed by global team.",
+              "evidence_id": "chunk-60ee2ceaa516"
+            }
+          ],
+          "todo": [
+            {
+              "text": "Continue to discuss with global team on target population for Asian Ph1.",
+              "quote": "Continue to discuss with global team on target population for Asian Ph1",
+              "evidence_id": "chunk-60ee2ceaa516"
+            },
+            {
+              "text": "Submit Asian Ph1 proposal to IUPC (not yet submitted as of current status).",
+              "quote": "Current status: Proposal has not yet submitted to IUPC.",
+              "evidence_id": "chunk-046447c9b0ca"
+            }
+          ]
+        }
+      ],
+      "reports": [
+        {
+          "topic_index": 0,
+          "passed": [
+            1,
+            2,
+            3,
+            4,
+            6,
+            7,
+            8,
+            9,
+            11,
+            13,
+            15,
+            16,
+            17
+          ],
+          "corrected": [
+            {
+              "check": 5,
+              "detail": "议题含具体研究编号、时间线、KOL提名及待确认行动，不属于低信息量；保留。"
+            },
+            {
+              "check": 10,
+              "detail": "todo F0004 的 quote 仅为'pre-IND sub\\n11/26/25'，补充了原文其他句子中的具体日期（19 Dec 2025 / 30 Jan 2026）以明确 pending 对象；原文支持。"
+            },
+            {
+              "check": 14,
+              "detail": "两条 todo 均缺少 owner；已在 text 中注明'原文未说明'。F0005 补充了 due（Mar 2026）和 status（nominated, confirmation pending）。completed 字段原文均未说明完成，视为未完成。"
+            },
+            {
+              "check": 18,
+              "detail": "标题中出现'DMD Development Plan'字样（来自 slide 52 标题'BI 764198 (TRPC6i), DMD Development Plan'），但 slide 内容实为 TRPC6i 肾病研究时间线，DMD 系 slide 标题误植或另一适应症；原文无 DMD 实质内容，议题标题已去除 DMD 字样，仅保留肾病相关内容，避免误导。"
+            }
+          ],
+          "not_applicable": [
+            {
+              "check": 12,
+              "detail": "仅一个议题，无合并判断需要。"
+            }
+          ]
+        },
+        {
+          "topic_index": 1,
+          "passed": [],
+          "corrected": [],
+          "not_applicable": []
+        },
+        {
+          "topic_index": 2,
+          "passed": [],
+          "corrected": [],
+          "not_applicable": []
+        },
+        {
+          "topic_index": 3,
+          "passed": [],
+          "corrected": [],
+          "not_applicable": []
+        }
+      ],
+      "excluded": [],
+      "coverage": "两个 evidence chunk（chunk-79e8e3349384、chunk-1dc8837e541a）覆盖了研究设计、全球及中国时间线、KOL提名和 pre-IND 行动；slide 52 标题中'DMD Development Plan'字样在正文无对应实质内容，已在 check-18 说明；其余 slides（53–61）属于其他资产议题，不属于本议题范围。；本议题质检引用未通过，保留抽取初稿；本议题质检结果未被采纳，保留抽取初稿；本议题质检引用未通过，保留抽取初稿",
+      "unresolved": [
+        "Slide 52 标题含'DMD Development Plan'，但 slide 正文内容全为 TRPC6i 肾病研究时间线，原文未说明 DMD 适应症的具体开发内容，无法判断是否为另一独立议题或标题错误。",
+        "本议题质检引用未通过，保留抽取初稿",
+        "本议题质检结果未被采纳，保留抽取初稿",
+        "本议题质检引用未通过，保留抽取初稿"
+      ]
+    }
+  ],
+  "final_topic_ids": [
+    "topic-d1045aa435cde9116cde",
+    "topic-3f2f2381df321b4da049",
+    "topic-5994d39fed717b2d2e15",
+    "topic-1714a7cf6fb33ae91a3a",
+    "topic-0aef5c66e1c2db6d45f5",
+    "topic-8bb555199e668f27ce44",
+    "topic-1cc1601812afa33dd99c",
+    "topic-3075a2c386ce292422da",
+    "topic-4cf4bbd9599164232486",
+    "topic-51ab6eddf2a12aae7d0e",
+    "topic-a7c94797e9e50075342e",
+    "topic-df0941ea03463b0cc3f1"
+  ],
+  "document_grouping": "all_candidates_accounted_for"
+}

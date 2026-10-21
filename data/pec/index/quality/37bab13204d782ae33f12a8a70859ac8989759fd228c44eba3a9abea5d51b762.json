@@ -1,0 +1,104 @@
+{
+  "source_ref": "MAP 2025 May/TENACITY strategy for CTA -MAP.pptx",
+  "source_digest": "beb42401f6f70b1ded669f68c4e04b2f7d8935b927d81fbd56970b35959df6bf",
+  "reports": [
+    {
+      "topics": [
+        {
+          "title": "Metalyse TENACITY Trial – Time Window Strategy for China CTA/NDA (Late Window Indication, 4.5–24h)",
+          "background": [
+            {
+              "text": "TENACITY trial targets late window AIS indication (beyond 4.5h from LKW) based on visible salvageable brain tissue rather than time from onset. EMA (06 May 2025) views this as a potential paradigm shift and appreciates the benefit-risk evaluation approach.",
+              "quote": "The TENACITY study introduces a new approach to decide eligibility for thrombolysis based on the presence of ‘visible’ salvageable brain tissue, instead of time from onset of AIS as proxy of the presence of salvageable brain tissue. If confirmed, this appears a paradigm shift in the treatment of AIS",
+              "evidence_id": "chunk-7229ba32cf03"
+            },
+            {
+              "text": "CDE (24 Apr 2025) does not support unrestricted extension of the thrombolytic time window; requires robust rationale for an appropriate time window; notes benefit-risk may differ beyond 4.5h with potentially smaller benefit and higher bleeding risk; recommends exploratory clinical trial exploring different doses and time windows; existing IIT data insufficient.",
+              "quote": "The available study data do not support the unrestricted extension of the thrombolytic time window. Furnish a robust foundation for the rational establishment of an appropriate thrombolytic time window.",
+              "evidence_id": "chunk-7229ba32cf03"
+            },
+            {
+              "text": "Mingfule CTA time window is 4.5–24h.",
+              "quote": "Mingfule CTA",
+              "evidence_id": "chunk-87a612ed3d12"
+            },
+            {
+              "text": "Local evidence team has conducted a preliminary assessment of five scenarios for the global CTP and China CTA/NDA strategy.",
+              "quote": "Local evidence team preliminary assessment",
+              "evidence_id": "chunk-52c81290c94e"
+            }
+          ],
+          "for_endorsement": [
+            {
+              "text": "Document is presented 'For advice' (2025 May 14) on the consideration of time window strategy for the Metalyse TENACITY trial late window indication.",
+              "quote": "Metalyse TENACITY trial\n(for late window indication)\nConsideration for time window\nFor advice\n2025 May 14",
+              "evidence_id": "chunk-bac61342a024"
+            }
+          ],
+          "decision": [],
+          "todo": [
+            {
+              "text": "Scenario 1: Amend global CTP to include 24h time window limit worldwide as IC/EC criterion. CTA POS: High; NDA POS: High (secures 24h indication). Risk: new round of internal Corporate review needed, potential trial delay.",
+              "quote": "Global CTP amendment to meet CDE requirement\nWith time window limit 24h for worldwide as IC/EC criterion",
+              "evidence_id": "chunk-2759fce334b7"
+            },
+            {
+              "text": "Scenario 2: Submit global CTP with 24h time window limit for China as specific IC/EC criterion and key secondary objective within 24h. CTA POS: Medium-High; NDA POS: High. Secures 24h indication; low chance to extend beyond 24h for China.",
+              "quote": "Submit global CTP\nWith time window limit 24h for China as a specific IC/EC criterion\nWith key secondary objective within 24h",
+              "evidence_id": "chunk-578f0490705e"
+            },
+            {
+              "text": "Scenario 3: Submit global CTP with 24h time window limit for China as specific IC/EC criterion and pre-specified subgroup for 24h. CTA POS: Medium; NDA: High risk (24h label not from pre-specified confirmatory subgroup).",
+              "quote": "Submit global CTP\nWith time window limit 24h for China as a specific IC/EC criterion\nWith a pre-specified subgroup for 24h",
+              "evidence_id": "chunk-d982eec63ae9"
+            },
+            {
+              "text": "Scenario 4: Submit global CTP with no time window limit for China as specific IC/EC criterion and key secondary objective within 24h. CTA POS: Very Low. If CDE rejects CTA, another round needed; local CTP amendment required; potential second CTA causing delay (internal preparation + 60 WD).",
+              "quote": "Submit global CTP\nNo time window limit for China as a specific IC/EC criterion\nWith key secondary objective within 24h",
+              "evidence_id": "chunk-cc108a908267"
+            },
+            {
+              "text": "Scenario 5: Submit global CTP with no time window limit for China as specific IC/EC criterion and pre-specified subgroup for 24h. CTA POS: Very Low. High likelihood CDE rejects CTA; local CTP amendment needed; global CTP amendment also needed to include key secondary objective within 24h; potential second CTA (internal preparation + 60 WD or more).",
+              "quote": "Submit global CTP\nNo time window limit for China as a specific IC/EC criterion\nWith a pre-specified subgroup for 24h",
+              "evidence_id": "chunk-967d432401da"
+            }
+          ],
+          "source_ref": "MAP 2025 May/TENACITY strategy for CTA -MAP.pptx",
+          "source_digest": "beb42401f6f70b1ded669f68c4e04b2f7d8935b927d81fbd56970b35959df6bf",
+          "evidence_ids": [
+            "chunk-7229ba32cf03",
+            "chunk-87a612ed3d12",
+            "chunk-52c81290c94e",
+            "chunk-bac61342a024",
+            "chunk-2759fce334b7",
+            "chunk-578f0490705e",
+            "chunk-d982eec63ae9",
+            "chunk-cc108a908267",
+            "chunk-967d432401da"
+          ],
+          "loc": "Slide 2 Table 1 row 2",
+          "folder": "MAP 2025 May",
+          "quality_status": "passed",
+          "topic_id": "topic-488676520bc9456d9e53"
+        }
+      ],
+      "reports": [
+        {
+          "topic_index": 0,
+          "passed": [],
+          "corrected": [],
+          "not_applicable": []
+        }
+      ],
+      "excluded": [],
+      "coverage": "本议题质检结果未被采纳，保留抽取初稿",
+      "unresolved": [
+        "本议题质检结果未被采纳，保留抽取初稿"
+      ]
+    }
+  ],
+  "final_topic_ids": [
+    "topic-488676520bc9456d9e53"
+  ],
+  "document_grouping": "all_candidates_accounted_for"
+}

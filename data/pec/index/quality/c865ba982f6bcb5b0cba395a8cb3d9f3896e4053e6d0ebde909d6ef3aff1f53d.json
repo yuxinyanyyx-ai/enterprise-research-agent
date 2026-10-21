@@ -1,0 +1,603 @@
+{
+  "source_ref": "MAP 2025 May/05. 2025-05-MAP ONC TA Portfolio.pptx",
+  "source_digest": "bd95f975c554af6d889de853fde25b47537a7dcfd1c7395384fbaf8e8e1e4700",
+  "reports": [
+    {
+      "topics": [
+        {
+          "title": "Zongertinib (HER2 TKI) – 2L NSCLC China NDA",
+          "background": [
+            {
+              "text": "CFDA & FDA GCP inspection completed in Apr 2025; CDE technical review initiated Jan 2025; 2nd rolling submission (PK study report and PI update) in Mar 2025; CTP v7.0 and local amendment submitted 9 May, approval expected Aug 2025; DSUR submitted in May 2025. China approval base case: Jan 2026.",
+              "evidence_id": "chunk-73e852b88152",
+              "quote": "CFDI & FDA GCP inspection accomplished in Apr\nTechnical review by CDE was initiated in Jan 2025.\n2nd  rolling submissions (PK study report and PI update) in Mar\nCTP v 7.0 and local amendment submitted on 9 May, approval expected in Aug.\nDSUR submitted in May"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": [
+            {
+              "text": "Prepare 3rd rolling submission (updated 12-month efficacy and safety data based on cohort 1 updated data) in May 2025. Owner: 原文未说明。Status: 原文未说明是否已完成。",
+              "evidence_id": "chunk-73e852b88152",
+              "quote": "Prepare for 3rd rolling submission (Updated 12months efficacy and safety data) in May based on cohort 1 updated data in May"
+            }
+          ]
+        },
+        {
+          "title": "Zongertinib (HER2 TKI) – 1L NSCLC (Beamion LUNG-2) China",
+          "background": [
+            {
+              "text": "HA interaction request for Beamion LUNG-2 CTP amendment (v5.0) based on FDA feedback submitted in May 2025. Global: Beamion LUNG-2 completed initial recruitment (270 pts) with 65 CN patients (216% commitment). China approval base case: Jan 2027.",
+              "evidence_id": "chunk-a28616309e2c",
+              "quote": "HA interaction request for Beamion LUNG-2 CTP amendment (v5.0) based on FDA feedback has been submitted  in May\nGlobal: Beamion LUNG-2 Completed the Initial Recruitment (270 pts) with 65 CN patients (216% commitment)"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": [
+            {
+              "text": "Prepare BTD application based on topline result of Beamion LUNG-1 cohort 2 in May; expect to submit in Jun 2025. HA interaction regarding SAT for AA in Q3 2025. Owner/status: 原文未说明。",
+              "evidence_id": "chunk-a28616309e2c",
+              "quote": "Prepare for BTD application based on topline result of Beamion LUNG-1 cohort 2 in May, expect to sub. in Jun\nHA interaction regarding SAT for AA in Q3"
+            }
+          ]
+        },
+        {
+          "title": "Zongertinib (HER2 TKI) – Adjuvant NSCLC (Beamion LUNG-3) China",
+          "background": [
+            {
+              "text": "Team evaluated FDA feedback on Beamion LUNG-3; revisited Pre-IND meeting questions in China and evaluated possible impact on trial conduction based on FDA requests. China approval base case: 2032.",
+              "evidence_id": "chunk-fdba1c59c49c",
+              "quote": "Team evaluated FDA feedback on Beamion LUNG-3 study and :\nRevisit Pre-IND meeting questions in China\nEvaluated possible impact on trial conduction based on FDA requests"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": [
+            {
+              "text": "Submit Pre-IND meeting request in May 2025; trial preparation for Beamion LUNG-3. Owner: 原文未说明。Status: 原文未说明。Completed: 原文未说明。",
+              "evidence_id": "chunk-fdba1c59c49c",
+              "quote": "To submit Pre-IND meeting request in May\nTrial preparation for Beamion LUNG-3"
+            }
+          ]
+        },
+        {
+          "title": "Zongertinib (HER2 TKI) – Pan-tumor China",
+          "background": [
+            {
+              "text": "Pan-tumor team approaching strategy to global CEC for further development (single specific indications, tumor agnostic, etc.). Protocol v2.0 (with three new cohorts) released; local team expected to execute new protocol by end of May 2025. CN: 5 subjects screened (3 Salivary Gland Cancer, 1 Colorectal Cancer, 1 Cervical cancer), 3 achieved PR. China approval base case: NA.",
+              "quote": "Pan tumor team is approaching the strategy to global CEC for further development ( Single specific indications, tumor agnostic, etc)\nProtocol version 2.0 (with three new cohorts) was released, local team is expected to execute the new protocol by the end of May.\nCN: 5 subjects were screened ( 3 Salivary Gland Cancer , 1 Colorectal  Cancer, 1 Cervical cancer) , 3 achieved PR.",
+              "evidence_id": "chunk-da5739d65bfb"
+            }
+          ],
+          "for_endorsement": [
+            {
+              "text": "Pan-tumor further development strategy (single specific indications vs. tumor agnostic, etc.) being brought to global CEC for endorsement.",
+              "quote": "Pan tumor team is approaching the strategy to global CEC for further development ( Single specific indications, tumor agnostic, etc)",
+              "evidence_id": "chunk-da5739d65bfb"
+            }
+          ],
+          "decision": [],
+          "todo": [
+            {
+              "text": "Execute new protocol v2.0 and enroll new cohorts-related subjects.",
+              "quote": "New protocol execution and enroll new cohorts-related subjects",
+              "evidence_id": "chunk-da5739d65bfb"
+            }
+          ]
+        },
+        {
+          "title": "Zongertinib (HER2 TKI) – GC/BC Value Maximization (3L+ BC, 2L BC, 2L GC) China",
+          "background": [
+            {
+              "text": "Zongertinib value maximization strategy (3L+ BC, 2L BC, 2L GC) endorsed; protocol v4.0 released with new cohorts to explore new zongertinib-based regimens in mBC. CN: 7 sites initiated, 6 patients treated. CTA amendment (new cohorts for breast cancer) submitted to CDE, expected approval by 10 Jul 2025. China approval base case: 2031.",
+              "quote": "Zongertinib value maximization strategy (3L+ BC, 2L BC, and 2L GC) was endorsed and protocol version 4.0 was released with new cohorts to explore new zongertinib based regimens in mBC.\nCN: 7 sites were initiated and totally 6 patients were treated with zongertinib.\nCTA amendment( new cohorts for breast cancer) application was submitted to CDE, expected to be approved by July 10,2025.",
+              "evidence_id": "chunk-456d6f6c7509"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": [
+            {
+              "text": "Await CTA amendment application approval by CDE (expected by 10 Jul 2025).",
+              "quote": "CTA amendment application approval by CDE.",
+              "evidence_id": "chunk-456d6f6c7509"
+            }
+          ]
+        },
+        {
+          "title": "Obrixtamig (DLL3/CD3 TcE) – 2L epNEC China Development Update",
+          "background": [
+            {
+              "text": "HA interaction feedback expected to be received end of May 2025. China approval base case: Apr 2028.",
+              "evidence_id": "chunk-446cf03172a2",
+              "quote": "HA interaction feedback is expected to receive in end of May 2025."
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": [
+            {
+              "text": "Initiate SIV of Dareon-5 in Aug 2025. Submit CTA of Dareon-Lung1 and Lung2 in Nov 2025. Initiate SIV of both trials in Q2 2026. Owner, status: 原文未说明。",
+              "evidence_id": "chunk-446cf03172a2",
+              "quote": "Initiate SIV of Dareon-5 in Aug 2025.\nSubmit CTA of Dareon-Lung1 and Lung2 in Nov of 2025. Initiate SIV of both trials in Q2 of 2026."
+            }
+          ]
+        },
+        {
+          "title": "Obrixtamig (DLL3/CD3 TcE) – 2L SCLC China Development",
+          "background": [
+            {
+              "text": "RoFD for Obrixtamig in 2L SCLC has been shifted from Apr to Jul 2025 due to immature early phase data. China approval base case is Oct 2028.",
+              "evidence_id": "chunk-ebc399bdc625",
+              "quote": "RoFD has been shifted from Apr to Jul 2025 due to the immature early phase data. China team targets to submit preIND in Aug 2025."
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": [
+            {
+              "text": "China team to submit pre-IND in Aug 2025. Owner: China team. Due: Aug 2025. Status: planned. Completed: N.",
+              "evidence_id": "chunk-ebc399bdc625",
+              "quote": "China team targets to submit preIND in Aug 2025."
+            }
+          ]
+        },
+        {
+          "title": "Brigimadlin (MDM2/p53 antagonist) – Rollover Study China CTA",
+          "background": [
+            {
+              "text": "China team submitted CTA on 25 Apr 2025. CDE reception officer inquired BI to clarify application purpose, stating the trial should be with registration purpose. China approval base case: NA.",
+              "evidence_id": "chunk-1f1c6b520757",
+              "quote": "China team has submitted CTA on 25Apr 2025. But CDE reception officer inquired BI to clarify the application purpose, the trial should be with registration purpose ."
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": [
+            {
+              "text": "Received BL1 HA supportive feedback on 14 May 2025. Will leverage feedback to draft clarification and adjust application letter. Owner: China team (原文未说明具体负责人). Due: 原文未说明. Status: in progress. Completed: N.",
+              "evidence_id": "chunk-1f1c6b520757",
+              "quote": "Have received BL1 HA supportive feedback on 14May 2025. Will leverage the feedback to draft clarification and adjust application letter."
+            }
+          ]
+        },
+        {
+          "title": "CD137/FAP – HNSCC (Study 1463-0001) China",
+          "background": [],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": [
+            {
+              "text": "Speed up China recruitment.",
+              "quote": "Speed up China recruitment",
+              "evidence_id": "chunk-97fdd5d1fd36"
+            }
+          ]
+        },
+        {
+          "title": "Systemic STING Agonist FR – NSCLC China CTA",
+          "background": [
+            {
+              "text": "Global Ph1 study under new dose level (DL7), adding approximately 2-3 months (DEC: early Jul 2025, PoPP: Jun 2025). No chance to catch up with NMPA CTA pilot program deadline; reverting to standard pathway while monitoring new policy. CTA preparation kicked off Mar 2025. China approval base case: Sep 2032.",
+              "quote": "Global ph1 study is under the new dose level (DL7), which will take approximately additional 2-3 months (DEC: early of Jul 2025, PoPP: Jun 2025).\nNo chance to catch up with the deadline of NMPA CTA pilot program (优化创新药临床试验审评审批试点工作方案), then go back to Standard pathway but keep close eyes on any new policy regarding the pilot CTA program.\nCTA preparation has kicked off in Mar 2025.",
+              "evidence_id": "chunk-8d067a52bb9c"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": []
+        },
+        {
+          "title": "KISIMA-02 – PDAC China Integration Plan (China Standalone Ph1 Study Discussion)",
+          "background": [
+            {
+              "text": "China standalone Ph1 study for KISIMA-02 in PDAC is under discussion, contingent on the global POPP milestone trigger point in Dec 2025. China approval base case is Aug 2035.",
+              "evidence_id": "chunk-111819093b53",
+              "quote": "It’s under the discussion of a China standalone Ph1 study after the trigger point of global POPP milestone  in Dec 2025."
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": [
+            {
+              "text": "Follow up China integration plan with global team. Owner: 原文未说明。Due/timeline: 原文未说明。Status: 原文未说明。Completed: N（原文列为 Next Step）。",
+              "evidence_id": "chunk-111819093b53",
+              "quote": "Follow up China integration plan with global team."
+            }
+          ]
+        }
+      ],
+      "reports": [
+        {
+          "topic_index": 0,
+          "passed": [
+            1,
+            2,
+            3,
+            6,
+            9,
+            11,
+            13,
+            17
+          ],
+          "corrected": [
+            {
+              "check": 7,
+              "detail": "for_endorsement 为空正确；background 中 'CTP v7.0 and local amendment submitted' 及 'approval expected in Aug' 均为流程状态，不属于委员会背书请求，已正确归入 background。"
+            },
+            {
+              "check": 8,
+              "detail": "decision 为空正确；原文无任何 PEC/CEC/MAP/HPSC/Ad-hoc CEC 层级决议记录，不应补填。"
+            },
+            {
+              "check": 14,
+              "detail": "todo 中 owner 和 completed 状态原文均未说明，已在 text 中注明「原文未说明」，符合规范。"
+            },
+            {
+              "check": 15,
+              "detail": "todo 时间线为 'in May'，会议为 May 2025，无法从原文判断是否已完成，已注明「原文未说明是否已完成」。"
+            }
+          ],
+          "not_applicable": [
+            {
+              "check": 4,
+              "detail": "本议题有具体 NDA 进展、监管风险（CTP 审批、rolling submission）及行动项，不属于噪音。"
+            },
+            {
+              "check": 5,
+              "detail": "含有 todo 行动项和监管里程碑风险，不属于低信息量纯进度条目。"
+            },
+            {
+              "check": 10,
+              "detail": "无 pending/TBD 字段，不适用。"
+            },
+            {
+              "check": 12,
+              "detail": "仅一个议题，无合并判断需要。"
+            },
+            {
+              "check": 16,
+              "detail": "无 for_endorsement 和 decision，不涉及反推检查。"
+            },
+            {
+              "check": 18,
+              "detail": "原文仅 chunk-73e852b88152 含本议题实质内容，其余 chunks 为其他资产或纯标题，覆盖完整。"
+            }
+          ]
+        },
+        {
+          "topic_index": 1,
+          "passed": [
+            1,
+            2,
+            3,
+            4,
+            6,
+            7,
+            8,
+            9,
+            11,
+            13,
+            17
+          ],
+          "corrected": [
+            {
+              "check": 14,
+              "detail": "todo 中 owner 和 completed 状态原文未提供，已在 text 中注明「原文未说明」，避免遗漏。"
+            },
+            {
+              "check": 10,
+              "detail": "「SAT for AA」为 todo 中 HA interaction 的具体对象，已保留原文缩写并在 text 中完整呈现，Q3 年份补充为 2025（与文档 May 2025 上下文一致）。"
+            }
+          ],
+          "not_applicable": [
+            {
+              "check": 5,
+              "detail": "议题含具体行动（BTD 申请、HA interaction）和监管进度风险，不属于低信息量条目。"
+            },
+            {
+              "check": 12,
+              "detail": "仅一个议题，无合并判断需要。"
+            },
+            {
+              "check": 15,
+              "detail": "todo 均为未完成的计划行动，无已完成事项需核查。"
+            },
+            {
+              "check": 16,
+              "detail": "for_endorsement 和 decision 均为空，原文无相关请求或决议，无反推风险。"
+            },
+            {
+              "check": 18,
+              "detail": "原文仅 chunk-a28616309e2c 一条证据涵盖全部事实，覆盖完整；其余 evidence_markdown 片段与本议题无关。"
+            }
+          ]
+        },
+        {
+          "topic_index": 2,
+          "passed": [
+            1,
+            2,
+            3,
+            4,
+            6,
+            8,
+            9,
+            11,
+            12,
+            13,
+            17
+          ],
+          "corrected": [
+            {
+              "check": 14,
+              "detail": "todo 缺少 owner、status、completed 字段；原文未提供，已在 text 中注明「原文未说明」。"
+            },
+            {
+              "check": 10,
+              "detail": "todo 中「trial preparation」对象较宽泛，但原文仅此表述，已保留原文措辞，无法进一步具体化。"
+            }
+          ],
+          "not_applicable": [
+            {
+              "check": 5,
+              "detail": "议题含具体行动（Pre-IND 提交）和监管风险评估，不属于低信息量条目。"
+            },
+            {
+              "check": 7,
+              "detail": "for_endorsement 为空，无需检查背书请求边界。"
+            },
+            {
+              "check": 15,
+              "detail": "原文未说明任何行动已完成，无已完成状态需核查。"
+            },
+            {
+              "check": 16,
+              "detail": "decision 为空，无反推问题；for_endorsement 亦为空。"
+            },
+            {
+              "check": 18,
+              "detail": "仅一个 chunk 支撑本议题，evidence 覆盖完整，无跨页遗漏风险。"
+            }
+          ]
+        },
+        {
+          "topic_index": 3,
+          "passed": [],
+          "corrected": [],
+          "not_applicable": []
+        },
+        {
+          "topic_index": 4,
+          "passed": [],
+          "corrected": [],
+          "not_applicable": []
+        },
+        {
+          "topic_index": 5,
+          "passed": [
+            1,
+            2,
+            3,
+            4,
+            6,
+            8,
+            9,
+            11,
+            13,
+            15,
+            16,
+            17
+          ],
+          "corrected": [
+            {
+              "check": 14,
+              "detail": "todo 条目缺少 owner 和 completed 状态；原文未说明，已在 text 中注明。"
+            },
+            {
+              "check": 5,
+              "detail": "议题仅含进度更新和里程碑计划，无风险、阻塞、背书请求或委员会决议，属于低信息量边界案例。但 HA interaction 反馈待收及多个 CTA/SIV 里程碑构成可跟进行动，保留。"
+            }
+          ],
+          "not_applicable": [
+            {
+              "check": 7,
+              "detail": "for_endorsement 为空，无背书请求需区分。"
+            },
+            {
+              "check": 10,
+              "detail": "无 pending/TBD 状态字段。"
+            },
+            {
+              "check": 12,
+              "detail": "仅一个议题，无合并问题。"
+            },
+            {
+              "check": 18,
+              "detail": "原文仅一个 chunk 涉及本议题，已完整引用，无遗漏。"
+            }
+          ]
+        },
+        {
+          "topic_index": 6,
+          "passed": [
+            1,
+            2,
+            3,
+            6,
+            7,
+            8,
+            9,
+            11,
+            13,
+            15,
+            16,
+            17
+          ],
+          "corrected": [
+            {
+              "check": 4,
+              "detail": "原始输入中 excluded 字段引用了 F0001/F0002 作为排除编号，但这两条均为有效事实（背景+行动），不应排除；已移除无效排除记录，保留两条事实于 background 和 todo。"
+            },
+            {
+              "check": 14,
+              "detail": "todo 补充 owner（China team）、due（Aug 2025）、status（planned）、completed（N），原稿仅有 due 隐含于 quote 中，owner/status/completed 未显式标注。"
+            }
+          ],
+          "not_applicable": [
+            {
+              "check": 5,
+              "detail": "议题含执行风险（RoFD 延迟原因：early phase data 不成熟）及具体行动，不属于低信息量条目。"
+            },
+            {
+              "check": 10,
+              "detail": "无 pending/TBD 字段，不适用。"
+            },
+            {
+              "check": 12,
+              "detail": "仅一个议题，无合并判断需要。"
+            },
+            {
+              "check": 18,
+              "detail": "chunk-7628a4c3a367 含 '1L SCLC | China Approval base case: Jul 2029'，与本议题（2L SCLC）为不同适应症，已在拆分判断中确认不合并；本议题证据仅 chunk-ebc399bdc625，覆盖完整。"
+            }
+          ]
+        },
+        {
+          "topic_index": 7,
+          "passed": [
+            1,
+            2,
+            3,
+            4,
+            6,
+            7,
+            8,
+            9,
+            11,
+            12,
+            13,
+            17,
+            18
+          ],
+          "corrected": [
+            {
+              "check": 14,
+              "detail": "todo 字段补充了 owner（原文未说明具体负责人）、due（原文未说明）、status（in progress）、completed（N）等完整字段说明，原稿仅有行动描述，缺少这些维度。"
+            }
+          ],
+          "not_applicable": [
+            {
+              "check": 5,
+              "detail": "议题含监管风险（CDE 质疑申请目的）和跟进行动，不属于低信息量条目。"
+            },
+            {
+              "check": 10,
+              "detail": "无 pending/TBD 字段，不适用。"
+            },
+            {
+              "check": 15,
+              "detail": "todo 中行动尚未完成，无已完成事项需核查。"
+            },
+            {
+              "check": 16,
+              "detail": "无 for_endorsement 和 decision 内容，无需核查请求与决议分别有据。"
+            }
+          ]
+        },
+        {
+          "topic_index": 8,
+          "passed": [],
+          "corrected": [],
+          "not_applicable": []
+        },
+        {
+          "topic_index": 9,
+          "passed": [],
+          "corrected": [],
+          "not_applicable": []
+        },
+        {
+          "topic_index": 10,
+          "passed": [
+            1,
+            2,
+            3,
+            4,
+            6,
+            7,
+            8,
+            9,
+            16,
+            17,
+            18
+          ],
+          "corrected": [
+            {
+              "check": 5,
+              "detail": "议题含有 under discussion 状态（China standalone Ph1 study 尚未确定）及跟进行动，不属于纯进度条目，保留。"
+            },
+            {
+              "check": 10,
+              "detail": "pending/under discussion 对象已明确为 China standalone Ph1 study，触发条件为 global POPP milestone Dec 2025，已在 background 中补全。"
+            },
+            {
+              "check": 14,
+              "detail": "todo 的 owner、due/timeline、status 原文均未说明，已在 text 中注明「原文未说明」；completed 标注为 N（列为 Next Step）。"
+            },
+            {
+              "check": 11,
+              "detail": "仅一个 asset（KISIMA-02）一个 indication（PDAC），无需拆分。"
+            }
+          ],
+          "not_applicable": [
+            {
+              "check": 12,
+              "detail": "仅一个议题，无合并场景。"
+            },
+            {
+              "check": 13,
+              "detail": "原文仅一处来源（chunk-111819093b53），无多格式重复。"
+            },
+            {
+              "check": 15,
+              "detail": "无已完成事项。"
+            }
+          ]
+        }
+      ],
+      "excluded": [],
+      "coverage": "议题仅有一个原文 chunk（chunk-73e852b88152）支撑，包含 NDA 监管进展（background）和一项 rolling submission 行动（todo）；无委员会决议和背书请求；其余 evidence chunks 均属其他资产或纯标题，与本议题无关，未遗漏实质内容。；议题仅有一条原文证据（chunk-a28616309e2c），背景与 todo 均已覆盖；无 for_endorsement 或 decision 原文依据，字段正确留空；todo 补充了年份推断说明及 owner/status 缺失注记。；议题仅有一个原始 chunk（chunk-fdba1c59c49c），background 和 todo 均已覆盖；其余 evidence 均属其他资产或议题，与本议题无关，未遗漏实质内容。；本议题质检结果未被采纳，保留抽取初稿；本议题质检结果未被采纳，保留抽取初稿；议题覆盖 chunk-446cf03172a2 全部实质内容（HA 反馈时间、China 批准基准日期、Dareon-5/Lung1/Lung2 CTA 及 SIV 里程碑）；其余 chunks 属于其他 asset 或纯标题/表头，与本议题无关，未纳入。；本议题仅有一条原始证据 chunk-ebc399bdc625，涵盖 RoFD 延迟原因、pre-IND 提交计划及 China 批准基准时间，所有实质内容均已保留；chunk-7628a4c3a367（1L SCLC）属不同适应症，不纳入本题。；议题完整覆盖 chunk-1f1c6b520757 中 Brigimadlin Rollover Study 的 CTA 提交状态、CDE 监管风险及后续行动；其余 evidence chunks 均属其他资产或噪音，与本议题无关，未纳入。；本议题质检引用未通过，保留抽取初稿；本议题质检结果未被采纳，保留抽取初稿；chunk-111819093b53 的全部实质内容（under discussion 状态、触发条件、base case 日期、跟进行动）均已覆盖；其余 evidence chunks 属于其他 asset/indication，与本议题无关，不纳入。",
+      "unresolved": [
+        "todo 中 3rd rolling submission 的 owner 及完成状态原文未说明，无法补全。",
+        "「SAT for AA」全称原文未展开，含义未说明。",
+        "BTD 申请 owner 及 Jun 2025 提交状态原文未说明，无法确认是否已完成。",
+        "todo 的 owner、due date 精度（仅知「May」，年份依上下文推断为 2025）、status 及 completed 均原文未说明，无法补全。",
+        "本议题质检结果未被采纳，保留抽取初稿",
+        "本议题质检结果未被采纳，保留抽取初稿",
+        "todo 条目的 owner 及 completed 状态原文未说明，无法补全。",
+        "原文未说明 pre-IND 提交的具体负责人姓名，仅标注 'China team'。",
+        "China approval base case Oct 2028 的来源列于表格同行，但原文 quote 未直接包含该日期，系从表格字段 'China Approval (base case): Oct 2028' 读取，已在 background text 中注明。",
+        "todo 中具体负责人及截止日期原文未说明，无法补全。",
+        "本议题质检引用未通过，保留抽取初稿",
+        "本议题质检结果未被采纳，保留抽取初稿",
+        "todo 的 owner 和 due date 原文未说明，无法补全。"
+      ]
+    }
+  ],
+  "final_topic_ids": [
+    "topic-a01b9bbc2338f97aab9c",
+    "topic-53c54d5360b70eb14b75",
+    "topic-66274d77cc71ae5fb8be",
+    "topic-2c4ec159e9886786d02a",
+    "topic-fa81b5fa97c4e161d1ef",
+    "topic-cac64b6768ba596080e9",
+    "topic-0c9dc6f42ed1ee799fec",
+    "topic-34ecd3e8150a437b6761",
+    "topic-e7f8a052218e942f0482",
+    "topic-e738006d6aa9635ccbae",
+    "topic-ea298b2a8c41c26a584f"
+  ],
+  "document_grouping": "all_candidates_accounted_for"
+}

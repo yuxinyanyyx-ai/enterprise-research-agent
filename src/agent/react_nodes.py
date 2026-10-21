@@ -10,7 +10,7 @@ from langchain_core.utils.function_calling import convert_to_openai_tool
 from src.agent.audit_log import trace_operation, write_event
 from src.agent.artifact_store import published_artifact_refs
 from src.agent.context_budget import ContextBudget, ContextBudgetExceeded, ToolMessagePairingError, build_model_messages, estimate_input_tokens, filter_sensitive_fields
-from src.agent.prompts import REACT_SYSTEM_PROMPT
+from src.agent.skills import build_system_prompt, load_skill_catalog
 from src.agent.react_state import ReactState
 from src.agent.domain_workflows import COMMON_INPUTS, DOCUMENT_FIELDS, WATCHLIST_FIELDS
 from src.schemas.workflow import WorkflowResult
@@ -54,6 +54,9 @@ def prepare_react_request(state: ReactState) -> dict[str, Any]:
         "request_id": state.get("request_id") or uuid4().hex,
         "react_messages": [HumanMessage(content=state.get("user_query") or "")],
         "react_tool_context": ToolContext.GENERAL.value,
+        "active_skill_ids": list(
+            load_skill_catalog().select_for_message(state.get("user_query") or "")
+        ),
         "react_tool_rounds": 0,
         "react_max_tool_rounds": state.get(
             "react_max_tool_rounds", DEFAULT_MAX_TOOL_ROUNDS
@@ -124,6 +127,8 @@ def build_react_agent_node(
             "active_result_id": state.get("result_id", ""),
             "pending": state.get("domain_pending", {}), "completed_workflows": state.get("completed_workflows", []),
         }
+        if state.get("latest_project_slide_job_id"):
+            context["latest_project_slide_job_id"] = state["latest_project_slide_job_id"]
         if not _current_result_is_visible(state, current, active_result):
             context["active_result"] = active_result
         memory_scope = state.get("memory_scope") or {}
@@ -165,10 +170,14 @@ def build_react_agent_node(
         binding_state = {**state, "published_artifact_refs": published}
         tools = [item.tool for item in registry.for_context(ToolContext.GENERAL)
                  if item.tool.name not in state.get("completed_workflows", []) and item.availability(binding_state)]
+        system_prompt = build_system_prompt(
+            state.get("active_skill_ids") or [],
+            loader_available=any(tool.name == "load_skill" for tool in tools),
+        )
         budget = ContextBudget.from_env()
         try:
             messages = build_model_messages(
-                state.get("react_messages") or [], context, REACT_SYSTEM_PROMPT,
+                state.get("react_messages") or [], context, system_prompt,
                 tools=tools, budget=budget,
             )
         except ToolMessagePairingError:

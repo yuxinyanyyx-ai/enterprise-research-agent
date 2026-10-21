@@ -9,6 +9,7 @@ from fastapi.staticfiles import StaticFiles
 from src.mineru.routes.convert import router as convert_router
 from src.settings import get_settings
 from src.web.routes.agent import router as agent_router
+from src.web.routes.knowledge import router as knowledge_router
 from src.web.routes.watchlist import router as watchlist_router
 
 # 读取项目配置
@@ -63,6 +64,7 @@ app.mount(
 # 注册文档解析API
 app.include_router(convert_router)
 app.include_router(agent_router)
+app.include_router(knowledge_router)
 app.include_router(watchlist_router)
 
 

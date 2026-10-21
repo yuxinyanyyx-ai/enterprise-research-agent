@@ -1,0 +1,205 @@
+{
+  "source_ref": "PEC1/00 PEC agenda.docx",
+  "source_digest": "da3f7a592f8760a1ee78457e8e3410a3990019167026ecd3badb51d4140ea07c",
+  "reports": [
+    {
+      "topics": [
+        {
+          "title": "Verducatib - Earlier NDA Submission Feasibility Analysis (INFL TA)",
+          "background": [
+            {
+              "text": "Agenda item classified as Advice collection (A) for PEC, scheduled 2:35-2:50 (15 min) on 23 Apr 2026, presented by Yayun Zhu under TA INFL.",
+              "quote": "(A) Verducatib - Earlier NDA Submission Feasibility Analysis- Preliminary Assessment for PEC Advice",
+              "evidence_id": "chunk-11278afdb3c1"
+            }
+          ],
+          "for_endorsement": [
+            {
+              "text": "Preliminary assessment on earlier NDA submission feasibility submitted to PEC for advice.",
+              "quote": "Verducatib - Earlier NDA Submission Feasibility Analysis- Preliminary Assessment for PEC Advice",
+              "evidence_id": "chunk-11278afdb3c1"
+            }
+          ],
+          "decision": [],
+          "todo": []
+        },
+        {
+          "title": "TENACITY & persisTENce Evaluation – PEC Advice Collection (TA CRM)",
+          "background": [
+            {
+              "text": "Agenda item classified as Advice collection (A) for PEC, scheduled 4:15–4:35 (20 min) on 23 Apr 2026, presented by Yuling Zhang under TA CRM.",
+              "evidence_id": "chunk-921d1f354aec",
+              "quote": "(A) TENACITY & persisTENce evaluation | Speaker: Yuling Zhang | Time: 4:15-4:35 | Duration: 20 min"
+            }
+          ],
+          "for_endorsement": [
+            {
+              "text": "TENACITY & persisTENce evaluation submitted to PEC for advice collection (purpose code A).",
+              "evidence_id": "chunk-921d1f354aec",
+              "quote": "(A) TENACITY & persisTENce evaluation"
+            }
+          ],
+          "decision": [],
+          "todo": []
+        },
+        {
+          "title": "Metalyse-IIS Proposal: BALANCE Study – Blood Pressure Lowering and Thrombolysis: Concurrent vs Sequential Management in Acute Ischemic Stroke (CRM TA)",
+          "background": [
+            {
+              "text": "Content Endorsement item scheduled 4:35–4:55 (20 min) on 23 Apr 2026, presented by Louki Liu under TA CRM. Full title: Blood Pressure Lowering and Thrombolysis: Concurrent vs Sequential Management in Acute Ischemic Stroke (BALANCE). Purpose code (E) = Content Endorsement.",
+              "evidence_id": "chunk-4cc00c40f5ae",
+              "quote": "(E) Metalyse-IIS proposal: Blood Pressure Lowering and Thrombolysis: Concurrent vs Sequential Management in Acute Ischemic Stroke (BALANCE) | Speaker: Louki Liu | Time: 4:35-4:55 | Duration: 20 min"
+            },
+            {
+              "text": "Presentation purpose legend: (I) Information sharing, (A) Advice collection, (E) Content Endorsement.",
+              "evidence_id": "chunk-df24015d9357",
+              "quote": "*Purpose of the presentation: Information sharing (I), Advice collection (A), and Content Endorsement (E)"
+            }
+          ],
+          "for_endorsement": [
+            {
+              "text": "Metalyse-IIS proposal BALANCE submitted to PEC for content endorsement.",
+              "evidence_id": "chunk-4cc00c40f5ae",
+              "quote": "(E) Metalyse-IIS proposal: Blood Pressure Lowering and Thrombolysis: Concurrent vs Sequential Management in Acute Ischemic Stroke (BALANCE)"
+            }
+          ],
+          "decision": [],
+          "todo": []
+        }
+      ],
+      "reports": [
+        {
+          "topic_index": 0,
+          "passed": [],
+          "corrected": [],
+          "not_applicable": []
+        },
+        {
+          "topic_index": 1,
+          "passed": [
+            1,
+            2,
+            6,
+            7,
+            8,
+            13,
+            17
+          ],
+          "corrected": [
+            {
+              "check": 3,
+              "detail": "原文仅为议程条目，无研究背景、风险或执行细节；background 已精简为议程事实，原文未说明具体研究内容。"
+            },
+            {
+              "check": 5,
+              "detail": "议题仅有议程行，无决议、风险或行动，属低信息量边缘案例；但因含明确 Advice collection 请求（purpose code A）且提交至 PEC，保留为实质议题。"
+            },
+            {
+              "check": 16,
+              "detail": "for_endorsement 依据议程中明确标注的 '(A) Advice collection' 目的码，非从 decision 反推；decision 为空，符合原文无决议记录的事实。"
+            }
+          ],
+          "not_applicable": [
+            {
+              "check": 9,
+              "detail": "无决议记录，状态字段不适用。"
+            },
+            {
+              "check": 10,
+              "detail": "无 pending/TBD 项，不适用。"
+            },
+            {
+              "check": 11,
+              "detail": "原文未列出具体适应症或研究编号，无法拆分；原文未说明。"
+            },
+            {
+              "check": 12,
+              "detail": "仅一个议题，无合并操作。"
+            },
+            {
+              "check": 14,
+              "detail": "无 todo 行动项，不适用。"
+            },
+            {
+              "check": 15,
+              "detail": "无已完成事项，不适用。"
+            },
+            {
+              "check": 18,
+              "detail": "证据仅 chunk-921d1f354aec 一条议程行，其余 chunks 均为会议头部信息（标题、时间、成员列表），与本议题无额外实质内容，无遗漏。"
+            }
+          ]
+        },
+        {
+          "topic_index": 2,
+          "passed": [
+            1,
+            2,
+            4,
+            6,
+            7,
+            8,
+            9,
+            11,
+            12,
+            13,
+            16,
+            17
+          ],
+          "corrected": [
+            {
+              "check": 3,
+              "detail": "Background expanded to include the presentation-purpose legend (chunk-df24015d9357) to clarify why (E) = Content Endorsement, providing minimal but necessary context. No other substantive background is available in the source; study rationale/risk not present in evidence."
+            },
+            {
+              "check": 18,
+              "detail": "chunk-df24015d9357 (purpose legend) was present in evidence_markdown but not referenced in the original draft; added to background to support the (E) classification."
+            }
+          ],
+          "not_applicable": [
+            {
+              "check": 5,
+              "detail": "Item carries an explicit endorsement request (E) to PEC; not low-information."
+            },
+            {
+              "check": 10,
+              "detail": "No pending/TBD items in this topic."
+            },
+            {
+              "check": 14,
+              "detail": "No todo actions recorded; none present in source."
+            },
+            {
+              "check": 15,
+              "detail": "No completed actions to verify."
+            }
+          ]
+        }
+      ],
+      "excluded": [
+        {
+          "fact_id": "F0001",
+          "reason": "progress_only",
+          "detail": "该议题仅为议程中标注为 Information sharing (I) 的信息分享条目，无讨论、风险、阻塞、背书请求、委员会决策或跟进行动，属于纯进度/信息分享条目，不构成实质议题。"
+        },
+        {
+          "fact_id": "F0001",
+          "reason": "progress_only",
+          "detail": "该议题标注为 Information sharing (I)，仅为信息分享性议程条目，无讨论、风险、阻塞、背书请求、委员会决策或跟进行动，属于纯进度/信息通报，应过滤。"
+        }
+      ],
+      "coverage": "本议题质检改动未被采纳，保留抽取初稿；原文仅提供议程表格中一行信息分享条目（nerandomilast IPF患者纵向定性研究），无任何决议、请求、风险或行动记录，整题过滤为 progress_only。；原文仅提供议程表中一行条目，标注为 Information sharing，无任何决议、请求、风险或行动内容，整题过滤为 progress_only。；原文仅提供一条议程行（chunk-921d1f354aec），包含议题名称、目的码(A)、演讲人、时间；其余 chunks 为会议标题、TA 时间分配表及成员列表，均不含本议题的实质内容，已全部覆盖。；All substantive evidence for this agenda item is covered: the agenda table row (chunk-4cc00c40f5ae) and the purpose-legend paragraph (chunk-df24015d9357). Remaining chunks are meeting header, TA-time summary, other TA rows, and attendee lists — none contain additional facts about the BALANCE proposal.",
+      "unresolved": [
+        "本议题质检改动未被采纳，保留抽取初稿",
+        "TENACITY 与 persisTENce 的具体研究编号、适应症及评估内容原文未说明，待会议纪要补充。",
+        "No study background, scientific rationale, or risk information for the BALANCE proposal is present in the provided evidence; original document may contain a separate slide deck not included here."
+      ]
+    }
+  ],
+  "final_topic_ids": [
+    "topic-cf67b3c7273c9da19cd9",
+    "topic-48501016fc4d39118190",
+    "topic-59d35158252aaf27d3dd"
+  ],
+  "document_grouping": "all_candidates_accounted_for"
+}

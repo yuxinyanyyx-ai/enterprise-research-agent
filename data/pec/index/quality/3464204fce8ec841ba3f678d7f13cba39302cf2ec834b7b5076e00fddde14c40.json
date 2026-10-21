@@ -1,0 +1,48 @@
+{
+  "source_ref": "MAP 2025 May/01. 202505 MAP Meeting agenda.docx",
+  "source_digest": "4404d15969b1f85edeae5b1406b2a08efe19fb6f728e8fd7e397026d1b8d1fba",
+  "reports": [
+    {
+      "topics": [],
+      "reports": [],
+      "excluded": [
+        {
+          "fact_id": "F0001",
+          "reason": "noise",
+          "detail": "该议题仅为会议议程中的一个时间槽条目（'Follow-up actions from last MAP'，9:10，15 min），无具体跟进事项内容、无风险、无请求、无决议、无行动负责人，属于纯议程标题噪音。"
+        },
+        {
+          "fact_id": "F0001",
+          "reason": "noise",
+          "detail": "该议题仅为会议议程条目，记录演讲者和时间安排，无讨论内容、风险、请求、决议或行动，属于纯标题/日程噪音。"
+        },
+        {
+          "fact_id": "F0001",
+          "reason": "noise",
+          "detail": "仅为会议议程条目（TA MHEH Update，9:45，20 min），无任何讨论内容、风险、背书请求、委员会决议或跟进行动，属于纯标题/日程安排噪音。"
+        },
+        {
+          "fact_id": "F0001",
+          "reason": "noise",
+          "detail": "仅为会议议程表中的一行条目，记录演讲者和时间安排，无讨论内容、风险、请求、决议或行动，属于纯标题/日程噪音。"
+        },
+        {
+          "fact_id": "F0001",
+          "reason": "noise",
+          "detail": "仅为会议议程条目，记录演讲者和时间安排，无任何讨论内容、风险、请求、决议或行动事项。"
+        },
+        {
+          "fact_id": "F0001",
+          "reason": "progress_only",
+          "detail": "原文仅为会议议程条目，记录演讲者、时间和时长，无讨论内容、风险、请求、决议或行动。无法从议程标题推断实质内容，整题为纯议程噪音。"
+        }
+      ],
+      "coverage": "原始证据仅包含会议议程表格条目，无任何实质内容（无具体跟进事项、无讨论、无决议、无行动），整题作为噪音排除。；原文仅为MAP会议议程表格中的一行条目（TA INFL Update，Helen Tao/Saskia Kind，9:25，20 min），无任何实质内容、背书请求、委员会决议或跟进行动，整题作为噪音排除。；原始证据仅包含 MAP 会议议程表格行，记录 TA MHEH Update 的发言人和时间安排，无实质内容可提取；整题筛除。；原始证据仅为 MAP 会议议程表中的一行（TA Oncology Update，Sally Chen/Jiaqi Lu，10:15，20 min），无任何实质内容、背书请求、委员会决议或跟进行动，整题筛除。；原始证据仅包含 MAP 会议议程表中的一行条目（TA CRM Update，演讲者 Emma Xie/Hongzi Liang，10:35，30 min），无实质内容，整题作为噪音排除。；原始证据仅包含MAP会议议程表格条目（chunk-38dc98b24a35），其余chunks均为会议元数据（标题、日期、参会人员、其他议程项）。无任何关于Metalyse TENACITY试验中国时间窗考量的实质讨论、风险、背书请求、委员会决议或跟进行动，整题筛除。",
+      "unresolved": [
+        "若存在该议程项对应的会议纪要或讨论记录，应补充作为独立文档处理。"
+      ]
+    }
+  ],
+  "final_topic_ids": [],
+  "document_grouping": "all_candidates_accounted_for"
+}

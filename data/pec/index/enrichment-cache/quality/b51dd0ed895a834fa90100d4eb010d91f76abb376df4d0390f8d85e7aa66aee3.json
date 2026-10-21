@@ -1,0 +1,1 @@
+{"topics": [], "reports": [], "excluded": [{"fact_id": "F0001", "reason": "progress_only", "detail": "该议题仅包含研究1305-0046中国及全球入组数字（筛选/随机化/筛选失败计数），无风险讨论、阻塞、背书请求、委员会决策或跟进行动，属于纯进度数据，不构成实质议题。"}], "coverage": "原始候选议题仅有一条入组进度事实（chunk-18f8468269cc），无for_endorsement、decision、todo字段内容，整题为progress_only，予以筛除。", "unresolved": []}

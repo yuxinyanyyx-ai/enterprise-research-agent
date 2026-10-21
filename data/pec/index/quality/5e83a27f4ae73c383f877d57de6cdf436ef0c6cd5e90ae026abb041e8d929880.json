@@ -1,0 +1,134 @@
+{
+  "source_ref": "PEC1/02 Follow up actions.pptx",
+  "source_digest": "ff6089bc29b83643718b7ec3e982f392280f3604d3ee71be696282c0e3db95ee",
+  "reports": [
+    {
+      "topics": [
+        {
+          "title": "Follow-up Action: Sample Size Commitment to CDE – Review & Process Strengthening",
+          "background": [
+            {
+              "text": "Action was raised at Mar. 2026 PEC to review previous sample size commitments, assess potential risks, and update the pre-IND package review process.",
+              "quote": "To review the previous sample size commitments and assess any potential risks.\nTo evaluate the pre-IND package review process and update as needed.",
+              "evidence_id": "chunk-d29a393bb295"
+            },
+            {
+              "text": "RA TAHs reviewed previous TA pre-IND packages for unnecessary disclosure of sample size allocation breakdown (Mainland/TW/HK); no additional cases identified beyond the single case already known.",
+              "quote": "RA TAHs reviewed the previous TA pre-IND packages for any disclosure of unnecessary sample size allocation breakdown (Mainland/TW/HK). No additional cases identified. The current case was a single case, and review process was followed.",
+              "evidence_id": "chunk-d29a393bb295"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [
+            {
+              "text": "Action completed (Y). Process strengthened by adding a note to the 'China Sample Size Proposal for Joining Pivotal Studies' document: do not share unnecessary allocation details (esp. Mainland/TW/HK); default to Greater China total sample size for HA communication.",
+              "quote": "Process strengthened: Add a note in the process document “China Sample Size Proposal for Joining Pivotal Studies (Registration Purpose)”: “Do not share unnecessary allocation details (esp. Mainland/TW/HK), which is internal execution-level alignment; default to Greater China total sample size for HA communication.”",
+              "evidence_id": "chunk-d29a393bb295"
+            }
+          ],
+          "todo": []
+        },
+        {
+          "title": "Follow-up Action: Communication Process for CFDI/CDE Comments/Questions",
+          "background": [
+            {
+              "text": "Action was raised at Mar. 2026 PEC to report CFDI/CDE comments/questions immediately upon receipt and share responses with related MLT.",
+              "quote": "To report comments/questions from CFDI/CDE immediately once received and share the responses with related MLT.",
+              "evidence_id": "chunk-4bb0688d1dd4"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [
+            {
+              "text": "Action completed (Y). RA function has embedded the agreed process into daily practice to immediately inform CFDI/CDE formal questions and circulate responses to the relevant MLT.",
+              "quote": "RA function has embedded the agreed process into daily practice to immediately inform CFDI/CDE formal questions and circulate responses to the relevant MLT.",
+              "evidence_id": "chunk-4bb0688d1dd4"
+            }
+          ],
+          "todo": []
+        },
+        {
+          "title": "China Sample Size Proposal Process for Joining Pivotal Studies (Registration Purpose)",
+          "background": [
+            {
+              "text": "The process document defines how CD physicians lead Local Project Teams to evaluate and propose sample size for registration-purpose trials as part of the China integration plan, balancing four evaluation aspects: statistical, regulatory, operational feasibility, and clinical considerations.",
+              "quote": "CD physicians will lead Local Project Team to evaluate and propose sample for registration purpose trial, as part of China integration plan.\nTeam proposal is a balance of the four aspects.",
+              "evidence_id": "chunk-a71b7c421bc2"
+            },
+            {
+              "text": "If certain requirements cannot be met, LPT must assess risk and mitigation plan and incorporate into the China integration proposal.",
+              "quote": "If certain requirement cannot be met, LPT need to assess the risk and mitigation plan, and incorporate into China integration proposal.",
+              "evidence_id": "chunk-a71b7c421bc2"
+            },
+            {
+              "text": "Process note added: do not share unnecessary allocation details (esp. Mainland/TW/HK); default to Greater China sample size information only for HA communication.",
+              "quote": "Do not share unnecessary allocation details (esp. Mainland/TW/HK), which is internal execution-level alignment; default to Greater China sample size information only for HA communication.",
+              "evidence_id": "chunk-a71b7c421bc2"
+            },
+            {
+              "text": "CO leads OPU feasibility; final commitment to individual study relies on final OPU allocation. Deviations may trigger China development plan re-assessment; teams should consider raising to PEC and/or core team.",
+              "quote": "CO will lead OPU feasibility, final commitment to individual study should rely upon final OPU allocation. If any deviation to proposed sample size by OPU feasibility, China development plan re-assessment and mitigation may be considered, please consider to raise to PEC and/or core team.",
+              "evidence_id": "chunk-a71b7c421bc2"
+            },
+            {
+              "text": "Statistical perspective: PMDA Method 1 is primary choice (80% chance to meet consistency criteria); PMDA Method 2 is secondary; special considerations for multiple comparisons and multiple trial participation. Responsible: Statistician.",
+              "quote": "PMDA Method 1: primary choice, to allow 80% chance to meet consistency criteria\nPMDA Method 2: secondary choice\nSpecial considerations for multiple comparisons and multiple trial participation",
+              "evidence_id": "chunk-881791074ded"
+            },
+            {
+              "text": "Regulatory consideration: 15–20% of overall study population in general; sample size of successful precedents with similar indication. Responsible: RA.",
+              "quote": "15-20% of overall study population in general\nSample size of successful precedents with similar indication",
+              "evidence_id": "chunk-b5f0047323af"
+            },
+            {
+              "text": "Operational feasibility considerations include benchmark data (internal/external, global/local), global strategic feasibility, preliminary feasibility (e.g. EE feedback), and TW/HK/other East Asian participation numbers if available. Responsible: ClinOps.",
+              "quote": "Benchmark data reference (Internal & External, Global & Local)\nGlobal strategic feasibility for reference, if applied\nPreliminary feasibility evaluation, eg. EE feedback\nParticipation patient number of TW/HK and other East Asian countries, if available",
+              "evidence_id": "chunk-84ccd711c492"
+            },
+            {
+              "text": "Clinical considerations include target patient population and medical practice in China, rare disease status, mega trial flag, early phase trial data if China joined, and sample sizes from trials with similar indication. Responsible: CD.",
+              "quote": "Target patient population and medical practice in China\nRare disease in China or not\nMega trial\nSample size and data from early phase trials if China has joined\nSample size of trials with similar indication",
+              "evidence_id": "chunk-acd707e1dad6"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": []
+        }
+      ],
+      "reports": [
+        {
+          "topic_index": 0,
+          "passed": [],
+          "corrected": [],
+          "not_applicable": []
+        },
+        {
+          "topic_index": 1,
+          "passed": [],
+          "corrected": [],
+          "not_applicable": []
+        },
+        {
+          "topic_index": 2,
+          "passed": [],
+          "corrected": [],
+          "not_applicable": []
+        }
+      ],
+      "excluded": [],
+      "coverage": "本议题质检引用未通过，保留抽取初稿；本议题质检改动未被采纳，保留抽取初稿；本议题质检结果未被采纳，保留抽取初稿",
+      "unresolved": [
+        "本议题质检引用未通过，保留抽取初稿",
+        "本议题质检改动未被采纳，保留抽取初稿",
+        "本议题质检结果未被采纳，保留抽取初稿"
+      ]
+    }
+  ],
+  "final_topic_ids": [
+    "topic-b91d86633e20b7ad266f",
+    "topic-29adf80272c597b5b3ac",
+    "topic-d83109276375dd390cca"
+  ],
+  "document_grouping": "all_candidates_accounted_for"
+}

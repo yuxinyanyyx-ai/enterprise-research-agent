@@ -6,13 +6,15 @@ import os
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
-
-_configured_root = Path(os.getenv("PEC_KNOWLEDGE_ROOT", "data/pec")).expanduser()
-KNOWLEDGE_ROOT = (_configured_root if _configured_root.is_absolute() else ROOT / _configured_root).resolve()
-
-SOURCES_DIR = KNOWLEDGE_ROOT / "sources"
-
-INDEX_DIR = KNOWLEDGE_ROOT / "index"
+_configured_root = Path(
+    os.getenv("KNOWLEDGE_ROOT")
+    or os.getenv("PEC_KNOWLEDGE_ROOT", "data/pec")
+).expanduser()
+KNOWLEDGE_ROOT = (
+    _configured_root if _configured_root.is_absolute() else ROOT / _configured_root
+).resolve()
+SOURCES_DIR = Path(os.getenv("KNOWLEDGE_SOURCES_DIR", str(KNOWLEDGE_ROOT / "sources")))
+INDEX_DIR = Path(os.getenv("KNOWLEDGE_INDEX_DIR", str(KNOWLEDGE_ROOT / "index")))
 
 MANIFEST_FILE = INDEX_DIR / "manifest.json"
 CHUNKS_FILE = INDEX_DIR / "chunks.jsonl"
@@ -40,7 +42,7 @@ def resolve_source_path(relative: str) -> Path:
 
 def normalize_source_scope(scope: str) -> tuple[str, Path]:
     path = resolve_source_path(scope)
-    return source_relative(path) if path != SOURCES_DIR.resolve() else "", path
+    return (source_relative(path) if path != SOURCES_DIR.resolve() else "", path)
 
 
 def source_in_scope(source_ref: str, scope: str) -> bool:

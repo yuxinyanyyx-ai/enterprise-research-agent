@@ -1,0 +1,137 @@
+{
+  "source_ref": "PEC-Dec 2025/PEC-Dec 2025/06. For endorsemnet- Metalyse Late Time Window HA Interaction Strategy.pptx",
+  "source_digest": "3889b4660e6904568e3be8d5d49f12f9617e364480d0815264865c253e36de28",
+  "reports": [
+    {
+      "topics": [
+        {
+          "title": "Metalyse Late Time Window China Sister Trial – HAI (Pre-IND) Interaction Strategy",
+          "background": [
+            {
+              "text": "BUPC decision on 11 Dec 2025: Global recommends submitting the CTA directly without prior CDE consultation. The regulatory strategy for the China sister trial is pending CN RA agreement.",
+              "evidence_id": "chunk-41ab694c0c3b",
+              "quote": "The decision from BUPC (11 Dec 2025)\n\nGlobal recommends submitting the CTA directly, without prior CDE consultation.\n\nThe regulatory strategy for the China sister trial is pending CN RA agreement."
+            },
+            {
+              "text": "Local team's current proposal (Pre-IND consultation) is not aligned with BUPC recommendations; guidance from PEC members is requested.",
+              "evidence_id": "chunk-41ab694c0c3b",
+              "quote": "Current proposal from the local team is not aligned with BUPC recommendations.\n2.Guidance from PEC members is requested."
+            },
+            {
+              "text": "Local assessment: Pre-IND is necessary due to complexity of the current development strategy.",
+              "evidence_id": "chunk-41ab694c0c3b",
+              "quote": "Pre-IND is necessary, due to the complexity of the current development strategy."
+            },
+            {
+              "text": "Local assessment pros of Pre-IND (value): opportunity for in-depth communication & alignment with CDE on overall development strategy; mitigates potential NDA approval risk at early stage; no cons identified.",
+              "evidence_id": "chunk-d4160feeb24e",
+              "quote": "With Pre-IND | PROS: Value: An opportunity for in-depth communication & alignment with CDE on overall development strategy. Mitigate potential risk for NDA approval at early stage | CONS: None"
+            },
+            {
+              "text": "Local assessment pros of Pre-IND (timeline): proactively identify and resolve potential issues; no impact to following sister trial process (placebo preparation is on critical path).",
+              "evidence_id": "chunk-b0ec8c0e36ce",
+              "quote": "Proactively identify and resolve potential issues to minimize timeline impact on overall development plan. Meanwhile, no impact to following sister trial process. (placebo preparation is on critical path)"
+            },
+            {
+              "text": "Local assessment cons of Without Pre-IND: lose opportunity for in-depth communication with CDE on overall development strategy, leaving significant uncertainty for NDA approval.",
+              "evidence_id": "chunk-4068ab28e44b",
+              "quote": "Without Pre-IND | PROS: Save limited resource for pre-IND preparation | CONS: Lose opportunity for in-depth communication with CDE on overall development strategy to leave a significant uncertainty for NDA-approval."
+            },
+            {
+              "text": "Additional con of Without Pre-IND: queries during CTA stage might be challenging and may impact following timeline.",
+              "evidence_id": "chunk-ce7419010274",
+              "quote": "Queries during CTA stage might be challenging and may impact following timeline"
+            }
+          ],
+          "for_endorsement": [
+            {
+              "text": "Slide 1 marks this item as 'For Endorsement'; the team proposes PEC endorse the HAI (Pre-IND consultation) strategy for the Metalyse Late Time Window China sister trial.",
+              "evidence_id": "chunk-e0c538fc0668",
+              "quote": "Metalyse Late Time Window HA Interaction Strategy\nONLY FOR INTERNAL USE\nFor endorsement"
+            }
+          ],
+          "decision": [],
+          "todo": [
+            {
+              "text": "Post PEC endorsement: share HAI strategy with global team and reach alignment; kick off HAI preparation with global team covering BB/TDO preparation. Owner/due: 原文未说明。",
+              "evidence_id": "chunk-a861353db491",
+              "quote": "Post PEC endorsement on HAI: Share HAI strategy with global team & reach alignment\nKick off HAI preparation with global team, covering BB/TDO preparation."
+            },
+            {
+              "text": "Submit HAI Application (60WD) by end of Jan 2026; CDE feedback expected around end of Apr 2026. HAI questions: 1. Overall development strategy; 2. Sister Trial Design – Statistical Analysis & Sample Size; 3. Metalyse placebo: leverage 50 mg stability data to support 60M shelf life for 25 mg placebo. Owner: 原文未说明。",
+              "evidence_id": "chunk-a861353db491",
+              "quote": "Timeline: Submit HAI Application (60WD) by the end of Jan 2026, CDE feedback expected around end of Apr 2026.\nHAI questions:\n1.Overall development Strategy; 2.Sister Trial Design - Statistical Analysis & Sample Size;3.Metalyse placebo: Leverage 50 mg Stability Data to support 60M shelf life for 25mg placebo.etc."
+            }
+          ],
+          "source_ref": "PEC-Dec 2025/PEC-Dec 2025/06. For endorsemnet- Metalyse Late Time Window HA Interaction Strategy.pptx",
+          "source_digest": "3889b4660e6904568e3be8d5d49f12f9617e364480d0815264865c253e36de28",
+          "evidence_ids": [
+            "chunk-41ab694c0c3b",
+            "chunk-d4160feeb24e",
+            "chunk-b0ec8c0e36ce",
+            "chunk-4068ab28e44b",
+            "chunk-ce7419010274",
+            "chunk-e0c538fc0668",
+            "chunk-a861353db491"
+          ],
+          "loc": "Slide 2",
+          "folder": "PEC-Dec 2025",
+          "quality_status": "passed",
+          "topic_id": "topic-71a506a3aca09d3dd083"
+        }
+      ],
+      "reports": [
+        {
+          "topic_index": 0,
+          "passed": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            9,
+            10,
+            11,
+            12,
+            13,
+            15,
+            17
+          ],
+          "corrected": [
+            {
+              "check": 7,
+              "detail": "原稿 for_endorsement 为空，但 chunk-e0c538fc0668 明确标注 'For endorsement'，且 chunk-41ab694c0c3b 写明 '√ For Endorsement'，已补入 for_endorsement。"
+            },
+            {
+              "check": 14,
+              "detail": "todo 两条均缺少 owner 字段，原文未提及负责人，已在 text 中注明'原文未说明'。"
+            },
+            {
+              "check": 16,
+              "detail": "原稿 for_endorsement 为空导致请求与决议无法分别有据；已从 chunk-e0c538fc0668 补入背书请求，decision 仍为空（原文无委员会决议记录）。"
+            }
+          ],
+          "not_applicable": [
+            {
+              "check": 6,
+              "detail": "无 global/local proposal approval 或 OASIS/protocol/EC approval 混入委员会决议的情况；BUPC 决定已正确置于 background。"
+            },
+            {
+              "check": 8,
+              "detail": "decision 为空，无需核查委员会层级。"
+            }
+          ]
+        }
+      ],
+      "excluded": [],
+      "coverage": "所有原始事实 F0001–F0009 均保留；新增 for_endorsement 条目来自 chunk-e0c538fc0668（Slide 1）和 chunk-41ab694c0c3b 中的 '√ For Endorsement' 标记，原稿遗漏该字段已补正；todo 补注 owner 原文未说明；其余字段与原稿一致。",
+      "unresolved": [
+        "PEC 会议上是否最终背书 HAI 策略，原文未记录决议结果。"
+      ]
+    }
+  ],
+  "final_topic_ids": [
+    "topic-71a506a3aca09d3dd083"
+  ],
+  "document_grouping": "all_candidates_accounted_for"
+}

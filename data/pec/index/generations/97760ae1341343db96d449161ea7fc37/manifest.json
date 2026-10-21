@@ -1,0 +1,1582 @@
+{
+  "version": 5,
+  "files": {
+    "PEC-Dec 2025/PEC-Dec 2025/00 2025 Dec PEC agenda.docx": {
+      "sha256": "4f58f34425be57bacb72f2e5376b9d9a1f2b774b09da987e071f462edc511081",
+      "size": 86570,
+      "chunk_count": 47,
+      "parser_version": 5,
+      "recipe": "[5, \"claude_4_6_sonnet\", \"pec-business-qc-meetings-v1\"]",
+      "topic_count": 4,
+      "vision_pages": 0,
+      "indexed_at": "2026-10-21T02:49:01.577702+00:00",
+      "provider": "local",
+      "external_id": "PEC-Dec 2025/PEC-Dec 2025/00 2025 Dec PEC agenda.docx",
+      "parse_status": "processed",
+      "markdown_path": "parsed/a9a51859c89147e1f01e9d2d452a48e2f83f6b63bc83884cfd8d34bb012380c9.md",
+      "quality_report": "quality/a9a51859c89147e1f01e9d2d452a48e2f83f6b63bc83884cfd8d34bb012380c9.json",
+      "warnings": [],
+      "preview_pages": 0,
+      "preview_type": ""
+    },
+    "PEC-Dec 2025/PEC-Dec 2025/00 2025 Dec PEC meeting minutes - draft.docx": {
+      "sha256": "78a405c836ffac15d16145fcf3800ab56acb3f16e403f6ff3336c5dd3f73dfa2",
+      "size": 88671,
+      "chunk_count": 49,
+      "parser_version": 5,
+      "recipe": "[5, \"claude_4_6_sonnet\", \"pec-business-qc-meetings-v1\"]",
+      "topic_count": 7,
+      "vision_pages": 0,
+      "indexed_at": "2026-10-21T02:50:34.189501+00:00",
+      "provider": "local",
+      "external_id": "PEC-Dec 2025/PEC-Dec 2025/00 2025 Dec PEC meeting minutes - draft.docx",
+      "parse_status": "processed",
+      "markdown_path": "parsed/bc11bc0192f8c5b94be9c51038aff389557d39dc793a0d731acd41a50608ae5f.md",
+      "quality_report": "quality/bc11bc0192f8c5b94be9c51038aff389557d39dc793a0d731acd41a50608ae5f.json",
+      "warnings": [],
+      "preview_pages": 0,
+      "preview_type": ""
+    },
+    "PEC-Dec 2025/PEC-Dec 2025/00 2025 Dec PEC meeting minutes - Final.pdf": {
+      "sha256": "ef5ca46726fc99eb7caae199f3c7e5424168ba9a4926098446013bc65d135164",
+      "size": 278085,
+      "chunk_count": 12,
+      "parser_version": 5,
+      "recipe": "[5, \"claude_4_6_sonnet\", \"pec-business-qc-meetings-v1\"]",
+      "topic_count": 7,
+      "vision_pages": 0,
+      "indexed_at": "2026-10-21T02:51:53.367819+00:00",
+      "provider": "local",
+      "external_id": "PEC-Dec 2025/PEC-Dec 2025/00 2025 Dec PEC meeting minutes - Final.pdf",
+      "parse_status": "processed",
+      "markdown_path": "parsed/26eef5c33005df2a1f5af505acdb9595b60b2385ba2821a66c84cddf30cbc438.md",
+      "quality_report": "quality/26eef5c33005df2a1f5af505acdb9595b60b2385ba2821a66c84cddf30cbc438.json",
+      "warnings": [
+        {
+          "loc": "Page 1",
+          "reason": "文字稀少或包含图片/绘图，仅保留可提取文字，不进行 OCR"
+        },
+        {
+          "loc": "Page 2",
+          "reason": "文字稀少或包含图片/绘图，仅保留可提取文字，不进行 OCR"
+        },
+        {
+          "loc": "Page 3",
+          "reason": "文字稀少或包含图片/绘图，仅保留可提取文字，不进行 OCR"
+        },
+        {
+          "loc": "Page 4",
+          "reason": "文字稀少或包含图片/绘图，仅保留可提取文字，不进行 OCR"
+        },
+        {
+          "loc": "Page 5",
+          "reason": "文字稀少或包含图片/绘图，仅保留可提取文字，不进行 OCR"
+        }
+      ],
+      "preview_pages": 0,
+      "preview_type": ""
+    },
+    "PEC-Dec 2025/PEC-Dec 2025/03. Oncology Portfolio Update_PEC_Dec2025.pptx": {
+      "sha256": "38f29ea257e81ba96eec3a41b2e67aeba814320baf8729de2e67264d709c8916",
+      "size": 2130596,
+      "chunk_count": 152,
+      "parser_version": 5,
+      "recipe": "[5, \"claude_4_6_sonnet\", \"pec-business-qc-meetings-v1\"]",
+      "topic_count": 18,
+      "vision_pages": 0,
+      "indexed_at": "2026-10-21T02:57:00.689851+00:00",
+      "provider": "local",
+      "external_id": "PEC-Dec 2025/PEC-Dec 2025/03. Oncology Portfolio Update_PEC_Dec2025.pptx",
+      "parse_status": "processed",
+      "markdown_path": "parsed/e409edfb0163d15b61f68846c64764702a6292a77d1d8a6dd74aea3adcf9e032.md",
+      "quality_report": "quality/e409edfb0163d15b61f68846c64764702a6292a77d1d8a6dd74aea3adcf9e032.json",
+      "warnings": [
+        {
+          "loc": "Slide 1",
+          "reason": "包含图片，图片内文字未提取"
+        },
+        {
+          "loc": "Slide 3",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 6",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字"
+        },
+        {
+          "loc": "Slide 7",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 8",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 9",
+          "reason": "包含图片，图片内文字未提取"
+        },
+        {
+          "loc": "Slide 10",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 11",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 13",
+          "reason": "存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 15",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 16",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 17",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字"
+        },
+        {
+          "loc": "Slide 18",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字"
+        },
+        {
+          "loc": "Slide 19",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 20",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 21",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 22",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 24",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 25",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 26",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 27",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 28",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 29",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 31",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 34",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 35",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 36",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 38",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 40",
+          "reason": "包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 41",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 42",
+          "reason": "包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 43",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 45",
+          "reason": "包含图片，图片内文字未提取"
+        }
+      ],
+      "preview_pages": 0,
+      "preview_type": ""
+    },
+    "PEC-Dec 2025/PEC-Dec 2025/0405. CRM Portfolio Update_20251215.pptx": {
+      "sha256": "c6fc5dd68ad912da317d6b6d6d938bd7205db238c2eaa66dd32944d50447ea20",
+      "size": 8299020,
+      "chunk_count": 174,
+      "parser_version": 5,
+      "recipe": "[5, \"claude_4_6_sonnet\", \"pec-business-qc-meetings-v1\"]",
+      "topic_count": 12,
+      "vision_pages": 0,
+      "indexed_at": "2026-10-21T03:02:41.808246+00:00",
+      "provider": "local",
+      "external_id": "PEC-Dec 2025/PEC-Dec 2025/0405. CRM Portfolio Update_20251215.pptx",
+      "parse_status": "processed",
+      "markdown_path": "parsed/85403789c6aea1cee5319dc67406df453d7856ac97024a0a67051508a964638e.md",
+      "quality_report": "quality/85403789c6aea1cee5319dc67406df453d7856ac97024a0a67051508a964638e.json",
+      "warnings": [
+        {
+          "loc": "Slide 1",
+          "reason": "包含图片，图片内文字未提取"
+        },
+        {
+          "loc": "Slide 3",
+          "reason": "本页未提取到文字，已跳过"
+        },
+        {
+          "loc": "Slide 5",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 6",
+          "reason": "包含图片，图片内文字未提取"
+        },
+        {
+          "loc": "Slide 7",
+          "reason": "包含图片，图片内文字未提取"
+        },
+        {
+          "loc": "Slide 8",
+          "reason": "包含图片，图片内文字未提取；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 9",
+          "reason": "包含图片，图片内文字未提取"
+        },
+        {
+          "loc": "Slide 12",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 13",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 16",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 17",
+          "reason": "包含图片，图片内文字未提取；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 19",
+          "reason": "包含图片，图片内文字未提取；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 20",
+          "reason": "存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 21",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字"
+        },
+        {
+          "loc": "Slide 22",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字"
+        },
+        {
+          "loc": "Slide 23",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字"
+        },
+        {
+          "loc": "Slide 24",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字"
+        },
+        {
+          "loc": "Slide 25",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字"
+        },
+        {
+          "loc": "Slide 26",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字"
+        },
+        {
+          "loc": "Slide 27",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字"
+        },
+        {
+          "loc": "Slide 28",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字"
+        },
+        {
+          "loc": "Slide 29",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 32",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 33",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 34",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 35",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字"
+        },
+        {
+          "loc": "Slide 36",
+          "reason": "包含图片，图片内文字未提取"
+        },
+        {
+          "loc": "Slide 37",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字"
+        },
+        {
+          "loc": "Slide 38",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字"
+        },
+        {
+          "loc": "Slide 39",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字"
+        },
+        {
+          "loc": "Slide 40",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字"
+        },
+        {
+          "loc": "Slide 41",
+          "reason": "包含图片，图片内文字未提取"
+        },
+        {
+          "loc": "Slide 42",
+          "reason": "包含图片，图片内文字未提取"
+        },
+        {
+          "loc": "Slide 43",
+          "reason": "包含图片，图片内文字未提取；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 45",
+          "reason": "包含图片，图片内文字未提取；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 46",
+          "reason": "包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 47",
+          "reason": "包含图片，图片内文字未提取；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 48",
+          "reason": "包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 49",
+          "reason": "包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 50",
+          "reason": "包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 51",
+          "reason": "包含图片，图片内文字未提取；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 52",
+          "reason": "包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 53",
+          "reason": "包含图片，图片内文字未提取"
+        },
+        {
+          "loc": "Slide 54",
+          "reason": "包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 55",
+          "reason": "包含图片，图片内文字未提取"
+        },
+        {
+          "loc": "Slide 58",
+          "reason": "包含图片，图片内文字未提取"
+        },
+        {
+          "loc": "Slide 59",
+          "reason": "包含图片，图片内文字未提取"
+        },
+        {
+          "loc": "Slide 61",
+          "reason": "包含图片，图片内文字未提取；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 62",
+          "reason": "包含图片，图片内文字未提取；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 63",
+          "reason": "包含图片，图片内文字未提取；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 65",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 66",
+          "reason": "包含图表或连接关系，仅保留可提取文字"
+        }
+      ],
+      "preview_pages": 0,
+      "preview_type": ""
+    },
+    "PEC-Dec 2025/PEC-Dec 2025/06. For endorsemnet- Metalyse Late Time Window HA Interaction Strategy.pptx": {
+      "sha256": "3889b4660e6904568e3be8d5d49f12f9617e364480d0815264865c253e36de28",
+      "size": 1259070,
+      "chunk_count": 11,
+      "parser_version": 5,
+      "recipe": "[5, \"claude_4_6_sonnet\", \"pec-business-qc-meetings-v1\"]",
+      "topic_count": 1,
+      "vision_pages": 0,
+      "indexed_at": "2026-10-21T03:02:42.142513+00:00",
+      "provider": "local",
+      "external_id": "PEC-Dec 2025/PEC-Dec 2025/06. For endorsemnet- Metalyse Late Time Window HA Interaction Strategy.pptx",
+      "parse_status": "processed",
+      "markdown_path": "parsed/a2c29741c61e02101be4a84633d409454bd8bdafb4fdc0bc53ffce3a927c1c57.md",
+      "quality_report": "quality/a2c29741c61e02101be4a84633d409454bd8bdafb4fdc0bc53ffce3a927c1c57.json",
+      "warnings": [
+        {
+          "loc": "Slide 2",
+          "reason": "存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 4",
+          "reason": "包含图表或连接关系，仅保留可提取文字"
+        }
+      ],
+      "preview_pages": 0,
+      "preview_type": ""
+    },
+    "PEC-Dec 2025/PEC-Dec 2025/07. CRM_FAP TRAILR2 Asian Phase 1 For PEC endorsement.pptx": {
+      "sha256": "dee9b86661b06ba598a0f71840ffaf374e4c8b34fa0e156d22b47aeeb055071a",
+      "size": 2388730,
+      "chunk_count": 132,
+      "parser_version": 5,
+      "recipe": "[5, \"claude_4_6_sonnet\", \"pec-business-qc-meetings-v1\"]",
+      "topic_count": 1,
+      "vision_pages": 0,
+      "indexed_at": "2026-10-21T03:03:50.466924+00:00",
+      "provider": "local",
+      "external_id": "PEC-Dec 2025/PEC-Dec 2025/07. CRM_FAP TRAILR2 Asian Phase 1 For PEC endorsement.pptx",
+      "parse_status": "processed",
+      "markdown_path": "parsed/ac8cd90c85f49f924baf5b8f722d630731a4bb58e7a486d1187d53c937b94c35.md",
+      "quality_report": "quality/ac8cd90c85f49f924baf5b8f722d630731a4bb58e7a486d1187d53c937b94c35.json",
+      "warnings": [
+        {
+          "loc": "Slide 2",
+          "reason": "包含图片，图片内文字未提取"
+        },
+        {
+          "loc": "Slide 3",
+          "reason": "包含图片，图片内文字未提取"
+        },
+        {
+          "loc": "Slide 6",
+          "reason": "包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 7",
+          "reason": "包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 8",
+          "reason": "存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 9",
+          "reason": "存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 10",
+          "reason": "包含图片，图片内文字未提取"
+        },
+        {
+          "loc": "Slide 13",
+          "reason": "包含图片，图片内文字未提取"
+        },
+        {
+          "loc": "Slide 15",
+          "reason": "包含图片，图片内文字未提取"
+        }
+      ],
+      "preview_pages": 0,
+      "preview_type": ""
+    },
+    "PEC-Dec 2025/PEC-Dec 2025/08. CRM_RWE_CKD GDMT & CVRR_v2.pptx": {
+      "sha256": "b02274f342fbc31f08185a7993dee607086247dbd1ed40c685bc0d959f11bcb4",
+      "size": 45877746,
+      "chunk_count": 55,
+      "parser_version": 5,
+      "recipe": "[5, \"claude_4_6_sonnet\", \"pec-business-qc-meetings-v1\"]",
+      "topic_count": 2,
+      "vision_pages": 0,
+      "indexed_at": "2026-10-21T03:03:54.135535+00:00",
+      "provider": "local",
+      "external_id": "PEC-Dec 2025/PEC-Dec 2025/08. CRM_RWE_CKD GDMT & CVRR_v2.pptx",
+      "parse_status": "processed",
+      "markdown_path": "parsed/8a88b4ae41cecc57d488cfcfa40f4f37f028bfca191d075cc4e05148542e5a3e.md",
+      "quality_report": "quality/8a88b4ae41cecc57d488cfcfa40f4f37f028bfca191d075cc4e05148542e5a3e.json",
+      "warnings": [
+        {
+          "loc": "Slide 2",
+          "reason": "包含图片，图片内文字未提取"
+        },
+        {
+          "loc": "Slide 3",
+          "reason": "包含图片，图片内文字未提取"
+        },
+        {
+          "loc": "Slide 5",
+          "reason": "包含图表或连接关系，仅保留可提取文字"
+        },
+        {
+          "loc": "Slide 6",
+          "reason": "包含图片，图片内文字未提取"
+        },
+        {
+          "loc": "Slide 7",
+          "reason": "包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 9",
+          "reason": "包含图片，图片内文字未提取"
+        },
+        {
+          "loc": "Slide 10",
+          "reason": "包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 11",
+          "reason": "包含图片，图片内文字未提取"
+        },
+        {
+          "loc": "Slide 14",
+          "reason": "包含图片，图片内文字未提取"
+        },
+        {
+          "loc": "Slide 16",
+          "reason": "包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 20",
+          "reason": "包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 21",
+          "reason": "包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 22",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 24",
+          "reason": "包含图片，图片内文字未提取"
+        },
+        {
+          "loc": "Slide 25",
+          "reason": "包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        }
+      ],
+      "preview_pages": 0,
+      "preview_type": ""
+    },
+    "PEC-Dec 2025/PEC-Dec 2025/09. PEC_TA INFL 2025_12.pptx": {
+      "sha256": "9ed89ed7c76a44ad0f2d3312a6f8189b2e6b053e060a7e131bcdfe26d2ba8d11",
+      "size": 6872045,
+      "chunk_count": 237,
+      "parser_version": 5,
+      "recipe": "[5, \"claude_4_6_sonnet\", \"pec-business-qc-meetings-v1\"]",
+      "topic_count": 15,
+      "vision_pages": 0,
+      "indexed_at": "2026-10-21T03:05:53.548071+00:00",
+      "provider": "local",
+      "external_id": "PEC-Dec 2025/PEC-Dec 2025/09. PEC_TA INFL 2025_12.pptx",
+      "parse_status": "processed",
+      "markdown_path": "parsed/5a1960eb5cfe386483975d1e4a9d85555729d31de3edcc25102037b52394251e.md",
+      "quality_report": "quality/5a1960eb5cfe386483975d1e4a9d85555729d31de3edcc25102037b52394251e.json",
+      "warnings": [
+        {
+          "loc": "Slide 1",
+          "reason": "包含图片，图片内文字未提取"
+        },
+        {
+          "loc": "Slide 3",
+          "reason": "包含图片，图片内文字未提取"
+        },
+        {
+          "loc": "Slide 5",
+          "reason": "包含图片，图片内文字未提取；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 6",
+          "reason": "包含图片，图片内文字未提取；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 9",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 10",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 12",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 13",
+          "reason": "包含图片，图片内文字未提取；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 14",
+          "reason": "包含图片，图片内文字未提取"
+        },
+        {
+          "loc": "Slide 15",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 16",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 17",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 18",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 20",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 21",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 22",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 23",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 24",
+          "reason": "包含图表或连接关系，仅保留可提取文字"
+        },
+        {
+          "loc": "Slide 25",
+          "reason": "包含图片，图片内文字未提取"
+        },
+        {
+          "loc": "Slide 26",
+          "reason": "包含图表或连接关系，仅保留可提取文字"
+        },
+        {
+          "loc": "Slide 27",
+          "reason": "包含图表或连接关系，仅保留可提取文字"
+        },
+        {
+          "loc": "Slide 28",
+          "reason": "包含图片，图片内文字未提取"
+        },
+        {
+          "loc": "Slide 30",
+          "reason": "包含图片，图片内文字未提取"
+        },
+        {
+          "loc": "Slide 36",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 37",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 38",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 39",
+          "reason": "包含图片，图片内文字未提取"
+        },
+        {
+          "loc": "Slide 40",
+          "reason": "包含图片，图片内文字未提取"
+        },
+        {
+          "loc": "Slide 41",
+          "reason": "包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 45",
+          "reason": "包含图片，图片内文字未提取"
+        },
+        {
+          "loc": "Slide 46",
+          "reason": "包含图片，图片内文字未提取"
+        },
+        {
+          "loc": "Slide 47",
+          "reason": "包含图片，图片内文字未提取"
+        },
+        {
+          "loc": "Slide 48",
+          "reason": "包含图片，图片内文字未提取"
+        },
+        {
+          "loc": "Slide 49",
+          "reason": "包含图片，图片内文字未提取"
+        },
+        {
+          "loc": "Slide 50",
+          "reason": "包含图表或连接关系，仅保留可提取文字"
+        },
+        {
+          "loc": "Slide 52",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 54",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 55",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 56",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 57",
+          "reason": "存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 59",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 61",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 62",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        }
+      ],
+      "preview_pages": 0,
+      "preview_type": ""
+    },
+    "PEC-Dec 2025/PEC-Dec 2025/10. China development strategy for Nerandomilast SSc indication__pre-reads for PEC Dec.pptx": {
+      "sha256": "a16be80b8137b80e6ac9ed9d81082a4681cbdfd6728a47093d39757a71f3749b",
+      "size": 3989672,
+      "chunk_count": 66,
+      "parser_version": 5,
+      "recipe": "[5, \"claude_4_6_sonnet\", \"pec-business-qc-meetings-v1\"]",
+      "topic_count": 1,
+      "vision_pages": 0,
+      "indexed_at": "2026-10-21T03:05:56.654096+00:00",
+      "provider": "local",
+      "external_id": "PEC-Dec 2025/PEC-Dec 2025/10. China development strategy for Nerandomilast SSc indication__pre-reads for PEC Dec.pptx",
+      "parse_status": "processed",
+      "markdown_path": "parsed/b4c13e6970de7c60198df47f1ac6957ce5320ce2b567111898abc14f22c957af.md",
+      "quality_report": "quality/b4c13e6970de7c60198df47f1ac6957ce5320ce2b567111898abc14f22c957af.json",
+      "warnings": [
+        {
+          "loc": "Slide 2",
+          "reason": "存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 4",
+          "reason": "包含图片，图片内文字未提取；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 6",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 8",
+          "reason": "包含图片，图片内文字未提取"
+        },
+        {
+          "loc": "Slide 9",
+          "reason": "包含图片，图片内文字未提取"
+        },
+        {
+          "loc": "Slide 13",
+          "reason": "包含图片，图片内文字未提取"
+        },
+        {
+          "loc": "Slide 17",
+          "reason": "存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 20",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 23",
+          "reason": "包含图片，图片内文字未提取；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 24",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 25",
+          "reason": "包含图片，图片内文字未提取；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 27",
+          "reason": "包含图片，图片内文字未提取"
+        }
+      ],
+      "preview_pages": 0,
+      "preview_type": ""
+    },
+    "PEC-Dec 2025/PEC-Dec 2025/11. MHEH Portfolio Update_PEC_Dec2025.pptx": {
+      "sha256": "85233e902e82990971460e700eaa6446238d35ead3b9bfe21bec892280e689b2",
+      "size": 2553927,
+      "chunk_count": 51,
+      "parser_version": 5,
+      "recipe": "[5, \"claude_4_6_sonnet\", \"pec-business-qc-meetings-v1\"]",
+      "topic_count": 9,
+      "vision_pages": 0,
+      "indexed_at": "2026-10-21T03:07:38.463809+00:00",
+      "provider": "local",
+      "external_id": "PEC-Dec 2025/PEC-Dec 2025/11. MHEH Portfolio Update_PEC_Dec2025.pptx",
+      "parse_status": "processed",
+      "markdown_path": "parsed/9fe0a3bed047afadae3c05235d07a263c15b11a844044914bbe1a112e803ba2f.md",
+      "quality_report": "quality/9fe0a3bed047afadae3c05235d07a263c15b11a844044914bbe1a112e803ba2f.json",
+      "warnings": [
+        {
+          "loc": "Slide 1",
+          "reason": "包含图片，图片内文字未提取"
+        },
+        {
+          "loc": "Slide 5",
+          "reason": "包含图片，图片内文字未提取"
+        },
+        {
+          "loc": "Slide 8",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 9",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 10",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 11",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 12",
+          "reason": "包含图片，图片内文字未提取"
+        },
+        {
+          "loc": "Slide 13",
+          "reason": "包含图片，图片内文字未提取"
+        },
+        {
+          "loc": "Slide 15",
+          "reason": "包含图片，图片内文字未提取"
+        },
+        {
+          "loc": "Slide 17",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 18",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 19",
+          "reason": "包含图片，图片内文字未提取；包含图表或连接关系，仅保留可提取文字；存在多形状布局，仅保留文字，不推断流程或层级关系"
+        },
+        {
+          "loc": "Slide 20",
+          "reason": "包含图片，图片内文字未提取"
+        }
+      ],
+      "preview_pages": 0,
+      "preview_type": ""
+    }
+  },
+  "embedding_model": "openai-text-embedding-3-large",
+  "updated_at": "2026-10-21T03:28:07.609450+00:00",
+  "generation": "9f29e50100f44ce288e53116bd185f28",
+  "chunk_count": 986,
+  "chunks_sha256": "3669486784ebd183ae6fc6d3f87c27716ae10a8bb5466fc0dd4ce496b3a876db",
+  "embeddings_sha256": "454ed1cb5862254a62ac979c44cfcfaa581e02f430d0bf5d711cb4fa13a874a7",
+  "source_root": "C:\\Users\\yanyuxin\\.ssh\\bicnexp-file-clean\\data\\pec\\sources",
+  "embeddings_ready": true,
+  "meeting_plans": {
+    "PEC-Dec 2025/PEC-Dec 2025": {
+      "groups": [
+        {
+          "title": "Metalyse Late Time Window – China HA Interaction Strategy (CRM)",
+          "members": [
+            "topic-0130546ac42b5411e707",
+            "topic-927e4a1d98b929dc48e7",
+            "topic-b68e158449f78180a222"
+          ],
+          "merge_basis": "同一议题：Metalyse Late Time Window中国HA沟通计划，同一会议（2025年12月15日PEC），同一演讲人Leo Bao，同一背书请求和决策内容，候选来自草稿版会议纪要，与G0001已有事实高度一致。",
+          "checks": [],
+          "conflicts": []
+        },
+        {
+          "title": "Two RWE Studies for VicaEMPA (CRM) – PEC Content Endorsement",
+          "members": [
+            "topic-105799271010bcde5fee",
+            "topic-bbf5b581a2c0ec4dfa50",
+            "topic-26113dc70516a0924b4e"
+          ],
+          "merge_basis": "同一议题：VicaEMPA两项RWE研究于2025年12月15日PEC会议提交内容背书，决议一致（PEC无意见背书并高度认可业务价值），候选条目来自同一会议的草稿版会议纪要。",
+          "checks": [],
+          "conflicts": []
+        },
+        {
+          "title": "Asian Phase 1 Trial on FAP/TRAILR2 in MASH Cirrhosis Patients – PEC Content Endorsement",
+          "members": [
+            "topic-5541e911903ab3229ce0",
+            "topic-5758b419dfab7b7b20d3",
+            "topic-505322b4caae743f1aac"
+          ],
+          "merge_basis": "同一议题：FAP/TRAILR2 MASH肝硬化亚洲Phase 1试验，同一会议（2025年12月15日PEC），同一演讲人Julia Zhu，同一结果（PEC未背书，计划Ad-hoc PEC跟进），候选文件为草稿版会议纪要，与已有组的最终版及议程来源高度一致。",
+          "checks": [],
+          "conflicts": []
+        },
+        {
+          "title": "Follow-up: Neradominast HK NDA Approval Timelines (IPF & PPF Indications)",
+          "members": [
+            "topic-85a9c47053ac4e55e04d",
+            "topic-37680a428f18078b4535"
+          ],
+          "merge_basis": "同一跟进事项：Neradominast HK NDA审批时间线更新（IPF & PPF适应症），负责人相同（Kuncy Xia & Karen Yuen），截止时间相同（Next PEC），均为上次PEC会议遗留行动项。",
+          "checks": [],
+          "conflicts": []
+        },
+        {
+          "title": "Zongertinib – 1L NSCLC NDA Approval Timeline Review (Post-CFDI Inspection)",
+          "members": [
+            "topic-91429686c7c91189ebb9",
+            "topic-205cb82b08ab635a1d2e",
+            "topic-1b0f7e05366080f49425"
+          ],
+          "merge_basis": "同一资产（Zongertinib）、同一适应症（1L NSCLC）、同一事项（CFDI检查后重新审视NDA批准时间线，目标时间均为2026年2月PEC），内容高度一致。",
+          "checks": [],
+          "conflicts": [
+            {
+              "fact_ids": [
+                "topic-91429686c7c91189ebb9:todo:0",
+                "topic-1b0f7e05366080f49425:todo:0"
+              ],
+              "reason": "负责人不同：T0005记录为Jiaqi Lu（演讲人推断），T0053明确记录为Lijie Yu。"
+            }
+          ]
+        },
+        {
+          "title": "Nerandomilast – China Development Strategy for SSc Indication (INFL)",
+          "members": [
+            "topic-af85e9282d3bf9ca6b85",
+            "topic-cbc7a047e1b44e1af6da",
+            "topic-13b4063c7e89646df15e"
+          ],
+          "merge_basis": "同一议题：Nerandomilast SSc/SSc-ILD中国开发策略，同一会议（2025年12月15日PEC），同一演讲人Bo Wang，同一内容（信息共享与意见收集，PEC建议正式与全球团队沟通并保留书面记录），候选文件为同一会议的草稿版会议纪要。",
+          "checks": [],
+          "conflicts": []
+        },
+        {
+          "title": "Afatinib – Chordoma IIS Study Details",
+          "members": [
+            "topic-f288a3de6f76209b2f26",
+            "topic-eff51a1f4b79144bbd13"
+          ],
+          "merge_basis": "同一事项：Afatinib-Chordoma IIS 向 Dr. Zhang 提供研究详情，负责人均为 Jiaqi Lu，截止时间均为 Next PEC（Feb 2026 PEC）。",
+          "checks": [],
+          "conflicts": []
+        },
+        {
+          "title": "Metalyse Late Time Window China Sister Trial – HAI (Pre-IND) Interaction Strategy",
+          "members": [
+            "topic-71a506a3aca09d3dd083"
+          ],
+          "merge_basis": "对照失败，单独保留",
+          "checks": [],
+          "conflicts": []
+        },
+        {
+          "title": "Afatinib IIS – Non-SqCC NSCLC Neoadjuvant (1200-0328)",
+          "members": [
+            "topic-041b9f8f44f8b10c5f7b"
+          ],
+          "merge_basis": "T0009 concerns IIS study 1200-0328 for afatinib in non-SqCC NSCLC neoadjuvant setting with a specific CEC-endorsed extension decision. G0007 concerns afatinib in chordoma IIS study details. These are different indications and different studies; no existing group matches.",
+          "checks": [],
+          "conflicts": []
+        },
+        {
+          "title": "STING Agonist (BI 1703880) – NSCLC Phase 2 (1480-0002)",
+          "members": [
+            "topic-1359186472c8e1e94168"
+          ],
+          "merge_basis": "No existing group covers BI 1703880 / study 1480-0002 (STING Agonist NSCLC Phase 2); this is a distinct asset and study number not represented in any current group.",
+          "checks": [],
+          "conflicts": []
+        },
+        {
+          "title": "Zongertinib (BI 1810631) – IIS NSCLC China (PEC Approval Pending)",
+          "members": [
+            "topic-16ad0ad876195d5f0f69"
+          ],
+          "merge_basis": "对照失败，单独保留",
+          "checks": [],
+          "conflicts": []
+        },
+        {
+          "title": "Zongertinib (BI 1810631) – Breast Cancer 2L Phase 3 (Beamion Breast-2, 1479-0017)",
+          "members": [
+            "topic-22a9a82964c6d0b9cb7f"
+          ],
+          "merge_basis": "Candidate T0013 concerns Zongertinib in Breast Cancer 2L Phase 3 (Beamion Breast-2, study 1479-0017), which is a distinct indication and study from all existing groups: G0005 covers Zongertinib 1L NSCLC NDA, and G0011 covers a Zongertinib IIS NSCLC China study. Different indication (BC vs NSCLC), different study number, and different development stage; no existing group matches.",
+          "checks": [],
+          "conflicts": []
+        },
+        {
+          "title": "BI 4015092 (KRAS G12D Inhibitor) – CRC Development Plan & China Integration",
+          "members": [
+            "topic-2a887f4e7e0b922c9466"
+          ],
+          "merge_basis": "BI 4015092 (KRAS G12D inhibitor) in CRC is a distinct asset and program not represented in any existing group; no matching study number, asset, or indication found among G0001–G0012.",
+          "checks": [],
+          "conflicts": []
+        },
+        {
+          "title": "Brigimadlin (BI 907828) – Rollover Study (1403-0032)",
+          "members": [
+            "topic-41de5763faed0ee63dc4"
+          ],
+          "merge_basis": "Brigimadlin (BI 907828) rollover study 1403-0032 does not match any existing group; no group covers this asset or study number.",
+          "checks": [],
+          "conflicts": []
+        },
+        {
+          "title": "Zongertinib (BI 1810631) – Gastric Cancer 2L Phase 3 (Beamion Gastric-1, 1479-0013)",
+          "members": [
+            "topic-5fad1d508325ca1b7ae6"
+          ],
+          "merge_basis": "Candidate covers Zongertinib in gastric cancer 2L (Beamion Gastric-1, 1479-0013), a distinct indication and study number from all existing groups: G0005 is Zongertinib 1L NSCLC NDA, G0011 is Zongertinib IIS NSCLC, and G0012 is Zongertinib breast cancer 2L (1479-0017). Different indication and trial number require a new group.",
+          "checks": [],
+          "conflicts": []
+        },
+        {
+          "title": "Zongertinib (BI 1810631) – Adjuvant NSCLC (Beamion LUNG-3, 1479-0032)",
+          "members": [
+            "topic-60ef3633bab15b582900"
+          ],
+          "merge_basis": "Candidate T0017 concerns Zongertinib in adjuvant NSCLC (Beamion LUNG-3, study 1479-0032), which is a distinct indication and study from all existing groups: G0005 covers 1L NSCLC NDA approval, G0011 covers a China-alone IIS in NSCLC, and G0012/G0015 cover breast cancer and gastric cancer Phase 3 trials respectively. Different study number and indication (adjuvant vs. 1L) preclude merging.",
+          "checks": [],
+          "conflicts": []
+        },
+        {
+          "title": "Obrixtamig (BI 764532) – 2L epNEC Epidemiology Study (1438-0032)",
+          "members": [
+            "topic-64498db88cf3976396c7"
+          ],
+          "merge_basis": "Candidate T0018 concerns Obrixtamig (BI 764532) study 1438-0032 for 2L epNEC epidemiology, which does not match any existing group by study number, asset, or indication.",
+          "checks": [],
+          "conflicts": []
+        },
+        {
+          "title": "CD137/FAP (BI 765179) – 1L HNSCC/NSCLC Phase 1b (1463-0001) China Enrollment",
+          "members": [
+            "topic-67980fe05aafe93f7db5"
+          ],
+          "merge_basis": "CD137/FAP (BI 765179) 1L HNSCC/NSCLC Phase 1b (1463-0001) does not match any existing group; no group covers this asset, study number, or indication.",
+          "checks": [],
+          "conflicts": []
+        },
+        {
+          "title": "Zongertinib (BI 1810631) – ECR/RWE Study (1479-0042) NRDL Support",
+          "members": [
+            "topic-7d29679e1eae28bb2329"
+          ],
+          "merge_basis": "对照失败，单独保留",
+          "checks": [],
+          "conflicts": []
+        },
+        {
+          "title": "Obrixtamig (BI 764532) – 1L epNEC Phase 3 (Dareon-Nec-1, 1438-0011) CTA Submission",
+          "members": [
+            "topic-7ea597fcfce2aa5e1643"
+          ],
+          "merge_basis": "T0021 concerns Obrixtamig (BI 764532) Phase 3 study 1438-0011 (Dareon-Nec-1) for 1L epNEC CTA submission, whereas the only existing Obrixtamig group (G0017) covers study 1438-0032, which is an epidemiology study for 2L epNEC. Different study numbers, different study types (Phase 3 interventional vs. epidemiology), and different lines of therapy; these are distinct topics.",
+          "checks": [],
+          "conflicts": []
+        },
+        {
+          "title": "Zongertinib (BI 1810631) – Pan-tumor HER2 Amplified & Mutant (Beamion Pan-tumor-1, 1479-0009)",
+          "members": [
+            "topic-80c5a8aece518b01bbc6"
+          ],
+          "merge_basis": "对照失败，单独保留",
+          "checks": [],
+          "conflicts": []
+        },
+        {
+          "title": "Obrixtamig (BI 764532) – 2L epNEC Single Arm Study (Dareon-5, 1438-0005)",
+          "members": [
+            "topic-9a3251de7ff7c675c552"
+          ],
+          "merge_basis": "Candidate covers Obrixtamig (BI 764532) study 1438-0005 (Dareon-5, 2L epNEC single arm), which is a distinct study from G0017 (1438-0032, epidemiology study) and G0020 (1438-0011, Dareon-Nec-1 Ph3); no existing group matches this study number or description.",
+          "checks": [],
+          "conflicts": []
+        },
+        {
+          "title": "Zongertinib (BI 1810631) – Breast Cancer & Gastric Cancer (Beamion BCGC-1, 1479-0012) Protocol v5.0",
+          "members": [
+            "topic-c74e917d870ffeee71c9"
+          ],
+          "merge_basis": "Study 1479-0012 (Beamion BCGC-1) covers Breast Cancer and Gastric Cancer cohorts under a single protocol; no existing group matches this study number or asset+indication combination. G0012 is 1479-0017 (Beamion Breast-2, 2L BC only) and G0015 is 1479-0013 (Beamion Gastric-1, 2L GC only) — both are distinct studies with different numbers and scopes.",
+          "checks": [],
+          "conflicts": []
+        },
+        {
+          "title": "Zongertinib (BI 1810631) – Breast Cancer 3L+ Phase 3 (Beamion Breast-1, 1479-0016)",
+          "members": [
+            "topic-ed68d6a04277ca26fdca"
+          ],
+          "merge_basis": "No existing group covers Zongertinib Beamion Breast-1 (1479-0016) 3L+ breast cancer; G0012 covers Beamion Breast-2 (1479-0017) 2L, a distinct study number and line of therapy.",
+          "checks": [],
+          "conflicts": []
+        },
+        {
+          "title": "Zongertinib (BI 1810631) – 1L NSCLC Combo Study (1479-0044)",
+          "members": [
+            "topic-f0a66c79e4a62014028d"
+          ],
+          "merge_basis": "对照失败，单独保留",
+          "checks": [],
+          "conflicts": []
+        },
+        {
+          "title": "Survodutide MASH NIT相关FDA会议及本地启动",
+          "members": [
+            "topic-0aef5c66e1c2db6d45f5"
+          ],
+          "merge_basis": "候选议题为Survodutide MASH NIT相关FDA会议及本地启动，与已有各组均无相同研究编号、asset或indication匹配，无法归入任何现有组。",
+          "checks": [],
+          "conflicts": []
+        },
+        {
+          "title": "Survodutide 肥胖症开发计划（SYNCHRONIZE系列试验）——患者保留与CDE临床药理反馈",
+          "members": [
+            "topic-1714a7cf6fb33ae91a3a"
+          ],
+          "merge_basis": "对照失败，单独保留",
+          "checks": [],
+          "conflicts": []
+        },
+        {
+          "title": "Avenciguat (sGCa.) GN Ph III (1366-0015) RoFD待定红灯",
+          "members": [
+            "topic-1cc1601812afa33dd99c"
+          ],
+          "merge_basis": "Avenciguat GN Ph III (1366-0015) is a distinct asset and indication not present in any existing group; no matching study, asset, or indication found among G0001–G0027.",
+          "checks": [],
+          "conflicts": []
+        },
+        {
+          "title": "BI 764198 (TRPC6i) pFSGS Ph III (1434-0017) 中国开发进展",
+          "members": [
+            "topic-3075a2c386ce292422da"
+          ],
+          "merge_basis": "候选议题涉及 BI 764198 (TRPC6i) pFSGS Ph III (1434-0017)，为全新 asset+indication 组合，现有分组中无对应条目，无法匹配。",
+          "checks": [],
+          "conflicts": []
+        },
+        {
+          "title": "Metalyse TENACITY China晚时间窗适应症开发（1123-0060）",
+          "members": [
+            "topic-3f2f2381df321b4da049"
+          ],
+          "merge_basis": "对照失败，单独保留",
+          "checks": [],
+          "conflicts": []
+        },
+        {
+          "title": "BI 764198 (TRPC6i) 足细胞病 Ph II (1434-0027) CTA提交及开发计划",
+          "members": [
+            "topic-4cf4bbd9599164232486"
+          ],
+          "merge_basis": "对照失败，单独保留",
+          "checks": [],
+          "conflicts": []
+        },
+        {
+          "title": "BI 3034701 (GGY2Ra.) – Study 1507-0002: Obesity Phase II Development Plan",
+          "members": [
+            "topic-51ab6eddf2a12aae7d0e"
+          ],
+          "merge_basis": "对照失败，单独保留",
+          "checks": [],
+          "conflicts": []
+        },
+        {
+          "title": "Survodutide MASH Ph III LIVERAGE™ (1404-0044) 招募红灯——中国大陆、台湾、香港",
+          "members": [
+            "topic-5994d39fed717b2d2e15"
+          ],
+          "merge_basis": "对照失败，单独保留",
+          "checks": [],
+          "conflicts": []
+        },
+        {
+          "title": "VicaEmpa CKD Ph III EASi-KIDNEY (1378-0006) 招募红灯",
+          "members": [
+            "topic-8bb555199e668f27ce44"
+          ],
+          "merge_basis": "对照失败，单独保留",
+          "checks": [],
+          "conflicts": []
+        },
+        {
+          "title": "BI 7703711 (SIRPα antagonist) – Study 1501-0005: MASH Cirrhosis Phase 2b Planning",
+          "members": [
+            "topic-a7c94797e9e50075342e"
+          ],
+          "merge_basis": "BI 7703711 (SIRPα antagonist) Study 1501-0005 MASH Cirrhosis Phase 2b is a distinct asset, study number, and indication not present in any existing group.",
+          "checks": [],
+          "conflicts": []
+        },
+        {
+          "title": "Jardiance (Empagliflozin) HFrEF & HFpEF China Local NIS Studies (1245-0291 / 1245-0313)",
+          "members": [
+            "topic-d1045aa435cde9116cde"
+          ],
+          "merge_basis": "对照失败，单独保留",
+          "checks": [],
+          "conflicts": []
+        },
+        {
+          "title": "BI 3802876 (FAP/TRAILR2 bispecific antibody) – MASH Cirrhosis: Asian Phase 1 and China Integration Plan",
+          "members": [
+            "topic-df0941ea03463b0cc3f1"
+          ],
+          "merge_basis": "对照失败，单独保留",
+          "checks": [],
+          "conflicts": []
+        },
+        {
+          "title": "BI 1815368 / PKKi, Diabetic Macular Edema (DME) & nAMD — Development Plan & China Preparation",
+          "members": [
+            "topic-12b286d2e19c810b2e04"
+          ],
+          "merge_basis": "对照失败，单独保留",
+          "checks": [],
+          "conflicts": []
+        },
+        {
+          "title": "BI 1356225 / GOATi, Impulsivity SUD (OUD/CUD) — Development Plan & China Update",
+          "members": [
+            "topic-3376c6374f4af0a35287"
+          ],
+          "merge_basis": "对照失败，单独保留",
+          "checks": [],
+          "conflicts": []
+        },
+        {
+          "title": "BI 3031185 / mGluR4 NAM, Impulsivity (BPD/ADHD) — Development Plan & China Update",
+          "members": [
+            "topic-56d73d6683f6451de991"
+          ],
+          "merge_basis": "对照失败，单独保留",
+          "checks": [],
+          "conflicts": []
+        },
+        {
+          "title": "BI 3776528 / SSTR4 Agonist, CI PSD — Development Plan (Study 1526-0006 PoM Revision & Path to PoC)",
+          "members": [
+            "topic-691af458325ecc0c7f1b"
+          ],
+          "merge_basis": "BI 3776528 / SSTR4 Agonist in CI PSD (study 1526-0006) is a distinct asset, indication, and study number not present in any existing group; no match found.",
+          "checks": [],
+          "conflicts": []
+        },
+        {
+          "title": "BI 1584862 / PAFR Antagonist, Geographic Atrophy (GA) — Development Plan & China Update",
+          "members": [
+            "topic-76c54fae19e93fab49fa"
+          ],
+          "merge_basis": "候选议题涉及BI 1584862 / PAFR拮抗剂用于地图状萎缩（GA）的开发计划，与现有所有组均不匹配——无相同研究编号、资产或适应症，应作为新议题。",
+          "checks": [],
+          "conflicts": []
+        },
+        {
+          "title": "BI 3797479 / COMTi, CIAS — Frontrunner Asset Termination & Backup Evaluation",
+          "members": [
+            "topic-abbc599b25ef4cca3b07"
+          ],
+          "merge_basis": "BI 3797479 COMTi in CIAS is a distinct asset and indication not represented in any existing group; no match found.",
+          "checks": [],
+          "conflicts": []
+        },
+        {
+          "title": "BI 764524 / Anti-Sema3A, Diabetic Retinopathy (DR) — Development Plan & China Update",
+          "members": [
+            "topic-d22411bb4c7b70b5f733"
+          ],
+          "merge_basis": "对照失败，单独保留",
+          "checks": [],
+          "conflicts": []
+        },
+        {
+          "title": "BI 771716 / Anti-C3 AB, Geographic Atrophy (GA) — Development Plan, China Update & COMPASS RWE Study",
+          "members": [
+            "topic-e2c82328b74e498004d9"
+          ],
+          "merge_basis": "对照失败，单独保留",
+          "checks": [],
+          "conflicts": []
+        },
+        {
+          "title": "BJ-PERFECT VR Study — CIAS Recruitment & Completion",
+          "members": [
+            "topic-e5854e5bec9508ea21c6"
+          ],
+          "merge_basis": "BJ-PERFECT VR Study is a distinct ECR study validating a VR functional capacity tool for CIAS, with no matching study number, asset, or indication among the 45 existing groups.",
+          "checks": [],
+          "conflicts": []
+        },
+        {
+          "title": "BI 3802876 (FAP/TRAILR2) Asian Phase 1 in MASH Cirrhosis – China HA Interaction Strategy & Joint Asian Phase 1 Plan (PEC Endorsement Request)",
+          "members": [
+            "topic-65e2c93b697b87b3b719"
+          ],
+          "merge_basis": "对照失败，单独保留",
+          "checks": [],
+          "conflicts": []
+        },
+        {
+          "title": "ECR研究概念（HTN+T2D+eCVD无HF患者患病率、治疗模式与结局）PEC及CEC背书请求",
+          "members": [
+            "topic-dcc5d8c162efc2f8c31b"
+          ],
+          "merge_basis": "候选议题 T0060 是一项针对 HTN+T2D+eCVD（无HF）患者的全新 ECR 研究概念，涉及 VicaEmpa（EASi™-PROTKT）的 HF 预防 RWE 证据，与已有组 G0002（VicaEMPA 两项 RWE 研究，CRM TA）在 asset 和 TA 上有一定关联，但 G0002 的两项 RWE 研究已在 Dec 2025 PEC 获得背书且无具体研究编号对应，而 T0060 是独立的新 ECR 研究概念（HTN+T2D+eCVD 适应症/人群、独立预算、独立里程碑），正在寻求 CEC&PEC 背书，属于不同研究事项，不应合并。",
+          "checks": [],
+          "conflicts": []
+        },
+        {
+          "title": "ONIS Study Concept（CKD GDMT真实世界研究）PEC及CEC背书请求",
+          "members": [
+            "topic-f0bfa877c5854394441d"
+          ],
+          "merge_basis": "T0061 is the ONIS study (CKD GDMT, CK-NET data, cross-sectional, VicaEmpa launch support), while G0048 is an ECR study on HTN+T2D+eCVD patients without HF (Beijing healthcare insurance data, retrospective observational, CVRR/HF prevention strategy). Although both come from the same source file and share the same milestone dates (Dec 2025 CEC&PEC endorsement), they are distinct studies with different research questions, target populations, data sources, designs, and budgets. They must not be merged.",
+          "checks": [],
+          "conflicts": []
+        },
+        {
+          "title": "Spesolimab (1368-0025 & 1368-0120) GPP – Operational Transfer to LEO Pharma",
+          "members": [
+            "topic-05d7efb6b3b49c373da4"
+          ],
+          "merge_basis": "Spesolimab GPP operational transfer to LEO Pharma (studies 1368-0025 & 1368-0120) does not match any existing group; no prior group covers this asset, indication, or topic.",
+          "checks": [],
+          "conflicts": []
+        },
+        {
+          "title": "Spesolimab (1368-0140) Capsayil Ph3 PG – Recruitment Challenges & Actions",
+          "members": [
+            "topic-26b4ec5b291cb719ff6a"
+          ],
+          "merge_basis": "对照失败，单独保留",
+          "checks": [],
+          "conflicts": []
+        },
+        {
+          "title": "Nerandomilast (1305-0014) IPF – NDA Approval Status (US & China) and Post-Approval PI Negotiation",
+          "members": [
+            "topic-34c69d81d5116bcd5874"
+          ],
+          "merge_basis": "候选议题 T0064 涉及 Nerandomilast IPF 适应症（1305-0014）的 NDA 批准状态及批准后 PI 谈判，而 G0004 涉及 Neradominast HK NDA 批准时间线更新（IPF & PPF 适应症），两者 asset 相同但具体事项不同（一为已批准后的 PI 谈判，一为 HK NDA 时间线跟进行动），且 G0004 无研究编号对应，无法确认为同一议题，作为新议题处理。",
+          "checks": [],
+          "conflicts": []
+        },
+        {
+          "title": "Verducatib (1397-0032) ANCA-AV – Global Go/No-Go Decision Pending Q1 2026",
+          "members": [
+            "topic-38e08eb91d8cd3082062"
+          ],
+          "merge_basis": "Candidate T0065 concerns Verducatib (1397-0032) ANCA-AV indication with a pending global Go/No-Go decision in Q1 2026. No existing group covers this asset or indication; all other groups involve distinct assets, indications, or study numbers.",
+          "checks": [],
+          "conflicts": []
+        },
+        {
+          "title": "BI 3000202 (cGASi) SLE Ph2 (1509-0004) – China Integration, CTA Submission & Leading PI Selection",
+          "members": [
+            "topic-5a8453f11a764160c695"
+          ],
+          "merge_basis": "对照失败，单独保留",
+          "checks": [],
+          "conflicts": []
+        },
+        {
+          "title": "Verducatib (1397-0014) AIRTIVITY Ph3 Bronchiectasis – Accelerated Recruitment, Updated Timeline & Adolescent Inclusion",
+          "members": [
+            "topic-65a2f5f6cbe2c49a1623"
+          ],
+          "merge_basis": "对照失败，单独保留",
+          "checks": [],
+          "conflicts": []
+        },
+        {
+          "title": "BI 3032950 (anti-TREM1) IBD (CD and UC) Ph2a – China Integration Strategy & Interim Analysis",
+          "members": [
+            "topic-6cfc659902a693bcc2b0"
+          ],
+          "merge_basis": "候选议题为BI 3032950 (anti-TREM1) IBD Ph2a中国整合策略，已有组中无任何涉及该资产或适应症的议题，无法匹配。",
+          "checks": [],
+          "conflicts": []
+        },
+        {
+          "title": "BI 685509 Avenciguat (sGC Activator) SSc Ph2 (1366-0031) – iDBL & EoP2 Planning",
+          "members": [
+            "topic-7755084b9cb095c6b3dd"
+          ],
+          "merge_basis": "候选议题为 BI 685509 Avenciguat 在 SSc 适应症的 Ph2 研究（1366-0031），涉及 iDBL、EoP2 及 BUEC RoFD 决策；已有组 G0028 为 Avenciguat sGC Activator GN Ph III（1366-0015），适应症为肾小球肾炎（GN），研究编号不同，适应症不同，不可合并。无其他已有组匹配。",
+          "checks": [],
+          "conflicts": []
+        },
+        {
+          "title": "Nerandomilast (1305-0052) SSc Ph3 – China CTA Strategy & Protocol Update",
+          "members": [
+            "topic-7e37928f128ade55bc27"
+          ],
+          "merge_basis": "对照失败，单独保留",
+          "checks": [],
+          "conflicts": []
+        },
+        {
+          "title": "Nerandomilast (1305-0023) FIBRONEER-ILD PPF – China NDA Approval & CN PI Summary",
+          "members": [
+            "topic-993161f28e6fe442cc7c"
+          ],
+          "merge_basis": "候选议题为Nerandomilast研究1305-0023（PPF适应症，FIBRONEER-ILD），已有组G0052涉及研究1305-0014（IPF适应症，FIBRONEER-IPF），研究编号不同、适应症不同，不得合并；G0004涉及Neradominast HK NDA时间线（IPF & PPF），但无研究编号且事项为carry-over行动项，与候选议题的具体内容（PPF NDA批准详情及CN PI摘要）不构成同一议题；无法与任何已有组匹配，视为新议题。",
+          "checks": [],
+          "conflicts": []
+        },
+        {
+          "title": "BI 1819479 (ATXi) IPF Ph2 Study 1462-0004 – EoT & DBL Timeline",
+          "members": [
+            "topic-a87f80e5cb7555e3bfdb"
+          ],
+          "merge_basis": "BI 1819479 (ATXi) IPF Ph2 study 1462-0004 does not match any existing group; no group covers this asset or study number.",
+          "checks": [],
+          "conflicts": []
+        },
+        {
+          "title": "Nerandomilast (1305-0046) FIBRONEER-SARD Ph3b – Recruitment Status",
+          "members": [
+            "topic-d256199f5d447503e3ba"
+          ],
+          "merge_basis": "候选议题为Nerandomilast研究1305-0046（FIBRONEER-SARD，SARD-ILD适应症），已有组中Nerandomilast相关议题分别为G0004（HK NDA，IPF&PPF）、G0006（SSc适应症开发策略）、G0052（IPF NDA审批）、G0058（SSc Ph3，1305-0052）、G0059（PPF，1305-0023）、G0060（ATXi IPF，1462-0004），均为不同研究编号或不同适应症，无匹配组。",
+          "checks": [],
+          "conflicts": []
+        },
+        {
+          "title": "BI 1839100 (TRPA1i) IPF Ph2 (1490-0004) – Trial Terminated by IUEC",
+          "members": [
+            "topic-d7996778fc44e21a7c5b"
+          ],
+          "merge_basis": "BI 1839100 (TRPA1i) IPF Ph2 (1490-0004) is a distinct asset and study number not present in any existing group; no match found.",
+          "checks": [],
+          "conflicts": []
+        },
+        {
+          "title": "Nerandomilast (1305-0022) chILD Ph3 – Pre-IND Feedback & China CTA Plan",
+          "members": [
+            "topic-fb70137b61cc74264900"
+          ],
+          "merge_basis": "对照失败，单独保留",
+          "checks": [],
+          "conflicts": []
+        },
+        {
+          "title": "Nerandomilast (1305-0152) FIBRONEER-ACT Ph4 non-IPF fibrotic ILD – Label Update Evaluation",
+          "members": [
+            "topic-fc5a522f6b4ed3904df6"
+          ],
+          "merge_basis": "候选议题为Nerandomilast研究1305-0152 FIBRONEER-ACT Ph4 non-IPF fibrotic ILD标签更新评估，与已有组中涉及Nerandomilast的议题（G0004 IPF/PPF HK NDA时间线、G0052 IPF NDA审批、G0058 SSc Ph3、G0059 PPF FIBRONEER-ILD、G0061 SARD Ph3b、G0063 chILD Ph3）均为不同研究编号、不同适应症或不同研究阶段，无法归入任何已有组。",
+          "checks": [],
+          "conflicts": []
+        },
+        {
+          "title": "Nerandomilast SSc适应症中国开发策略（研究1305-0052）",
+          "members": [
+            "topic-c42c58fbfdbd96d5e9cc"
+          ],
+          "merge_basis": "对照失败，单独保留",
+          "checks": [],
+          "conflicts": []
+        }
+      ],
+      "source_types": {
+        "PEC-Dec 2025/PEC-Dec 2025/00 2025 Dec PEC meeting minutes - Final.pdf": "minutes",
+        "PEC-Dec 2025/PEC-Dec 2025/06. For endorsemnet- Metalyse Late Time Window HA Interaction Strategy.pptx": "action_log",
+        "PEC-Dec 2025/PEC-Dec 2025/03. Oncology Portfolio Update_PEC_Dec2025.pptx": "ta_update",
+        "PEC-Dec 2025/PEC-Dec 2025/0405. CRM Portfolio Update_20251215.pptx": "ta_update",
+        "PEC-Dec 2025/PEC-Dec 2025/11. MHEH Portfolio Update_PEC_Dec2025.pptx": "ta_update",
+        "PEC-Dec 2025/PEC-Dec 2025/00 2025 Dec PEC agenda.docx": "agenda",
+        "PEC-Dec 2025/PEC-Dec 2025/00 2025 Dec PEC meeting minutes - draft.docx": "draft_minutes",
+        "PEC-Dec 2025/PEC-Dec 2025/07. CRM_FAP TRAILR2 Asian Phase 1 For PEC endorsement.pptx": "other",
+        "PEC-Dec 2025/PEC-Dec 2025/08. CRM_RWE_CKD GDMT & CVRR_v2.pptx": "other",
+        "PEC-Dec 2025/PEC-Dec 2025/09. PEC_TA INFL 2025_12.pptx": "other",
+        "PEC-Dec 2025/PEC-Dec 2025/10. China development strategy for Nerandomilast SSc indication__pre-reads for PEC Dec.pptx": "other"
+      },
+      "excluded_progress_only": []
+    }
+  },
+  "topic_count": 77
+}

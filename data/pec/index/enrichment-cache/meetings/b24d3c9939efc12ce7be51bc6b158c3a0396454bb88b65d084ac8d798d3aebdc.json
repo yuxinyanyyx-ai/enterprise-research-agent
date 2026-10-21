@@ -1,0 +1,1 @@
+{"group_id": "G0005", "merge_basis": "同一资产（Zongertinib）、同一适应症（1L NSCLC）、同一事项（CFDI检查后重新审视NDA批准时间线，目标时间均为2026年2月PEC），内容高度一致。", "conflicts": [{"fact_ids": ["T0005:todo:0", "T0053:todo:0"], "reason": "负责人不同：T0005记录为Jiaqi Lu（演讲人推断），T0053明确记录为Lijie Yu。"}]}

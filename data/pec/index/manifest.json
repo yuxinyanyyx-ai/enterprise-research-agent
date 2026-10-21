@@ -1,163 +1,133 @@
 {
   "version": 2,
   "files": {
-    "PEC1/00 PEC agenda.docx": {
-      "sha256": "da3f7a592f8760a1ee78457e8e3410a3990019167026ecd3badb51d4140ea07c",
-      "size": 95985,
-      "mtime": 1780882572.0,
-      "chunk_count": 34,
-      "preview_pages": 5,
+    "PEC2/01. 20240425 PEC Review Meeting agenda.docx": {
+      "sha256": "a45b6802472472a47c8e7d9eb818e31d7706bd62d9c7439a1a466ee325d56d89",
+      "size": 86209,
+      "mtime": 1780886768.0,
+      "chunk_count": 31,
+      "preview_pages": 4,
       "preview_type": "docx",
       "preview_error": "",
-      "indexed_at": "2026-09-16T01:18:13.817830+00:00"
+      "indexed_at": "2026-09-24T03:33:44.038311+00:00"
     },
-    "PEC1/02 Follow up actions.pptx": {
-      "sha256": "ff6089bc29b83643718b7ec3e982f392280f3604d3ee71be696282c0e3db95ee",
-      "size": 709990,
-      "mtime": 1780882572.0,
-      "chunk_count": 9,
-      "preview_pages": 3,
+    "PEC2/02. Action items tracking_PEC_Apr 2024.pptx": {
+      "sha256": "e558d48513af5a318585aa6bb66d763bf82bab16edb60380af405f2813660bad",
+      "size": 4779468,
+      "mtime": 1780886768.0,
+      "chunk_count": 4,
+      "preview_pages": 2,
       "preview_type": "pptx",
       "preview_error": "",
-      "indexed_at": "2026-09-16T01:18:42.888826+00:00"
+      "indexed_at": "2026-09-24T03:33:55.609246+00:00"
     },
-    "PEC1/03 PEC_TA INFL Apr 2026.pptx": {
-      "sha256": "1b0d7a8adc6c8ae5ab688e0179391347550dee383e57f5551ca3f9bf4cca0d6d",
-      "size": 6184971,
-      "mtime": 1780882572.0,
-      "chunk_count": 165,
-      "preview_pages": 67,
-      "preview_type": "pptx",
-      "preview_error": "",
-      "indexed_at": "2026-09-16T01:32:03.831298+00:00"
-    },
-    "PEC1/04 Verducatib_PEC_Earlier NDA Submission Discussion.pptx": {
-      "sha256": "7df95670c25bb4cdc0d0203b5a1a566584c5273c1f3fb7dd9e92c7560c07e434",
-      "size": 1383596,
-      "mtime": 1780882572.0,
-      "chunk_count": 33,
-      "preview_pages": 12,
-      "preview_type": "pptx",
-      "preview_error": "",
-      "indexed_at": "2026-09-16T01:34:30.597444+00:00"
-    },
-    "PEC1/05 Qualitative study among nera new users-0421 new.pptx": {
-      "sha256": "a59558d37232e4dd91513cece821f7512efe065c2044f5f15690803a9c8fb56b",
-      "size": 5059624,
-      "mtime": 1780882572.0,
-      "chunk_count": 24,
+    "PEC2/03. Report for RDPAC CO Timeline Survey 2023.pptx": {
+      "sha256": "3e0ecf21d114655f90f920ae726aabdf92b2d86e30664698621660eaf7cd7dce",
+      "size": 471786,
+      "mtime": 1780886768.0,
+      "chunk_count": 41,
       "preview_pages": 11,
       "preview_type": "pptx",
       "preview_error": "",
-      "indexed_at": "2026-09-16T01:37:49.231213+00:00"
+      "indexed_at": "2026-09-24T03:35:43.708186+00:00"
     },
-    "PEC1/06. Proposal_EPI and disease burden of SSc in Beijing_PEC.pptx": {
-      "sha256": "ed86f9c083fe3a69658a62531429c794e7491d7dba7d537b450015b2ac5957c2",
-      "size": 1373125,
-      "mtime": 1780882572.0,
-      "chunk_count": 45,
-      "preview_pages": 15,
+    "PEC2/04. Cross-function evaluation on FOT HOM painpoints and solutions_2.pptx": {
+      "sha256": "d355337823ff79fe468b6a27c84417cab3a087de146e5efef33725aa259f0c5c",
+      "size": 4366737,
+      "mtime": 1780886768.0,
+      "chunk_count": 11,
+      "preview_pages": 8,
       "preview_type": "pptx",
       "preview_error": "",
-      "indexed_at": "2026-09-16T01:39:37.893810+00:00"
+      "indexed_at": "2026-09-24T03:37:04.255658+00:00"
     },
-    "PEC1/07 CRM TA_PEC update_Apr2026.pptx": {
-      "sha256": "779870f8ec324c4ccaab3a364667633edb78c19883ca56527ba161e183acc44e",
-      "size": 7840189,
-      "mtime": 1780882574.0,
-      "chunk_count": 253,
-      "preview_pages": 99,
+    "PEC2/05 Portfolio Overview_Inflammation_PEC Apr 2024.pptx": {
+      "sha256": "39aadb26e42d3ea59cb384e3c83de23ba0f84f841bb0397cba0f3f73f997951a",
+      "size": 6081640,
+      "mtime": 1780886768.0,
+      "chunk_count": 297,
+      "preview_pages": 68,
       "preview_type": "pptx",
       "preview_error": "",
-      "indexed_at": "2026-09-16T01:54:59.729203+00:00"
+      "indexed_at": "2026-09-24T03:56:38.203856+00:00"
     },
-    "PEC1/08 TENACITY & PersisTENce Evaluation.pptx": {
-      "sha256": "2a90463a7176b955ce3a16a40cb6fa018a939e9b2571e18593024164f44ab857",
-      "size": 1473778,
-      "mtime": 1780882574.0,
-      "chunk_count": 37,
-      "preview_pages": 9,
-      "preview_type": "pptx",
-      "preview_error": "",
-      "indexed_at": "2026-09-16T01:55:52.657463+00:00"
-    },
-    "PEC1/09 BALANCE for PEC Endorsement 20260413.pptx": {
-      "sha256": "4947a10f629117d47edf6714f1b5685ee07c91854723c940a87bd648b37bf8d0",
-      "size": 5921236,
-      "mtime": 1780882574.0,
-      "chunk_count": 42,
-      "preview_pages": 20,
-      "preview_type": "pptx",
-      "preview_error": "",
-      "indexed_at": "2026-09-16T01:57:40.979077+00:00"
-    },
-    "PEC1/10 Oncology Portfolio Update_PEC_Apr2026.pptx": {
-      "sha256": "6348807fadd643c32b688acc5c8f5fafc8a8bc072528f32afd0a4492b6bcfbb1",
-      "size": 5892324,
-      "mtime": 1780882574.0,
-      "chunk_count": 126,
-      "preview_pages": 51,
-      "preview_type": "pptx",
-      "preview_error": "",
-      "indexed_at": "2026-09-16T02:03:54.618893+00:00"
-    },
-    "PEC1/11 MHEH Portfolio Update_PEC_Apr2026.pptx": {
-      "sha256": "95d7af7546c47c5e31459784dc143cb8ed0d222d8db0b499ff344897f6c7b964",
-      "size": 2278935,
-      "mtime": 1780882574.0,
-      "chunk_count": 72,
+    "PEC2/06【For PEC endorsement】EPI study of PG&HS with updates.pptx": {
+      "sha256": "cbe4045b589dcc217ab3efa22e939aeca3a12bc188747b5b0395cea39c766e3a",
+      "size": 4502703,
+      "mtime": 1780886770.0,
+      "chunk_count": 93,
       "preview_pages": 35,
       "preview_type": "pptx",
       "preview_error": "",
-      "indexed_at": "2026-09-16T02:07:23.303539+00:00"
+      "indexed_at": "2026-09-24T04:01:16.490851+00:00"
     },
-    "PEC1/20260423 PEC minutes-final.docx": {
-      "sha256": "1516933f2da84834933f1ea10c4f33ed32b0f28ef8503ab1c284c9e742751d6f",
-      "size": 101112,
-      "mtime": 1780882574.0,
-      "chunk_count": 34,
-      "preview_pages": 5,
-      "preview_type": "docx",
-      "preview_error": "",
-      "indexed_at": "2026-09-16T02:07:35.955240+00:00"
-    },
-    "PEC1/20260423 PEC minutes-final.pdf": {
-      "sha256": "4690e7604243269df34cc642dc3f2280b1db45af288d7b404b2c8c54017f86f2",
-      "size": 351559,
-      "mtime": 1780882574.0,
-      "chunk_count": 5,
-      "preview_pages": 5,
-      "preview_type": "pdf",
-      "preview_error": "",
-      "indexed_at": "2026-09-16T02:07:37.931312+00:00"
-    },
-    "PEC1/20260423 PEC minutes.docx": {
-      "sha256": "cdaba5741721feea2ec02005b356876cf169b43f4479b3d47389a25d5c516111",
-      "size": 103056,
-      "mtime": 1780882574.0,
-      "chunk_count": 34,
-      "preview_pages": 6,
-      "preview_type": "docx",
-      "preview_error": "",
-      "indexed_at": "2026-09-16T02:07:52.464613+00:00"
-    },
-    "PEC1/Action follow up- Verducatib_PEC_Earlier NDA Submission Discussion-v2.pptx": {
-      "sha256": "2da94894bf0a784186b0d808630cc0ed3b4148ca9f55bd17803145639d86d734",
-      "size": 451832,
-      "mtime": 1780882574.0,
-      "chunk_count": 4,
-      "preview_pages": 4,
+    "PEC2/07. Portfolio Overview_CMR_PEC_Apr 2024.pptx": {
+      "sha256": "4dfffbd768af8e13349235edbb904f3de4dfd6d6aa6eb69ac389fa2c64a05857",
+      "size": 49079141,
+      "mtime": 1780886770.0,
+      "chunk_count": 165,
+      "preview_pages": 65,
       "preview_type": "pptx",
       "preview_error": "",
-      "indexed_at": "2026-09-16T02:08:19.008982+00:00"
+      "indexed_at": "2026-09-24T04:19:50.983110+00:00"
+    },
+    "PEC2/08. Portfolio Overview_Oncology_PEC_Apr2024.pptx": {
+      "sha256": "dd3f121753a97146ba37ff00bbf943178e72f4ec879109c3d298b01d06ba5a9c",
+      "size": 9337702,
+      "mtime": 1780886770.0,
+      "chunk_count": 96,
+      "preview_pages": 33,
+      "preview_type": "pptx",
+      "preview_error": "",
+      "indexed_at": "2026-09-24T05:53:10.119624+00:00"
+    },
+    "PEC2/09. DDLPS RWE Results Update at PEC.pptx": {
+      "sha256": "9a45b7fc220be93e1dc3b791368477e7b76bcfd351e5091e466a20e09cf897bb",
+      "size": 1201502,
+      "mtime": 1780886770.0,
+      "chunk_count": 21,
+      "preview_pages": 7,
+      "preview_type": "pptx",
+      "preview_error": "",
+      "indexed_at": "2026-09-24T04:30:25.176250+00:00"
+    },
+    "PEC2/10. Portfolio review_CREA_PEC_Apr2024.pptx": {
+      "sha256": "d94884366339ae72ac9e048f722140923194597ae8524c2578d1d4d559daa96a",
+      "size": 3739517,
+      "mtime": 1780886770.0,
+      "chunk_count": 105,
+      "preview_pages": 23,
+      "preview_type": "pptx",
+      "preview_error": "",
+      "indexed_at": "2026-09-24T06:50:38.220318+00:00"
+    },
+    "PEC2/11. Metalyse and Actilyse Overview_PEC_Apr2024.pptx": {
+      "sha256": "dbe5d0dcced2e91e0d26c92938ec7de3181e5ffb9e92f16d48bbd4a98874af7f",
+      "size": 11056423,
+      "mtime": 1780886770.0,
+      "chunk_count": 23,
+      "preview_pages": 11,
+      "preview_type": "pptx",
+      "preview_error": "",
+      "indexed_at": "2026-09-24T04:38:49.262447+00:00"
+    },
+    "PEC2/12. 20240425 PEC Review Meeting Minutes.docx": {
+      "sha256": "0b6d9c288ec2ef47086b7fad28bcda04f78900c53ed73239cd4d98dcc4804bc7",
+      "size": 89924,
+      "mtime": 1780886770.0,
+      "chunk_count": 31,
+      "preview_pages": 5,
+      "preview_type": "docx",
+      "preview_error": "",
+      "indexed_at": "2026-09-24T04:39:06.256815+00:00"
     }
   },
   "embedding_model": "openai-text-embedding-3-large",
-  "updated_at": "2026-09-16T02:19:16.800184+00:00",
-  "generation": "54796f8558114c1296e6af821772908d",
-  "chunk_count": 917,
-  "chunks_sha256": "29b4b8d09af17b74a8415b50324336e231a35a984c57d128a930be3094c256b9",
-  "embeddings_sha256": "6bf713fe7a275523a698cde57676af007528c479c70264edc281819be4764f36",
+  "updated_at": "2026-09-24T06:50:47.167630+00:00",
+  "generation": "9f29e50100f44ce288e53116bd185f28",
+  "chunk_count": 918,
+  "chunks_sha256": "3669486784ebd183ae6fc6d3f87c27716ae10a8bb5466fc0dd4ce496b3a876db",
+  "embeddings_sha256": "454ed1cb5862254a62ac979c44cfcfaa581e02f430d0bf5d711cb4fa13a874a7",
   "source_root": "C:\\Users\\yanyuxin\\.ssh\\bicnexp-file-clean\\data\\pec\\sources",
   "embeddings_ready": true
 }

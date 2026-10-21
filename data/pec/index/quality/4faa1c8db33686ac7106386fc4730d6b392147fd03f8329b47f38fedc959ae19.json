@@ -1,0 +1,1119 @@
+{
+  "source_ref": "PEC1/03 PEC_TA INFL Apr 2026.pptx",
+  "source_digest": "1b0d7a8adc6c8ae5ab688e0179391347550dee383e57f5551ca3f9bf4cca0d6d",
+  "reports": [
+    {
+      "topics": [
+        {
+          "title": "STING抑制剂 BI 3009947（IFN/SSc）项目终止及备用化合物规划",
+          "background": [
+            {
+              "text": "STING抑制剂BI 3009947在IFN和SSc适应症的前沿化合物项目因SRD的PK/PD数据未能达到目标接触要求且无法满足疗效标准而终止，备用化合物正在规划中。",
+              "evidence_id": "chunk-32593739cf34",
+              "quote": "Termination of STING inh. BI 3009947 in IFN and SSc\nThe current front-runner compound program was terminated as the PK/PD data from SRD failed to meet the required target engagement, and unable to meet efficacy criteria.\nA backup compound is under planning."
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": []
+        },
+        {
+          "title": "Nerandomilast 1305-0105 PROFINA（PPF，ECR）—入组进展与CRO更换",
+          "background": [
+            {
+              "text": "PROFINA研究（1305-0105）于2025年9月23日完成FPI，计划入组600例/30个中心，实际入组5例/1个中心（截至报告时），新CRO已到位，研究时间线正在评估中。",
+              "quote": "FPI\n(23Sep 2025)",
+              "evidence_id": "chunk-b2baff14ecd8"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": []
+        },
+        {
+          "title": "Nerandomilast 北京医保数据库非干预研究（IPF，ECR）—等待GMA完成Lectrona全球发布",
+          "background": [
+            {
+              "text": "该研究PEC于2025年11月17日背书；2026年2月25日混合审查完成并获批（附意见）；Lectrona中所有审查已批准，等待GMA在Lectrona完成全球发布的MM。",
+              "evidence_id": "chunk-7079b8e2e585",
+              "quote": "PEC endorsed on 17Nov 2025.\nHybrid review  was completed in 25Feb 2026, and the result is approved with comments.\nAll reviews approved in Lectrona and waiting for GMA to complete the MM of global release in Lectrona."
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": [
+            {
+              "text": "GMA需在Lectrona完成全球发布的MM（milestone：Mar 2026）；owner：GMA；status：原文未说明是否已完成。",
+              "evidence_id": "chunk-7079b8e2e585",
+              "quote": "waiting for GMA to complete the MM of global release in Lectrona"
+            }
+          ]
+        },
+        {
+          "title": "Nerandomilast 定性调查研究（IPF，ECR）—Ad-hoc CEC 0413前准备",
+          "background": [
+            {
+              "text": "该研究（Peking University Third Hospital，Prof. CHU Hongling）研究编号TBD，当前状态TBD，正在进行提案前的线下准备和讨论，计划提交Ad-hoc CEC（0413）。",
+              "quote": "Offline preparation and discussion on proposal before CEC\nAdhoc CEC 0413",
+              "evidence_id": "chunk-ad2e9fd0b0fa"
+            }
+          ],
+          "for_endorsement": [
+            {
+              "text": "拟提交Ad-hoc CEC（0413）审议Nerandomilast定性调查研究提案。",
+              "quote": "Offline preparation and discussion on proposal before CEC\nAdhoc CEC 0413",
+              "evidence_id": "chunk-ad2e9fd0b0fa"
+            }
+          ],
+          "decision": [],
+          "todo": []
+        },
+        {
+          "title": "北京医保数据库SSc流行病学研究（SSc，ECR）—Ad-hoc CEC 0413前准备",
+          "background": [
+            {
+              "text": "SSc流行病学研究（Peking University Third Hospital，Prof. ZHUO Lin）研究编号TBD，当前状态TBD，正在进行提案前的线下准备和讨论，计划提交Ad-hoc CEC（0413）。",
+              "quote": "Offline preparation and discussion on proposal before CEC\nAdhoc CEC 0413",
+              "evidence_id": "chunk-0716f39e45b1"
+            }
+          ],
+          "for_endorsement": [
+            {
+              "text": "拟提交Ad-hoc CEC（0413）审议SSc流行病学研究提案。",
+              "quote": "Offline preparation and discussion on proposal before CEC\nAdhoc CEC 0413",
+              "evidence_id": "chunk-0716f39e45b1"
+            }
+          ],
+          "decision": [],
+          "todo": []
+        },
+        {
+          "title": "Nerandomilast 1305-0161 多模态早期IPF检测研究（IPF，IIS）—合同等待研究者反馈",
+          "background": [
+            {
+              "text": "研究1305-0161（上海胸科医院，Prof. LI Feng），CEC于2025年9月1日批准，全球提案于2025年11月3日批准，提案于2025年11月24日发布，方案于2026年2月12日批准；当前状态为Protocol approval（Apr 2026），下一里程碑为Contract（Nov 2026）。合同正等待研究者第一轮反馈。",
+              "evidence_id": "chunk-323f8ff12e05",
+              "quote": "CEC approval on 1 Sep 2025\nGlobal proposal approved on 3 Nov 2025\nProposal released on 24 Nov2025\nProtocol approval on 12 Feb 2026\nContract awaiting the investigator's first-round feedback."
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": [
+            {
+              "text": "合同等待研究者第一轮反馈；下一里程碑为2026年11月合同签署。Owner：原文未说明；due：Nov 2026；status：pending investigator response；completed：N。",
+              "evidence_id": "chunk-323f8ff12e05",
+              "quote": "Contract awaiting the investigator's first-round feedback."
+            }
+          ]
+        },
+        {
+          "title": "Nerandomilast IIM-ILD生物标志物研究（IIM-ILD，IIS，Renji Hospital，Prof. YE Shuang）—全球提案审批流程中",
+          "background": [
+            {
+              "text": "该研究（Renji Hospital，Prof. YE Shuang）PEC于2026年2月9日批准，提案于2026年3月17日提交并于3月18日获本地批准，正在进行全球提案审批和发布流程，MA已于3026年3月通过邮件申请AMP。研究编号尚为TBD（IIS类型）。",
+              "evidence_id": "chunk-da36b7a54613",
+              "quote": "PEC approval on 20260209\nProposal submit on 0317 and was locally approved on 0318.\nGlobal proposal approve and release process.\nAMP applied in Mar by email from MA"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [
+            {
+              "text": "PEC于2026年2月9日批准该研究提案。",
+              "evidence_id": "chunk-da36b7a54613",
+              "quote": "PEC approval on 20260209"
+            }
+          ],
+          "todo": [
+            {
+              "text": "全球提案审批和发布流程进行中；下一里程碑为2026年5月提案发布（Proposal release May2026）。Owner/due原文未说明，status：进行中。",
+              "evidence_id": "chunk-da36b7a54613",
+              "quote": "Global proposal approve and release process.\nAMP applied in Mar by email from MA"
+            }
+          ]
+        },
+        {
+          "title": "Nerandomilast CCDS/中国LPI更新（CCDS版本0306-04，紧急级别2）",
+          "background": [
+            {
+              "text": "CCDS/CC IFU版本0306-04于2026年2月18日发布，紧急级别2，更新内容包括：整合DDI研究1305-0119和1305-0113结果（与强/中度CYP3A诱导剂联用的剂量和相互作用章节）及其他准确性和清晰度编辑。中国计划2026年3月底提交，批准预计2026年8月。修订后的LPI提案已于2026年3月31日提交CDE，4月17日收到受理通知，预计8月12日获批。",
+              "evidence_id": "chunk-531205638eb9",
+              "quote": "The revised LPI proposal was submitted to CDE on March 31st, with acceptance notice on April 17th. Approval is anticipated by August 12th."
+            },
+            {
+              "text": "CCDS更新内容：整合DDI研究1305-0119和1305-0113结果用于剂量和相互作用章节；美国计划2026年3月提交、2026年9月实施；欧盟在MA审查期间提交并随MA批准实施；中国计划2026年3月底提交，批准约2026年8月。",
+              "evidence_id": "chunk-34ee9041e7ab",
+              "quote": "For the update in Dosage and in Interactions: Integration of results from drug-drug interaction studies 1305-0119 and 1305-0113 for concomitant use with strong or moderate CYP3A inducers.\nAdditional edits to enhance accuracy and clarity"
+            },
+            {
+              "text": "CTP v7.0于2026年3月发布，被认定为非实质性变更，将在2026年5月DSUR中报告；IMPD 4.0于4月2日发布，将在DSUR中实施。",
+              "evidence_id": "chunk-0c62f8fb403f",
+              "quote": "CTP 7.0 dispatched in Mar and considered as non-substantial change, will be reported by DSUR in May 2026\nIMPD 4.0 dispatched on Apr 2, will be implemented in DSUR."
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": []
+        },
+        {
+          "title": "Nerandomilast 1305-0022（chILD，Ph3）—中国CTA提交及IM安排",
+          "background": [
+            {
+              "text": "中国CTA于2026年3月13日提交，预计6月中旬获批；中国IM计划于2026年7月3日在上海举行。全球NDA预计2029年9月22日提交，NDA批准最佳情况2030年8月20日。",
+              "evidence_id": "chunk-874d637cb60e",
+              "quote": "The China CTA was submitted on Mar 13, with approval expected by mid-June.\nThe China IM is scheduled for Jul 3 in Shanghai."
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": []
+        },
+        {
+          "title": "Nerandomilast 1305-0052（SSc，Ph3）—中国CTA提交及FDA ODD",
+          "background": [
+            {
+              "text": "美国IND于4月10日开放，FDA非搁置意见预计5月收到（可能触发CTP修订），FDA于4月9日授予ODD。中国CTA于4月13日提交，4月17日收到受理通知，预计7月15日获批。主要中心GCP提交于4月20日完成，正在审查中。",
+              "quote": "US IND open was achieved on Apr 10. Non-hold comments from FDA are anticipated in May, which may trigger CTP amendment. ODD was granted by FDA on Apr 9.\nThe China CTA was submitted on Apr 13, with acceptance notice received on Apr 17.  Approval is expected by Jul 15.\nLeading site GCP submission is completed on Apr 20 and currently under review.",
+              "evidence_id": "chunk-c078696e67ab"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": []
+        },
+        {
+          "title": "Nerandomilast 1305-0146（IIM，Ph3）—HAI反馈、风险及CTA准备",
+          "background": [
+            {
+              "text": "RoFD于2026年3月27日发布，FDA和EMA书面反馈已收到，PMDA初步反馈已收到，CDE仍在审查中。TDO/CTP更新正在进行，CTA正在准备，计划6月提交。21个中心的SQV正在进行中。",
+              "quote": "RoFD was released on Mar 27.\nFinal feedback from the FDA and EMA for HAI has been received, along with initial feedback from the PMDA. Updates for TDO/CTP are in progress, and the CTA is currently being prepared. China HAI is still under review.\nSQVs in 21 sites are in progress.",
+              "evidence_id": "chunk-5763d173b575"
+            },
+            {
+              "text": "FDA书面反馈：不支持广泛IIM适应症，强烈建议聚焦特定疾病亚组（如DM）；TIS有效性和临床意义需按疾病亚组证明；现有数据极为有限，强烈建议开展Ph2剂量探索PoC研究。",
+              "quote": "FDA (written response):\nInsufficient evidence and a ph2 dose‑ranging POC study is strongly recommended.\nA broad IIM indication not supported and development should focus on specific disease subgroups (e.g., DM).\nPrimary endpoint (TIS) validity and clinical meaningfulness must be justified per disease subgroups.",
+              "evidence_id": "chunk-917173add39b"
+            },
+            {
+              "text": "EMA书面反馈：支持直接进入IIM Ph3；研究设计和剂量选择可接受；TIS作为主要终点总体可接受；IBM/IMNM排除可能影响适应症标签；单一关键试验是否足以支持MA仍待评估。",
+              "quote": "EMA (written response):\nRationale supports direct ph3 entry in IIM; design and dose selection are acceptable.\nTIS acceptable as primary endpoint despite remaining validation limitations.\nExclusion of IBM/IMNM may affect the indication label.\nSupportive evidence is limited; MA remains uncertain.",
+              "evidence_id": "chunk-917173add39b"
+            },
+            {
+              "text": "PMDA初步反馈：建议在Ph3前开展探索性Ph2 PoC研究，但不排除研究启动和日本参与。",
+              "quote": "PMDA (preliminary feedback):\nAn exploratory ph2 PoC study is recommended prior to ph3, but study initiation and Japan participation are not precluded.",
+              "evidence_id": "chunk-917173add39b"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": [
+            {
+              "text": "密切跟进全球团队，确保所有HA监管反馈纳入最终CTA/EC材料；加强证据包，主动解决数据缺口；CTA计划6月提交。",
+              "quote": "Closely follow with global team to ensure incorporation of key regulatory feedback from all HAs into the final CTA/EC packages.\nCollaborate with global team and strengthen the overall evidence package by proactively addressing identified data gaps, including clear justification of endpoints, target population, and supportive evidence strategy.",
+              "evidence_id": "chunk-917173add39b"
+            },
+            {
+              "text": "关键风险：CDE可能质疑直接启动Ph3的科学依据；EC可能要求CDE对HAI的书面反馈，若有顾虑可能导致延迟批准。",
+              "quote": "CTA approval: CDE may challenge the scientific justification for initiating a ph3 study directly.\nEC approval: EC may request the CDE’s feedback on HAI. If concerns are documented in the written response, site EC may also raise concerns or delay approval.",
+              "evidence_id": "chunk-917173add39b"
+            }
+          ]
+        },
+        {
+          "title": "Verducatib 1397-0014 AIRTIVITY（支气管扩张，Ph3）—全球及中国入组进展",
+          "background": [
+            {
+              "text": "截至2026年4月20日，全球筛选2243例，随机化1558例，筛选失败335例，筛选失败率15%，11名青少年患者已筛选，2名随机化。中国筛选323例，随机化242例，筛选失败68例，筛选失败率21%。",
+              "quote": "Cut-off date: 20-Apr-2026\nTotal Screened = 2243\nPatient in Screening= 407\nTotal Randomized =  1558\nTotal Screen failure =  335\nScreen failure rate = 15%\n11 adolescent patients were screened, 2 were randomized",
+              "evidence_id": "chunk-299cb66b06e2"
+            },
+            {
+              "text": "CTP v3于2026年4月中旬发布，DBL时间具有灵活性。中国NDA提交计划2027年12月，中国批准最佳情况2028年12月，基础情况2029年6月。",
+              "quote": "CTP v3 – Mid Apr 2026\nDBL Timing - Flexibility",
+              "evidence_id": "chunk-66aadcc9813f"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": []
+        },
+        {
+          "title": "Verducatib COPD及ANCA-AV新适应症评估—BUEC决策及后续步骤",
+          "background": [
+            {
+              "text": "COPD项目已重新激活并获得RoFD，HAI从6月开始，中国CTA计划2026年9月。ANCA-AV未获RoFD，BUEC将在后续审查后决定下一步。BUEC于2026年3月作出决定，请求为资产最大化对verducatib两个适应症的RoFD给予有条件批准。",
+              "quote": "COPD:\nReactivation of the COPD program and RoFD were granted.\nHAI starting from June, China CTA in Sep 2026.\nRequest conditional approval for RoFD for TWO indications for asset maximization for  verducatib.\nBUEC Decision in Mar 26.\nANCA-AV:\nRoFD not granted, but there are some follow ups to review and then BUEC will decide on the next steps.",
+              "evidence_id": "chunk-37b63c01039f"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": [
+            {
+              "text": "COPD：HAI从6月开始，中国CTA计划2026年9月；Leading PI及指导委员会成员提案于Q2 2026完成。ANCA-AV：BUEC将在后续审查后决定下一步。",
+              "quote": "HAI  in June, CTA in Sep 2026\nLeading PI  & Steering committee member proposal by Q2 2026",
+              "evidence_id": "chunk-37b63c01039f"
+            }
+          ]
+        },
+        {
+          "title": "Spesolimab 1368-0025 / 1368-0140（GPP，Ph2 OLE）—运营转让至LEO Pharma",
+          "background": [
+            {
+              "text": "Spesolimab全球许可权将于2025年10月1日授予LEO Pharma（来源：Spevigo licensing and transfer to Leo Pharma Playbook for Countries, Date: 30 September 2025）。1368-0025赞助方转让申请（含方案修订）：按CDE要求将与MAH转让并行提交，目标4月23日（有几天延迟，等待LEO本周更新），目标7月31日前获批，9月30日前完成赞助方转让（含HGRAC批准）；主要中心EC于2026年3月4日批准方案和ICF修订。1368-0140 CDE批准已于2026年3月31日获得。",
+              "evidence_id": "chunk-92999da2e23a",
+              "quote": "1368-0025: 1) as CDE required, will be submitted in parallel with the MAH transfer, which is targeted for 23 April (several days delay and waiting for  LEO update this week) , aiming to be approved by 31Jul and sponsorship transfer competed by 30Sep with HGRAC approval.  2) protocol & ICF amendment approved by leading site EC on 4Mar.\n1368-0140: CDE approval obtained on 31Mar2026."
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": [
+            {
+              "text": "1368-0025赞助方转让申请与MAH转让并行提交（目标4月23日，有几天延迟，等待LEO本周更新），目标7月31日前获批，9月30日前完成赞助方转让（含HGRAC批准）。Owner：原文未说明。Status：进行中（提交尚未完成）。Completed：N。",
+              "evidence_id": "chunk-92999da2e23a",
+              "quote": "will be submitted in parallel with the MAH transfer, which is targeted for 23 April (several days delay and waiting for  LEO update this week) , aiming to be approved by 31Jul and sponsorship transfer competed by 30Sep with HGRAC approval."
+            }
+          ]
+        },
+        {
+          "title": "Spesolimab 1368-0140 Capsayil（PG，Ph3）—入组挑战与促进措施",
+          "background": [
+            {
+              "text": "截至2026年4月17日，全球筛选142例（+11），随机化54例（+7），筛选失败87例，筛选失败率62.6%；中国筛选24例（+1），随机化6例（+1），筛选失败17例，筛选失败率70.8%。2026年4月招募时间线延长约6个月：末例患者随机化从2026年10月改为2027年4月，中国从2026年8月改为2027年2月，DBL从2028年2月改为2028年9月。",
+              "quote": "Recruitment timeline extended for ~6 months in Apr 2026:\nChanged Last Subject Randomized to Apr 2027 from Oct 2026\nChina mainland: changed to Feb 2027 from Aug 2026\nChanged DBL date to Sep 2028 from Feb 2028",
+              "evidence_id": "chunk-923e7b0c1200"
+            },
+            {
+              "text": "入组挑战包括：患者参与临床试验意愿低、疾病认知度低、安慰剂设计、罕见病招募池有限、PG诊断困难、患者来源分散于不同科室等。",
+              "quote": "Low patient willingness for clinical trials​\nLow awareness ​\nPotential patients with disease controlled with current treatments\nPlacebo trial design : patients with high disease burden with high need for timely and effective treatments​​\nLimited Recruitment Pool\nRare disease\nDifficult for PG diagnosis – exclusive diagnosis",
+              "evidence_id": "chunk-cbb252f89682"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": [
+            {
+              "text": "促进入组措施：现场促进访视（持续进行）、全球一对一电话（持续）、线下招募供应商Jsure（2026年3月中旬起）、MSL活动、HCP和患者试验材料、会议宣传等。",
+              "quote": "On-site boosting visits: Ongoing – leading site visit 14April, CHN15_12March, CHN13_17April, CHN5_15April.\nGlobal One On One call set up for the sites had no screened patients: Ongoing – CHN12 on 27Jan. CHN16 9th Feb.\nOffline Recruitment vendor Jsure Onboarding since mid of March 2026.",
+              "evidence_id": "chunk-971a68f1dd06"
+            }
+          ]
+        },
+        {
+          "title": "BI 1819479（Autotaxin抑制剂）IPF Ph2（1462-0004）—PoC未达标，项目决策待定",
+          "background": [
+            {
+              "text": "Ph2 IPF研究（1462-0004）TLR于2026年3月显示PoC未达标，PoC里程碑从3月IUEC推迟至4月IUEC。IUPC和IUEC关于项目未来的会议计划于5月召开。",
+              "quote": "PoC criteria not met.\nMeetings with IUPC and IUEC for decision on the future of the project scheduled for May.",
+              "evidence_id": "chunk-232fe3bbabb8"
+            },
+            {
+              "text": "TLR于2026年3月显示PoC未达标，PoC里程碑从3月IUEC推迟至4月IUEC。",
+              "quote": "TLR in Mar indicated PoC was not achieved. PoC milestone moved from Mar IUEC to Apr IUEC.",
+              "evidence_id": "chunk-5220ec2c863f"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": [
+            {
+              "text": "IUPC和IUEC关于项目未来的决策会议计划于2026年5月召开。",
+              "quote": "Meetings with IUPC and IUEC for decision on the future of the project scheduled for May.",
+              "evidence_id": "chunk-232fe3bbabb8"
+            }
+          ]
+        },
+        {
+          "title": "BI 3000202（cGASi）SLE Ph2（1509-0004）—中国首例入组及研究者会议",
+          "background": [
+            {
+              "text": "cGASi SLE Ph2研究（1509-0004），全球25个月，N=405，11个中心；中国21个月，N=25。中国CTA于2026年1月13日至2月13日（30工作日CTA通道）获批，中国首个中心于2026年4月13日启动，首例患者于4月20日筛选（比对HA承诺提前3周，在FPI 12周内）。研究者会议计划5月16日在西安举行，Leading PI Prof. Li受邀加入全球专家组，全球AB会议计划5月和6月。",
+              "quote": "Global 1st SIV: China 1st site initiation on Apr 13th\nGlobal 1st FSS: China 1st patient screen on Apr 20th, 3 weeks ahead of the commitment to HA (within 12 weeks to achieve FPI).\nInvestigator meeting  planned on 16May in Xi’an.\nLeading PI Prof. Li was invited to join global expert group. Global AB meetings planned in May and June.",
+              "evidence_id": "chunk-d9e97b454f26"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": []
+        },
+        {
+          "title": "BI 3032950（Anti-TREM1）IBD（CD和UC）—当前剂量PoC未达标，高剂量研究提案中，PoC里程碑推迟至4月IUEC",
+          "background": [
+            {
+              "text": "Anti-TREM1 IBD（CD和UC）Ph2b整合策略已获背书；当前剂量PoC标准未达标，但观察到明确的靶点接触和组织水平通路及疾病生物标志物调节；数据提示非应答者在当前剂量下组织靶点调节不完全；目前提议开展更高剂量研究；PoC里程碑从3月IUEC推迟至4月IUEC。",
+              "evidence_id": "chunk-ab16cc4d00bc",
+              "quote": "PoC criteria was not met at current dose.\nClear target engagement and tissue-level pathway and disease biomarker modulation observed.\nData suggests incomplete tissue target modulation in non-responders at current dose. A higher-dose study currently is proposed.\nPoC milestone moved from Mar IUEC to Apr IUEC."
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": []
+        },
+        {
+          "title": "BI 3810477（Anti-CTGF）IPF—中国纳入候选国家列表，可行性评估中",
+          "background": [
+            {
+              "text": "Anti-CTGF IPF Ph1 MRD正在进行，Ph2a整合策略正在讨论中。中国已被纳入试验1530-0005草案TDO通讯的潜在分配国家列表，国家可行性评估需于5月12日前完成。",
+              "quote": "China has been added to the potential allocated country list in draft TDO communication for trial 1530‑0005.\nCountry feasibility to be completed by May 12th",
+              "evidence_id": "chunk-8561342deef0"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": [
+            {
+              "text": "国家可行性评估需于2026年5月12日前完成。",
+              "quote": "Country feasibility to be completed by May 12th",
+              "evidence_id": "chunk-8561342deef0"
+            }
+          ]
+        }
+      ],
+      "reports": [
+        {
+          "topic_index": 0,
+          "passed": [
+            1,
+            2,
+            3,
+            4,
+            6,
+            7,
+            8,
+            9,
+            13,
+            17
+          ],
+          "corrected": [
+            {
+              "check": 5,
+              "detail": "议题包含项目终止原因（PK/PD未达标）和执行风险（备用化合物仍在规划），具有实质内容，不属于低信息量条目，保留。"
+            },
+            {
+              "check": 11,
+              "detail": "原文明确列出IFN和SSc两个适应症，但终止原因和备用化合物规划为同一事件整体描述，无法按适应症拆分出不同进展或决策，合并保留为一个议题。"
+            }
+          ],
+          "not_applicable": [
+            {
+              "check": 10,
+              "detail": "无pending/TBD对象，不适用。"
+            },
+            {
+              "check": 12,
+              "detail": "仅一个议题，无合并判断需要。"
+            },
+            {
+              "check": 14,
+              "detail": "无todo行动项，不适用。"
+            },
+            {
+              "check": 15,
+              "detail": "无已完成行动项，不适用。"
+            },
+            {
+              "check": 16,
+              "detail": "无for_endorsement或decision字段内容，原文未记录委员会请求或决议，不适用。"
+            },
+            {
+              "check": 18,
+              "detail": "chunk-9b4f796a5373（表格行：STING inh. BI 3009947: SSC; IFN）与chunk-7eb748a2e157（表格行：STING inh. BI 3009947）为pipeline summary表格中的纯标题/进度行，无额外实质内容，已由chunk-32593739cf34覆盖，不构成遗漏。"
+            }
+          ]
+        },
+        {
+          "topic_index": 1,
+          "passed": [],
+          "corrected": [],
+          "not_applicable": []
+        },
+        {
+          "topic_index": 2,
+          "passed": [
+            1,
+            2,
+            3,
+            6,
+            7,
+            8,
+            9,
+            11,
+            12,
+            13,
+            16,
+            17
+          ],
+          "corrected": [
+            {
+              "check": 14,
+              "detail": "todo 原稿缺少 owner 和 status 说明；已补充 owner=GMA，status 原文未说明是否已完成。"
+            },
+            {
+              "check": 15,
+              "detail": "原文未明确该 todo 是否已完成，已在 todo 文本中注明「原文未说明是否已完成」，避免误判为已完成。"
+            }
+          ],
+          "not_applicable": [
+            {
+              "check": 4,
+              "detail": "本议题有实质进度状态、阻塞点（等待GMA）及行动，不属于纯噪音。"
+            },
+            {
+              "check": 5,
+              "detail": "存在阻塞行动（GMA待完成全球发布），不属于低信息量条目。"
+            },
+            {
+              "check": 10,
+              "detail": "无 pending/TBD 字段，不适用。"
+            },
+            {
+              "check": 18,
+              "detail": "原文仅一个 chunk 涉及本研究，已全部引用，无遗漏。"
+            }
+          ]
+        },
+        {
+          "topic_index": 3,
+          "passed": [],
+          "corrected": [],
+          "not_applicable": []
+        },
+        {
+          "topic_index": 4,
+          "passed": [],
+          "corrected": [],
+          "not_applicable": []
+        },
+        {
+          "topic_index": 5,
+          "passed": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            9,
+            11,
+            12,
+            13,
+            15,
+            17
+          ],
+          "corrected": [
+            {
+              "check": 6,
+              "detail": "background中'CEC approval on 1 Sep 2025'为CEC委员会决议，应保留；'Global proposal approved'和'Protocol approval'为流程状态，不等于PEC/CEC委员会决议，已在background中保留为流程状态，边界处理正确，无需修改，但原稿未区分说明，此处标注。"
+            },
+            {
+              "check": 14,
+              "detail": "todo原稿缺少owner、status、completed字段；已补充：owner原文未说明，due Nov 2026，status pending investigator response，completed N。"
+            },
+            {
+              "check": 16,
+              "detail": "decision字段为空，for_endorsement字段为空，均有据可查（原文无提交委员会请求，无PEC/CEC层级决议记录于此议题），不存在反推，正确。"
+            }
+          ],
+          "not_applicable": [
+            {
+              "check": 7,
+              "detail": "本议题无for_endorsement内容，背书请求边界检查不适用。"
+            },
+            {
+              "check": 8,
+              "detail": "本议题decision为空，委员会来源层级检查不适用；background中CEC approval已有日期，来源明确。"
+            },
+            {
+              "check": 10,
+              "detail": "无pending/TBD决议对象，检查不适用。"
+            },
+            {
+              "check": 18,
+              "detail": "原文仅一个chunk（chunk-323f8ff12e05）承载本议题全部信息，覆盖完整，无跨页遗漏风险。"
+            }
+          ]
+        },
+        {
+          "topic_index": 6,
+          "passed": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            9,
+            11,
+            13,
+            17
+          ],
+          "corrected": [
+            {
+              "check": 6,
+              "detail": "原稿将PEC approval写入background但未在decision字段体现；PEC approval属于委员会决议，已移至decision字段。"
+            },
+            {
+              "check": 7,
+              "detail": "原稿todo中混入了AMP applied（流程状态），已保留在background说明中，todo聚焦于全球审批里程碑。"
+            },
+            {
+              "check": 8,
+              "detail": "原稿decision字段为空，实际原文有'PEC approval on 20260209'，已补入decision并标注层级为PEC。"
+            },
+            {
+              "check": 14,
+              "detail": "todo的owner和due原文未说明，已在text中注明'Owner/due原文未说明'，next milestone日期来自原文'May2026'已保留。"
+            }
+          ],
+          "not_applicable": [
+            {
+              "check": 10,
+              "detail": "无pending/TBD决议对象需要说明；研究编号TBD属于进度信息已在background注明。"
+            },
+            {
+              "check": 12,
+              "detail": "仅一个议题，无合并问题。"
+            },
+            {
+              "check": 15,
+              "detail": "无已完成行动项需要标注completed状态。"
+            },
+            {
+              "check": 16,
+              "detail": "for_endorsement为空，无反推问题；decision来自原文明确记录。"
+            },
+            {
+              "check": 18,
+              "detail": "原文仅chunk-da36b7a54613一条证据，已完整覆盖；其余chunks与本议题无关。"
+            }
+          ]
+        },
+        {
+          "topic_index": 7,
+          "passed": [
+            1,
+            2,
+            3,
+            6,
+            9,
+            11,
+            13,
+            17
+          ],
+          "corrected": [
+            {
+              "check": 4,
+              "detail": "F0003（CTP/IMPD进度）属于纯进度信息，无风险、请求或决议，但与CCDS更新同属一张幻灯片的监管文件更新背景，保留作为背景上下文；若单独成题则应过滤。"
+            },
+            {
+              "check": 5,
+              "detail": "整体议题为纯进度/流程状态更新，无委员会请求、决议或行动项。保留原因：含监管里程碑（CDE受理、预计批准日期）和执行风险背景，具有跟进价值；但需注意该议题无for_endorsement/decision/todo，属于信息通报类。"
+            },
+            {
+              "check": 7,
+              "detail": "LPI提案提交CDE及受理属于监管流程状态，非PEC/CEC委员会背书请求，已正确置于background，无需移入for_endorsement。"
+            },
+            {
+              "check": 16,
+              "detail": "for_endorsement和decision均为空，原文无明确委员会请求或决议记录，不反推，保持为空。"
+            }
+          ],
+          "not_applicable": [
+            {
+              "check": 8,
+              "detail": "本议题无委员会决议记录，委员会来源层级检查不适用。"
+            },
+            {
+              "check": 10,
+              "detail": "无pending/TBD状态字段，检查不适用。"
+            },
+            {
+              "check": 12,
+              "detail": "仅一个议题，无合并判断需要。"
+            },
+            {
+              "check": 14,
+              "detail": "无todo行动项，负责人/期限/状态检查不适用。"
+            },
+            {
+              "check": 15,
+              "detail": "无已完成行动项字段，检查不适用。"
+            }
+          ]
+        },
+        {
+          "topic_index": 8,
+          "passed": [
+            1,
+            2,
+            3,
+            6,
+            7,
+            8,
+            9,
+            11,
+            12,
+            13,
+            17
+          ],
+          "corrected": [
+            {
+              "check": 5,
+              "detail": "议题仅含进度里程碑（CTA提交日期、IM日期、NDA预计日期），无风险、请求、决议或行动。按规则应为progress_only候选，但因属于PEC会议汇报中的具体研究节点，保留为背景信息，不单独升级为实质议题。"
+            },
+            {
+              "check": 14,
+              "detail": "todo字段为空，原文无owner/due/status信息，符合实际，无需补充。"
+            },
+            {
+              "check": 16,
+              "detail": "for_endorsement和decision均为空，原文无提交委员会请求或委员会决议记录，不反推。"
+            },
+            {
+              "check": 18,
+              "detail": "原文chunk-874d637cb60e包含时间线图表数据（NDA sub. 22 Oct 2029、NDA appr. 20 Mar 2030等），初稿仅引用文字说明部分，图表中NDA appr. 20 Mar 2030与初稿所写20 Aug 2030（best case）并存，已在background中以best case注明，覆盖完整。"
+            }
+          ],
+          "not_applicable": [
+            {
+              "check": 10,
+              "detail": "无pending/TBD字段，不适用。"
+            },
+            {
+              "check": 15,
+              "detail": "无已完成行动条目，不适用。"
+            }
+          ]
+        },
+        {
+          "topic_index": 9,
+          "passed": [],
+          "corrected": [],
+          "not_applicable": []
+        },
+        {
+          "topic_index": 10,
+          "passed": [],
+          "corrected": [],
+          "not_applicable": []
+        },
+        {
+          "topic_index": 11,
+          "passed": [],
+          "corrected": [],
+          "not_applicable": []
+        },
+        {
+          "topic_index": 12,
+          "passed": [],
+          "corrected": [],
+          "not_applicable": []
+        },
+        {
+          "topic_index": 13,
+          "passed": [
+            1,
+            2,
+            3,
+            4,
+            6,
+            8,
+            9,
+            11,
+            13,
+            17
+          ],
+          "corrected": [
+            {
+              "check": 7,
+              "detail": "原稿 background 中将 'protocol & ICF amendment approved by leading site EC on 4Mar' 和 '1368-0140: CDE approval obtained on 31Mar2026' 均保留为流程状态，符合规则（EC/CDE 批准不等于 PEC/CEC 委员会决议），已保留。"
+            },
+            {
+              "check": 14,
+              "detail": "todo 原稿缺少 owner、completed 字段说明；已补注 'Owner：原文未说明'、'Completed：N'、'Status：进行中'。"
+            },
+            {
+              "check": 16,
+              "detail": "for_endorsement 和 decision 均为空，原文无明确提交委员会的请求或 PEC/CEC 层级决议，保持空数组，不反推。"
+            },
+            {
+              "check": 18,
+              "detail": "原稿 title 仅写 '1368-0025'，但 background 和 todo 均涉及 1368-0140；题目已补充 '/ 1368-0140' 以覆盖两个研究编号。"
+            }
+          ],
+          "not_applicable": [
+            {
+              "check": 5,
+              "detail": "议题含执行风险（延迟、HGRAC 批准依赖）和跟进行动，非低信息量，不适用过滤。"
+            },
+            {
+              "check": 10,
+              "detail": "无 pending/TBD 状态字段，不适用。"
+            },
+            {
+              "check": 12,
+              "detail": "仅一个议题，无合并判断需要。"
+            },
+            {
+              "check": 15,
+              "detail": "1368-0140 CDE 批准已完成（31Mar2026），已在 background 中记录为已完成事项，todo 仅保留未完成的 1368-0025 提交行动，符合规则。"
+            }
+          ]
+        },
+        {
+          "topic_index": 14,
+          "passed": [],
+          "corrected": [],
+          "not_applicable": []
+        },
+        {
+          "topic_index": 15,
+          "passed": [],
+          "corrected": [],
+          "not_applicable": []
+        },
+        {
+          "topic_index": 16,
+          "passed": [],
+          "corrected": [],
+          "not_applicable": []
+        },
+        {
+          "topic_index": 17,
+          "passed": [
+            1,
+            2,
+            3,
+            4,
+            6,
+            8,
+            9,
+            11,
+            13,
+            17,
+            18
+          ],
+          "corrected": [
+            {
+              "check": 7,
+              "detail": "原稿 background 中'Ph2b整合策略已获背书'属于流程状态（非PEC/CEC委员会决议），保留在 background 是正确的；for_endorsement 和 decision 均为空，符合原文无明确提交委员会请求或委员会决议的情况。"
+            },
+            {
+              "check": 10,
+              "detail": "高剂量研究提案状态为'currently is proposed'，属于 pending/under discussion，具体对象为'更高剂量研究提案'，已在 background 中体现，无需单独 todo 条目，但 title 已补充说明'高剂量研究提案中'以明确对象。"
+            }
+          ],
+          "not_applicable": [
+            {
+              "check": 5,
+              "detail": "议题含PoC未达标风险、靶点调节不完全的科学讨论及里程碑推迟，不属于低信息量条目。"
+            },
+            {
+              "check": 12,
+              "detail": "仅一个 asset+indication 组合（Anti-TREM1 IBD CD/UC），无合并问题。"
+            },
+            {
+              "check": 14,
+              "detail": "原文无 todo 行动项，owner/due/status 均不适用。"
+            },
+            {
+              "check": 15,
+              "detail": "无已完成行动项需核查。"
+            },
+            {
+              "check": 16,
+              "detail": "for_endorsement 和 decision 均为空，原文无明确提交请求或委员会决议，不存在反推问题。"
+            }
+          ]
+        },
+        {
+          "topic_index": 18,
+          "passed": [],
+          "corrected": [],
+          "not_applicable": []
+        }
+      ],
+      "excluded": [
+        {
+          "fact_id": "F0001",
+          "reason": "progress_only",
+          "detail": "该议题仅记录1305-0111 ILD EPI研究第1/2部分数据分析已完成（2025年9月30日）、第3部分正在进行中、下一里程碑为2026年6月完成第3部分数据分析，无风险、阻塞、背书请求、委员会决策或跟进行动，属于纯进度更新，应过滤。"
+        },
+        {
+          "fact_id": "F0001",
+          "reason": "progress_only",
+          "detail": "该议题仅记录研究1305-0123的入组进展（178/325例，FPI完成，EC修正案批准，下一里程碑LPI Dec 2026），无讨论、风险、阻塞、背书请求、委员会决策或跟进行动，属于纯进度条目，应过滤。"
+        },
+        {
+          "fact_id": "F0001",
+          "reason": "progress_only",
+          "detail": "该议题仅包含研究1305-0046中国及全球入组数字（筛选/随机化/筛选失败计数），无风险讨论、阻塞、背书请求、委员会决策或跟进行动，属于纯进度数据，不构成实质议题。"
+        }
+      ],
+      "coverage": "议题仅有一条原文证据chunk-32593739cf34，完整覆盖项目终止原因和备用化合物规划状态；pipeline表格中对应行（chunk-7eb748a2e157、chunk-9b4f796a5373）为纯标题行，无增量信息；原文未记录任何委员会请求、决议或行动项，相关字段依据原文留空。；本议题质检结果未被采纳，保留抽取初稿；原始议题仅含一条进度事实（第1/2部分数据分析完成、第3部分进行中），无讨论、风险、请求、决议或行动，整题为 progress_only，予以排除。；议题仅有一个原文 chunk（chunk-7079b8e2e585），background 和 todo 均已覆盖；补充了 todo 的 owner（GMA）和完成状态说明；无 for_endorsement 和 decision 原文依据，字段保持为空。；本议题质检结果未被采纳，保留抽取初稿；本议题质检结果未被采纳，保留抽取初稿；原始议题仅含一条进度事实（入组178/325，FPI完成，EC修正案批准），无for_endorsement、decision、todo字段内容，亦无风险或讨论记录，整题为progress_only，予以排除。；本议题全部内容来自chunk-323f8ff12e05（Slide 6 Table 1 row 8），包含研究编号、机构、各阶段批准日期及当前合同状态，覆盖完整；无for_endorsement或PEC/CEC层级决议记录，todo已补全owner/status/completed字段说明。；原文chunk-da36b7a54613完整覆盖本议题所有事实（PEC决议、本地批准、全球审批流程、AMP申请、下一里程碑）；其余chunks均属其他产品/研究，与本议题无关，未纳入。；三条原始事实均保留：F0001和F0002覆盖CCDS版本、DDI研究整合内容及中国LPI监管进度；F0003覆盖同一监管更新背景下的CTP/IMPD文件发布状态。议题无委员会请求、决议或行动项，属于监管进度信息通报类，原文未记录PEC/CEC层级决议。；原始候选议题仅有一条入组进度事实（chunk-18f8468269cc），无for_endorsement、decision、todo字段内容，整题为progress_only，予以筛除。；议题仅有一个原文chunk（chunk-874d637cb60e）支撑，内容为中国CTA提交/审批时间线及IM安排，属进度汇报性质；无委员会请求、决议或行动，字段如实为空，原文证据覆盖完整。；本议题质检结果未被采纳，保留抽取初稿；本议题质检改动未被采纳，保留抽取初稿；本议题质检结果未被采纳，保留抽取初稿；本议题质检结果未被采纳，保留抽取初稿；原文 chunk-92999da2e23a 全部实质内容均已覆盖：1368-0025 提交时间线（含延迟风险）、HGRAC 批准目标、EC 批准方案/ICF 修订（已完成，归入 background）、1368-0140 CDE 批准（已完成，归入 background）；todo 仅保留未完成行动并补全 owner/status/completed 字段注释。；本议题质检结果未被采纳，保留抽取初稿；本议题质检改动未被采纳，保留抽取初稿；本议题质检引用未通过，保留抽取初稿；唯一原文证据 chunk-ab16cc4d00bc 已完整覆盖：PoC未达标、靶点接触数据、高剂量研究提案、里程碑推迟至4月IUEC；其余 evidence chunks 均属其他议题（PMS研究进展、其他 asset），与本议题无关，未引入。；本议题质检引用未通过，保留抽取初稿",
+      "unresolved": [
+        "备用化合物具体名称、规划时间线及后续委员会审议安排原文未说明。",
+        "本议题质检结果未被采纳，保留抽取初稿",
+        "GMA完成全球发布MM的实际完成情况原文未说明，milestone为Mar 2026，会议日期为Apr 2026，可能已逾期但原文无确认。",
+        "本议题质检结果未被采纳，保留抽取初稿",
+        "本议题质检结果未被采纳，保留抽取初稿",
+        "todo中owner原文未说明，无法确认合同跟进责任人。",
+        "研究编号标注为TBD（IIS类型），全球提案审批结果尚未在原文中体现。",
+        "F0003（CTP v7.0/IMPD 4.0）与CCDS更新议题的关联性依赖幻灯片上下文，原文未明确说明其是否属于同一议题范围，保留为背景候选。",
+        "原文时间线图表中同时出现NDA appr. 20 Mar 2030和NDA appr. (best case) 20 Aug 2030两个日期，含义差异原文未进一步说明。",
+        "本议题质检结果未被采纳，保留抽取初稿",
+        "本议题质检改动未被采纳，保留抽取初稿",
+        "本议题质检结果未被采纳，保留抽取初稿",
+        "本议题质检结果未被采纳，保留抽取初稿",
+        "1368-0025 赞助方转让申请的具体 owner（负责人）原文未说明。",
+        "LEO Pharma 本周更新内容及其对4月23日目标的最终影响原文未说明。",
+        "本议题质检结果未被采纳，保留抽取初稿",
+        "本议题质检改动未被采纳，保留抽取初稿",
+        "本议题质检引用未通过，保留抽取初稿",
+        "高剂量研究提案是否已正式提交至IUEC或PEC审议，原文未说明；4月IUEC结果未在本文档中体现。",
+        "本议题质检引用未通过，保留抽取初稿"
+      ]
+    },
+    {
+      "topics": [
+        {
+          "title": "BI 1291583 (AIRTIVITY, Study 1397-0018) – NDA Scenario Analysis & Adolescent Recruitment Mitigation",
+          "background": [
+            {
+              "text": "Three NDA scenarios are defined based on timing of adolescent vs adult recruitment completion and sufficiency of adolescent data at DBL1. Scenario 1 (Global Goal): adolescent and adult recruitment completes simultaneously; labelled population includes 12y+ patients with BE; no sNDA required.",
+              "evidence_id": "chunk-08f909aff115",
+              "quote": "Scenario #1 (Global Goal):\nAdolescent and adult recruitment completes simultaneously; and the labelled population includes 12 year and older patients with BE (no sNDA)."
+            },
+            {
+              "text": "Scenario 2: Adolescent recruitment completes much later than adult; available adolescent data at DBL1 may or may not be sufficient; medium-to-high risk of sNDA; China HA may have objections; mitigation is China contributing more adolescent and CF patients.",
+              "evidence_id": "chunk-4cd6eb28af3a",
+              "quote": "Medium to high risk of sNDA, depending on the data totality;\nChina HA may have objections as well"
+            },
+            {
+              "text": "Scenario 3: Adolescent data at DBL1 is NOT sufficient; sNDA required; China priority review and NRDL premium pricing chance will be much lower.",
+              "evidence_id": "chunk-8cde65821936",
+              "quote": "Adolescent recruitment completes much later than adult recruitment (DBL 1 for adults and DBL 2 for adols.); but the available adolescent data at DBL 1 is NOTsufficient to support label inclusion of adols (sNDA)."
+            },
+            {
+              "text": "Mitigation plan slide is noted as 'To be updated', indicating the plan is still in draft.",
+              "evidence_id": "chunk-1d3513ab1378",
+              "quote": "Next step actions – mitagation plan\nTo support global adolescent (and CF) recruitment\n59\nTo be updated"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": [
+            {
+              "text": "Mitigation action #1: Submit for EC/GCP approval at existing sites; two sites already selected and added for adolescent recruitment; additional sites from existing site list capable of adolescent recruitment to be considered. Owner/due date: 原文未说明。",
+              "evidence_id": "chunk-844b6ffe2f88",
+              "quote": "Currently, two sites were seleced and added for adols recruitment\nMore sites from the exisitng site list that are capable of adols recruitment could be considered."
+            },
+            {
+              "text": "Mitigation action #2: Engage the two adolescent sites for recruitment – proactive communication with country IMs/CTM/CRA/CRC, line up adolescent patients, regular follow-up on progress/challenges. Owner/due date: 原文未说明。",
+              "evidence_id": "chunk-45f68ee109df",
+              "quote": "Proactively communicate start of adols. Recruitment per country (globa and local IMs, CTM/CRA/CRC site communication)\nLine up of adol. Patients\nRegular f/u with sites on progress/challenges of adol recruitment"
+            }
+          ]
+        },
+        {
+          "title": "BI 1291583 – In-Class DPP1 Competitor Landscape & Local Differentiation Strategy (NCFBE/'One' BE)",
+          "background": [
+            {
+              "text": "Two aIL-33 mAb Ph2 trials (GSK3862995B and Itepekimab) are ongoing with 7-8 overlapping sites each; two Ph2 and one Ph3 DPP1 inhibitor trials ongoing with 10-15 overlapping sites each.",
+              "quote": "Two ph2 and 1 ph3 trials for other DPP1 inhibitors are ongoing\n10-15 overlapping sites with each competitor\nTwo aIL-33 mAb ph2 trials are ongoing\n7-8 overlapping sites with each competitor",
+              "evidence_id": "chunk-4c31f4795d64"
+            },
+            {
+              "text": "BI 1291583 Ph2 key EP: 34% risk reduction in time to first PEx (HR=0.66) at 2.5mg; Asian sub-group 59%. HSK31858 Ph2: 57%/67% reduction at 20/40mg. Non-head-to-head; HSK data only in Chinese population.",
+              "quote": "Non-head-to-head comparison & baseline demographics differ between BI and HSK\nHSK31858 data were only generated in Chinese population\nBI 129583 data in Asian sub-group was comparable with HSK31858",
+              "evidence_id": "chunk-9ef203e0c56c"
+            },
+            {
+              "text": "Local strategy (draft, 1 July 2025): based on expedited global recruitment timeline and increasing competition from external pipelines in China.",
+              "quote": "Local strategy to move forward… (draft)\nBI 1291583 Evidence Network 1st July 2025   |    CONFIDENTIAL",
+              "evidence_id": "chunk-0436f05e69d1"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": [
+            {
+              "text": "Cross-trial comparison (eligibility criteria, study process, dosing form, prior efficacy/safety, MoA advantage, trial stage) to identify differentiating advantages; lead: Medical/Clinical.",
+              "quote": "Cross-trial comparison:\nKey Eligibility Criteria Dive-in\nKey Study Process\nDosing form (oral vs IV/SC)\nPrior efficacy & safety data\nMoA advantage\nTrial stage (ph2 vs ph3)",
+              "evidence_id": "chunk-0e4d225062ec"
+            },
+            {
+              "text": "Site/PI engagement (boost visit, city meetings, advisory board meeting) to engage participating PIs and leverage connections for referral; lead: CD&O.",
+              "quote": "Site/PI Engagement:\nBoost visit?\nCity Meetings?\nAb meeting",
+              "evidence_id": "chunk-39f7027ef677"
+            },
+            {
+              "text": "External promotion via WeiXin/WeChat official platform and national/regional congresses to increase exposure to targeted experts/patients; lead: MA.",
+              "quote": "External Promotion:\nWeiXin/WeChat official platform\nNational/Regional Congress/Conference",
+              "evidence_id": "chunk-3ba01824da1f"
+            }
+          ]
+        },
+        {
+          "title": "BI 3000202 (cGAS inhibitor, Study 1509-0004) in SLE – China Joining Global Phase II: CDE Feedback & Leading PI Selection",
+          "background": [
+            {
+              "text": "CDE clin-pharm division initially recommended enrolling Chinese patients in low-dose (25mg BID) arm first; team pushed back (submitted 27 Aug, alignment meeting 26 Aug). CDE accepted pushback on 29 Aug with further comment requiring detailed rationale that increased exposure poses no safety risk for Asian SLE patients in CTA.",
+              "evidence_id": "chunk-aea473acc733",
+              "quote": "CDE accepted with further comment on 29 Aug:\nSuggest to comprehensively consider the available data to ensure the safety of the subjects. When submit the CTA, please provide the detailed rationale that no safety risk to increase exposure in Asian SLE patients."
+            },
+            {
+              "text": "China milestone timeline (accelerated): First EC submission 30 Dec 2025 (original 12 Jan 2026); CTA submission 19 Jan 2026; First EC approval 6 Feb 2026 (original 28 Feb); CTA approval 6 Mar 2026 (original 31 Mar); First SIV 30 Apr 2026; First Subject Randomized 15 Jun 2026; Last Subject Randomized 25 Jun 2028; DBL 15 Jul 2029.",
+              "evidence_id": "chunk-a36a86811cb9",
+              "quote": "CTA submission | Global: 22-Dec-25 | col_3: 17-Dec-25 | China: 19-Jan-26 | col_5: 22-Dec-25"
+            },
+            {
+              "text": "Leading PI 李梦涛 (北京协和医院) endorsed by ad hoc PEC on 9 Oct; total grade 81.25%; selected (Y) for study 1509-0004.",
+              "evidence_id": "chunk-c6e43e0e732f",
+              "quote": "Leading PI  endorsed by ad hoc PEC (9th Oct)"
+            },
+            {
+              "text": "Risk for leading site: potential publication per PI's request and IP sharing; contract negotiation (MSA renewal under negotiation, ~2 months to finalize).",
+              "evidence_id": "chunk-c3bdcb5cca98",
+              "quote": "Risk: Potential publication per PI’s request and IP sharing."
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [
+            {
+              "text": "Leading PI 李梦涛 (北京协和医院) endorsed by ad hoc PEC on 9 October for study 1509-0004.",
+              "evidence_id": "chunk-c6e43e0e732f",
+              "quote": "Leading PI  endorsed by ad hoc PEC (9th Oct)"
+            }
+          ],
+          "todo": [
+            {
+              "text": "Justify in CTA that increased exposure poses no safety risk for Asian SLE patients (required by CDE clin-pharm division). Owner/due: 原文未说明。",
+              "evidence_id": "chunk-8fa4a17c1b73",
+              "quote": "Justify in the CTA that increased exposure poses no safety risk for Asian SLE patients."
+            },
+            {
+              "text": "Slide 67 content for BI 3000202 (cGASi) in SLE is under preparation (status: incomplete at time of meeting).",
+              "evidence_id": "chunk-8a11db8c9b80",
+              "quote": "BI 3000202 (cGASi) in SLE (slide under preparation)"
+            }
+          ]
+        }
+      ],
+      "reports": [
+        {
+          "topic_index": 0,
+          "passed": [
+            1,
+            2,
+            3,
+            4,
+            6,
+            7,
+            8,
+            9,
+            11,
+            12,
+            13,
+            16,
+            17
+          ],
+          "corrected": [
+            {
+              "check": 5,
+              "detail": "Slide 59 header chunk-1d3513ab1378 ('To be updated') was not used in original draft but carries relevant draft-status signal for the mitigation plan; added to background."
+            },
+            {
+              "check": 14,
+              "detail": "Todo items F0004/F0005 lack owner and due date; added note '原文未说明' to each todo text to comply with completeness requirement."
+            },
+            {
+              "check": 15,
+              "detail": "No completed status indicated in source; todos left as open/in-progress per original text."
+            },
+            {
+              "check": 18,
+              "detail": "chunk-1d3513ab1378 ('To be updated') was present in evidence but unused in original draft; incorporated into background to capture draft status of mitigation plan."
+            }
+          ],
+          "not_applicable": [
+            {
+              "check": 10,
+              "detail": "No pending/TBD decision items exist in this topic; all TBD references are in the mitigation plan draft status, already noted."
+            }
+          ]
+        },
+        {
+          "topic_index": 1,
+          "passed": [],
+          "corrected": [],
+          "not_applicable": []
+        },
+        {
+          "topic_index": 2,
+          "passed": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            11,
+            12,
+            13,
+            16,
+            17,
+            18
+          ],
+          "corrected": [
+            {
+              "check": 10,
+              "detail": "todo F0006 的 owner/due 原文未说明，已在 text 中注明「原文未说明」，不臆造。"
+            },
+            {
+              "check": 14,
+              "detail": "F0006 owner 和 due 原文均未提及，已注明「原文未说明」；F0007 status 补充为「incomplete at time of meeting」以反映原文「slide under preparation」含义。"
+            },
+            {
+              "check": 15,
+              "detail": "F0007「slide under preparation」为未完成状态，已保留；无已完成事项被误写为未完成。"
+            }
+          ],
+          "not_applicable": []
+        }
+      ],
+      "excluded": [],
+      "coverage": "所有五个原始事实（F0001–F0005）均保留并对应到正确字段；新增 chunk-1d3513ab1378 作为背景补充，反映缓解计划处于草稿状态。竞争格局幻灯片（chunk-394ccb94ab1a、chunk-4c31f4795d64 等）及 BI 3000202 幻灯片（chunk-b36a3af4ab44 等）属于本议题范围外的独立内容，不纳入本题。；本议题质检引用未通过，保留抽取初稿；所有7条原始事实（F0001–F0007）均保留并映射至对应字段：background 4条（CDE反馈、里程碑时间线、Leading PI评分与决议、合同风险）、decision 1条（ad hoc PEC背书）、todo 2条（CTA安全性论证、幻灯片待准备）。evidence_markdown 中 Slide 56–61 的内容属于其他议题（BI 1291583 NCFBE/BE），与本议题无关，已确认不纳入。",
+      "unresolved": [
+        "Todo 行动项的负责人（owner）和截止日期（due date）原文均未说明，无法补全。",
+        "Mitigation plan 标注 'To be updated'，最终版本内容原文未提供。",
+        "本议题质检引用未通过，保留抽取初稿",
+        "F0006 todo 的具体负责人和截止日期原文未说明。",
+        "Slide 67「slide under preparation」未说明预计完成时间。"
+      ]
+    }
+  ],
+  "final_topic_ids": [
+    "topic-a9f172986013c3f48109",
+    "topic-50f8a2c42b9f39fac471",
+    "topic-0d49b15bc9318cbbe0ef",
+    "topic-88cae1ebf70a15be6b25",
+    "topic-f1ec3d646c2ca66ab34e",
+    "topic-1a80319cdf470b770980",
+    "topic-3f9ed4a629e9c84f48e7",
+    "topic-25e9da03690542fe9552",
+    "topic-c1e9c903969ca4c9c299",
+    "topic-7c09f6f18bd55cbf6f81",
+    "topic-3bb7a6b154a92af64d68",
+    "topic-0d44b2debb6f252f37d1",
+    "topic-a4dbbd09940b8258acc3",
+    "topic-c74b13f42460033a0d2a",
+    "topic-1134572e58a473b805e4",
+    "topic-e9189049d2b63cc6a498",
+    "topic-425eaa0079eab5e5fc96",
+    "topic-a9caed131ecbc7b6ec2d",
+    "topic-a66d48021f492749b388"
+  ],
+  "document_grouping": "all_candidates_accounted_for"
+}

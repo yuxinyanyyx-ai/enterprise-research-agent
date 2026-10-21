@@ -1,0 +1,151 @@
+{
+  "source_ref": "PEC-Dec 2025/PEC-Dec 2025/10. China development strategy for Nerandomilast SSc indication__pre-reads for PEC Dec.pptx",
+  "source_digest": "a16be80b8137b80e6ac9ed9d81082a4681cbdfd6728a47093d39757a71f3749b",
+  "reports": [
+    {
+      "topics": [
+        {
+          "title": "Nerandomilast SSc适应症中国开发策略（研究1305-0052）",
+          "background": [
+            {
+              "text": "全球策略：基于FIBRONEER-ILD试验SSc-ILD亚组数据及支持性临床前证据，不等待ph2b CONQUEST试验结果，直接推进SSc适应症ph3试验。",
+              "evidence_id": "chunk-cbde055a752d",
+              "quote": "The global strategy involves proceeding directly to a ph3 trial for the SSc indication without awaiting results from the ph2b CONQUEST trial, based on encouraging subgroup data for SSc-ILD from the FIBRONEER-ILD trial and supportive preclinical evidence."
+            },
+            {
+              "text": "中国整合策略已于2025年8月获CEC背书。",
+              "evidence_id": "chunk-cbde055a752d",
+              "quote": "China integration strategy for SSc project has been endorsed by CEC in Aug 2025."
+            },
+            {
+              "text": "FDA、CDE和PMDA的Pre-CTA HAI反馈一致指出现有数据不足以支持SSc确证性ph3试验，并提出最终NDA批准风险。",
+              "evidence_id": "chunk-cbde055a752d",
+              "quote": "Feedback from FDA, CDE and PMDA consistently highlighted that the current data is insufficient for a confirmatory ph3 trial in SSc. Risks for the final NDA approval of SSc indication were also raised."
+            },
+            {
+              "text": "BUEC于2025年11月18日发布SSc的RoFD，SSc ph3试验将按计划推进。",
+              "evidence_id": "chunk-cbde055a752d",
+              "quote": "RoFD for SSc was released by BUEC on Nov 18th and ph3 trial in SSc will be proceed."
+            },
+            {
+              "text": "中国CTA潜在风险：CDE尚未就具体研究设计提供反馈，CTA审评期间可能附带证据不足相关备注；EC可能因SSc患者风险获益不明确提出顾虑；NDA批准SSc适应症存在挑战。",
+              "evidence_id": "chunk-0806a15501c8",
+              "quote": "CTA: CDE has not yet provided feedback regarding the specific study design and further review will be needed during CTA review; although the likelihood of CDE directly rejecting the CTA application is low, the approval letter may include remarks related to insufficient evidence and concerns.\n    - EC: Concerns may be raised by site ECs due to unclear risk-benefit profile in SSc patients, which could potentially impact the subsequent trial execution.\n    - NDA: remarks on the HAI feedback and CTA approval letter need to be addressed in NDA submission; approval of SSc indication may be challengi"
+            },
+            {
+              "text": "中国CTA提交策略（FDA反馈后提交）已于11月获CEC背书，并与全球ET对齐；NDA批准风险已于11月告知本地AT。",
+              "evidence_id": "chunk-0806a15501c8",
+              "quote": "China CTA submission strategy has been endorsed by CEC in Nov and aligned with global ET.\nRisks associated with final NDA approval were communicated to local AT in Nov."
+            },
+            {
+              "text": "FDA反馈：SSc-ILD亚组数据对更广泛SSc人群的相关性不确定，建议开展ph2剂量探索/POC试验；基于现有数据推进ph3由申办方自行决定。",
+              "evidence_id": "chunk-9c5f8fdbc859",
+              "quote": "FDA: The SSc-ILD subgroup data’s relevance to the broader SSc population remains uncertain; a ph 2 dose-finding/POC trial is recommended to guide ph3; conducting a ph3 trial based on available data is at your discretion."
+            },
+            {
+              "text": "CDE反馈：现有证据不足以直接推进SSc确证性试验，需开展剂量探索试验或提供额外证据。",
+              "evidence_id": "chunk-9c5f8fdbc859",
+              "quote": "CDE: current evidence is insufficient to justify proceeding directly to a pivotal trial for SSc; a dose-exploratory trial for SSc or provide additional evidence would support advancing to a pivotal trial for SSc."
+            },
+            {
+              "text": "PMDA反馈：因证据不足，该试验不能被视为确证性研究；即使主要终点达到，也存在被否定判断的高风险；即使基于试验结果开展NDA前咨询，也担忧无法获得NDA批准。",
+              "evidence_id": "chunk-9c5f8fdbc859",
+              "quote": "PMDA: Interpreting the results may be difficult, and there is a high risk that a negative judgment may have to be made even if proposed primary endpoint meets; no intention to halt the conduct of the 1305-0052 trial due to no safety concerns; even if a pre-NDA consultation is conducted based on the trial’s findings, there is concern that it may not result in NDA approval."
+            },
+            {
+              "text": "1305-0052试验设计：N≈448，1:1随机，Nerandomilast 18mg bid vs 安慰剂，主要终点为至疾病进展或全因死亡时间，关键次要终点为第52周FVC变化和mRSS变化。",
+              "evidence_id": "chunk-c328e52771a3",
+              "quote": "Primary Endpoint:\nTime to the first occurrence of disease progression or all-cause death:\nAdjudicated SSc-related clinically meaningful disease progression or complications*, or\nAbsolute decline in FVC% predicted ≥5%, or\nRelative increase in mRSS ≥25% and absolute increase in mRSS ≥5 points, or\nAll-cause death"
+            },
+            {
+              "text": "1305-0052主要终点（至疾病进展或死亡时间）在其他SSc关键试验中尚无先例作为主要终点使用。",
+              "evidence_id": "chunk-c328e52771a3",
+              "quote": "The primary endpoint proposed in the 1305-0052 trial has not been used as the primary endpoint in other pivotal trials for SSc."
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [
+            {
+              "text": "本次PEC讨论性质为信息共享和征求建议，非背书请求。",
+              "evidence_id": "chunk-cbde055a752d",
+              "quote": "✔ For Sharing  ✔  For Advice   □ For Endorsement"
+            }
+          ],
+          "todo": [
+            {
+              "text": "准备HAI回复并纳入CTA提交包（owner/due/status：原文未说明）。",
+              "evidence_id": "chunk-784efbf53621",
+              "quote": "HAI response will be prepared and incorporated into the CTA submission packages."
+            },
+            {
+              "text": "与全球ET保持密切沟通，就CTA补充支持性证据进行协调（owner/due/status：原文未说明）。",
+              "evidence_id": "chunk-784efbf53621",
+              "quote": "Maintain close communication with global ET regarding the supplemental supporting evidence for the CTA."
+            },
+            {
+              "text": "与全球ET和本地AT保持密切沟通，就未来NDA策略进行协调（owner/due/status：原文未说明）。",
+              "evidence_id": "chunk-784efbf53621",
+              "quote": "Maintain close communication with global ET and local AT about the future NDA strategy."
+            }
+          ],
+          "source_ref": "PEC-Dec 2025/PEC-Dec 2025/10. China development strategy for Nerandomilast SSc indication__pre-reads for PEC Dec.pptx",
+          "source_digest": "a16be80b8137b80e6ac9ed9d81082a4681cbdfd6728a47093d39757a71f3749b",
+          "evidence_ids": [
+            "chunk-cbde055a752d",
+            "chunk-0806a15501c8",
+            "chunk-9c5f8fdbc859",
+            "chunk-c328e52771a3",
+            "chunk-784efbf53621"
+          ],
+          "loc": "Slide 2",
+          "folder": "PEC-Dec 2025",
+          "quality_status": "passed",
+          "topic_id": "topic-c42c58fbfdbd96d5e9cc"
+        }
+      ],
+      "reports": [
+        {
+          "topic_index": 0,
+          "passed": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            16,
+            17,
+            18
+          ],
+          "corrected": [
+            {
+              "check": 14,
+              "detail": "三条todo均缺少owner、due date和status，已在text中补注「原文未说明」，保留原有内容不删除。"
+            },
+            {
+              "check": 15,
+              "detail": "F0002（CEC Aug 2025背书）和F0006（CEC Nov背书）为已完成的委员会决议，已保留在background中正确标注为历史决议，不作为未完成todo处理，符合规则。"
+            }
+          ],
+          "not_applicable": []
+        }
+      ],
+      "excluded": [],
+      "coverage": "所有原始事实F0001–F0015均已保留并映射至对应字段；background涵盖全球策略、监管机构反馈（FDA/CDE/PMDA）、中国CTA/EC/NDA风险及试验设计；decision正确记录本次为For Sharing/For Advice而非For Endorsement；todo三条行动完整保留并补注owner/due/status原文未说明；两条历史CEC背书决议（Aug 2025、Nov）保留在background，未误入decision字段。",
+      "unresolved": [
+        "F0010中试验设计N≈448的来源chunk-c328e52771a3仅含终点描述，样本量数字未见于该chunk引文；原稿text中「截至12月2日」的日期标注在引文中亦未出现，已从text中移除以避免臆造。"
+      ]
+    }
+  ],
+  "final_topic_ids": [
+    "topic-c42c58fbfdbd96d5e9cc"
+  ],
+  "document_grouping": "all_candidates_accounted_for"
+}

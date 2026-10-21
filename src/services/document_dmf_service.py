@@ -107,6 +107,8 @@ class DocumentDMFService:
 			raise DocumentDMFError(f"不支持的文件格式：{path.name}")
 		if suffix in {".xlsx", ".xls"}:
 			return self._store_excel_document(path)
+		if suffix in {".png", ".jpg", ".jpeg"}:
+			return self._store_image_document(path)
 
 		with self._mineru_factory(self.settings) as client:
 			result = client.parse_files([path])
@@ -299,7 +301,29 @@ class DocumentDMFService:
 			workbook.close()
 
 		if not written_sheets:
-			raise DocumentDMFError("Excel 工作簿中没有可读取的单元格数据")
+			raise DocumentDMFError("Excel 工作簿中没有可读取的单元格数据"			)
+
+	def _store_image_document(self, path: Path) -> DocumentArtifact:
+			mime_type = {
+				".png": "image/png",
+				".jpg": "image/jpeg",
+				".jpeg": "image/jpeg",
+			}[path.suffix.lower()]
+			try:
+				image = path.read_bytes()
+			except OSError as exc:
+				raise DocumentDMFError(f"读取图片失败：{path.name}：{exc}") from exc
+
+			from openai import APIError
+			from src.llm.apollo import ApolloConfigurationError, describe_image
+
+			try:
+				markdown = describe_image(image, mime_type=mime_type)
+			except (APIError, ApolloConfigurationError, RuntimeError, ValueError) as exc:
+				raise DocumentDMFError(
+					f"图片视觉识别失败：{path.name}：{exc}"
+				) from exc
+			return self._store_markdown_document(path, markdown)
 
 	@staticmethod
 	def _read_xls_sheets(path: Path) -> list[tuple[str, list[list[Any]]]]:

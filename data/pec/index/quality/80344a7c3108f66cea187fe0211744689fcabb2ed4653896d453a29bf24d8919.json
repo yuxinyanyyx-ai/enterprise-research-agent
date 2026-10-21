@@ -1,0 +1,563 @@
+{
+  "source_ref": "MAP 2025 May/04 MAP TA update_MHEH_May2025.pptx",
+  "source_digest": "63da1c6a142f96459361a99f4b87663838c89f4a06b2a3d3a0251c96387b85e0",
+  "reports": [
+    {
+      "topics": [
+        {
+          "title": "NR2B NAM – MDD Ph3 China Integration Strategy",
+          "background": [
+            {
+              "text": "Global asset team proposes US acceleration plan (Go scenario from MDD Ph2 readouts): two US-focused trials for accelerated US launch (+4 months) and two global (RoW) trials for CN/JP NDA with postponed NDA/launch vs. current plan (3 parallel MRCTs).",
+              "evidence_id": "chunk-79eefc6c5ef8",
+              "quote": "The global asset team is proposing an US acceleration plan assuming a Go scenario from MDD Ph2 readouts. Two US focused trials will be conducted to support accelerated US launch by 4 months; and two global (RoW) trials will be conducted to support CN/JP NDA with postponed NDA and launch compared with the current plan (3 parallel MRCTs)."
+            },
+            {
+              "text": "China team proposes to enroll ~40 Chinese patients (10 sites) per US-focused trial to ensure simultaneously accelerated NDA submission with registrational and operational feasibility without impacting global US launch timeline.",
+              "evidence_id": "chunk-79eefc6c5ef8",
+              "quote": "The China team proposes to participate in the US focus trials by enrolling approximately 40 Chinese patients (10 sites) per trial. This approach aims to ensure simultaneously accelerated NDA submission, with registrational and operational feasibility for China without impacting the global timeline for the US launch."
+            },
+            {
+              "text": "China base case approval: Nov 2029. Prof. Gang Wang (Beijing An'Ding Hospital) accepted invitation as China Leading PI for NR2B NAM Ph3 in MDD (visited Mar 24th). 1st wave internal MSL/commercial training completed May 12th.",
+              "evidence_id": "chunk-2fee97cd5c33",
+              "quote": "Prof Gang Wang from Beijing An’Ding Hospital was visited on Mar 24th to update on CONNEX results and he accepted the invitation as the China Leading PI for NR2B NAM Ph3 in MDD.\n1st wave internal training for MSLs and commercial team was completed on May 12th."
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [
+            {
+              "text": "China Integration Strategy into NR2B NAM MDD Ph3 endorsed by Mar CEC (TA-CEC).",
+              "evidence_id": "chunk-79eefc6c5ef8",
+              "quote": "Endorsed by Mar CEC"
+            }
+          ],
+          "todo": [
+            {
+              "text": "Update China integration strategy after MDD Ph2 adjunctive readout; evidence gap analysis to be performed within limited scope of local members; strategy to be aligned with global team after Ph2 readouts. Owner/due date: 原文未说明。",
+              "evidence_id": "chunk-2fee97cd5c33",
+              "quote": "Evidence gap analysis will be performed within limited scope of local members.\nChina integration strategy will be aligned with global team after ph2 readouts."
+            }
+          ]
+        },
+        {
+          "title": "NR2B NAM – MDD Adjunctive Ph2 TLR Local Communication Plan",
+          "background": [
+            {
+              "text": "Ph2 MDD Adjunctive TLR: China early asset team members and RA representative will be informed via global meeting invitation. Per global guidance, high-level information shared only to local EoP2 submission team and local MKT/MA core team for ICP. Further distribution at townhall on July 10th together with Ph2 MDD Monotherapy TLR. External communications only after both trials have read out.",
+              "evidence_id": "chunk-a793be09b3bb",
+              "quote": "Ph2 MDD Adjunctive TLR:\nChina early asset team members and RA representative will be informed with global meeting invitation.\nPer global guidance, high level information can be shared only to local EoP2 submission team and local MKT/MA core team for ICP.\nFurther distribution will be made at the townhall on July 10th together with Ph2 MDD Monotherapy TLR.\nExternal communications only after both trials have read out."
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [
+            {
+              "text": "NR2B NAM MDD Adjunctive Ph2 TLR Local Communication Plan endorsed by TA-CEC in May CEC.",
+              "evidence_id": "chunk-a793be09b3bb",
+              "quote": "Endorsed in May CEC"
+            }
+          ],
+          "todo": [
+            {
+              "text": "Communication to proceed per global guidance. Owner/due date: 原文未说明。",
+              "evidence_id": "chunk-a793be09b3bb",
+              "quote": "Communication per global guidance"
+            }
+          ]
+        },
+        {
+          "title": "NR2B NAM – BD Ph2 China Preparation",
+          "background": [
+            {
+              "text": "Prof. Gang Wang accepted invitation as China Leading PI for NR2B NAM Ph2 in BD. Globally, Ph2 BD accelerated from Q1 2026 to Q4 2025; FDA pre-IND planned Q3 2025. China base case approval: 2032.",
+              "quote": "Prof Gang Wang accepted the invitation as the China Leading PI for NR2B NAM Ph2 in BD.\nGlobal:\nPh2 BD is planned to be accelerated from Q1 2026 to Q4 2025. And FDA pre-IND is planned for Q3 2025.",
+              "evidence_id": "chunk-0071f446c3cd"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": [
+            {
+              "text": "Update China BD preparation timeline after global MDD Ph2 readouts.",
+              "quote": "Update China BD preparation timeline after Global MDD ph2 readouts",
+              "evidence_id": "chunk-0071f446c3cd"
+            }
+          ]
+        },
+        {
+          "title": "Iclepertin (GlyT1) – CIAS China & Global Update",
+          "background": [
+            {
+              "text": "China: CIAS review response submitted to Chinese Journal of Psychiatry on Apr 2nd (authorship: Prof. Tianmei Si, on behalf of Chinese Society of Psychiatry - Schizophrenia branch). BJ-PERFECT (VR) study (ECR): 6 pts and 206 HCs enrolled. Checklist program for CIAS screening: Delphi interview process ongoing.",
+              "quote": "China CIAS Review: response submitted to Chinese Journal of Psychiatry on Apr 2nd (Authorship: Prof. Tianmei Si, on behalf of Chinese Society of Psychiatry - Schizophrenia branch)\nBJ-PERFECT (VR) study (ECR): 6 pts and 206 HCs have been enrolled\nChecklist program for CIAS screening: Delphi interview process",
+              "evidence_id": "chunk-36ba6dfbdb6d"
+            },
+            {
+              "text": "Global: CONNEX Pooled publication draft reviewed by Prof. Wang Gang and Prof. Hongyan Zhang with feedback provided. Target journal: Lancet Psychiatry; target submission date: May 2025.",
+              "quote": "CONNEX Pooled publication:\nThe draft version had been reviewed by Prof. Wang Gang and Prof. Hongyan Zhang with feedback provided.\nTarget journal is Lancet Psychiatry and target submission date is May 2025.",
+              "evidence_id": "chunk-36ba6dfbdb6d"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": []
+        },
+        {
+          "title": "GA Evidence Gap Analysis – Anti-C3 GA ECR (Geographic Atrophy)",
+          "background": [
+            {
+              "text": "Timeline delayed 4–5 months due to GA ECR contract process. Local evidence team proposes: (1) accelerate enrollment and perform early IA with 6-month follow-up from <50 patients (pre-defined IA sample size) to catch up with Ph3 decision point in July 2026 for Anti-C3; (2) evaluate feasibility/risk of informal HAI with CDE after positive PMDA informal/non-binding consultation allowing JP integration into Anti-C3 Ph3 without early data; (3) search for additional GA evidence beyond ECR database.",
+              "evidence_id": "chunk-021dab6c359f",
+              "quote": "With timeline delayed by 4-5 months due to GA ECR contract process, local evidence team proposes:\nAccelerate enrollment and perform early IA with 6 months follow-up from less than 50 patients (the pre-defined sample size for IA) to catch up with the ph3 decision point in July 2026 for Anti-C3.\nThe team is evaluating the feasibility and risk to conduct informal HAI with CDE after positive feedback from PMDA informal/non-binding consultation which allows JP integration into Anti-C3 Ph3 without early data.\nSearch for additional evidence or insights on GA beyond the GA ECR database."
+            },
+            {
+              "text": "GA ECR contract signed May 13th; FPI expected May/Jun. Collaboration with Prof. Youxin CHEN from Peking Union Hospital.",
+              "evidence_id": "chunk-bf52f9996491",
+              "quote": "GA ECR (in collaboration with Prof. Youxin CHEN from Peking Union Hospital):\nContract signed on May 13th.\nFPI is expected in May/Jun."
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [
+            {
+              "text": "GA Evidence Gap Analysis endorsed by TA-CEC in May CEC.",
+              "evidence_id": "chunk-021dab6c359f",
+              "quote": "Endorsed in May CEC"
+            }
+          ],
+          "todo": [
+            {
+              "text": "Close engagement with sites; evaluate HAI proposal with local and global teams. Owner/due date: 原文未说明。",
+              "evidence_id": "chunk-021dab6c359f",
+              "quote": "Close engagement with sites\nEvaluate HAI proposal with local and global teams"
+            }
+          ]
+        },
+        {
+          "title": "PKKi – DME Ph2 CTA and Site Initiation",
+          "background": [
+            {
+              "text": "CDE sent two HA questions on May 9th: allocated Chinese sample size in proposed Ph2 and whether Chinese patients enrolled in Ph1. Response to be submitted by May 16th.",
+              "quote": "The team received two HA questions on May 9th about allocated Chinese sample size in the proposed ph2 and whether Chinese patients have been enrolled in ph1. Response will be submitted by May 16th.",
+              "evidence_id": "chunk-d7ae5c54aea4"
+            },
+            {
+              "text": "IQVIA & BI teams jointly visited leading PI Prof. Xun Xu on Apr 22nd; Prof. Xu shared insights on proposed site list and potential challenge on EC review due to placebo control.",
+              "quote": "IQVIA & BI teams jointly visited leading PI Prof. Xun Xu on Apr 22nd, and Prof. Xu shared insights on the proposed site list and potential challenge on EC review due to placebo control.",
+              "evidence_id": "chunk-d7ae5c54aea4"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": [
+            {
+              "text": "Prepare response to CDE queries by May 16th; prepare for other potential CDE queries; follow up IQVIA SSV update; invite selected site PIs to attend NAB.",
+              "quote": "Prepare for other potential CDE query\nFollow up IQVIA SSV update\nInvite selected sites PI to attend NAB",
+              "evidence_id": "chunk-d7ae5c54aea4"
+            }
+          ]
+        },
+        {
+          "title": "Nintedanib IVT XR – nAMD Termination (Apr HPSC)",
+          "background": [
+            {
+              "text": "Nintedanib IVT XR was terminated in the April HPSC meeting due to animal toxicity study not supporting Phase 1. China base case was NA. The termination is also reflected in the 2025 Eye Health Key Milestone Overview.",
+              "evidence_id": "chunk-c1425ec2c62f",
+              "quote": "Terminated in Apr HPSC due to animal toxicity study not supporting ph1."
+            },
+            {
+              "text": "The 2025 Eye Health milestone overview marks Nintedanib IVT XR Termination in April HPSC as an update event on the timeline.",
+              "evidence_id": "chunk-cbece200d665",
+              "quote": "Nintedanib IVT XR Termination (Apr HPSC)\nUpdate"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": []
+        },
+        {
+          "title": "Anti-C3 – GA CDE Type 3 HAI Evaluation (Delayed to Mar/Apr 2026)",
+          "background": [
+            {
+              "text": "Anti-C3 GA CDE Type 3 HAI is under evaluation; delayed to Mar/Apr 2026 due to animal study.",
+              "evidence_id": "chunk-cbece200d665",
+              "quote": "Anti-C3 – GA\nCDE Type 3 HAI: under evaluation\nDelayed to Mar/Apr 2026 due to animal study"
+            },
+            {
+              "text": "PMDA informal HAI for Anti-C3 GA was completed with a positive/non-binding result, allowing JP integration into Ph3 without early data. (原文未说明该结果是否已提交委员会审议。)",
+              "evidence_id": "chunk-cbece200d665",
+              "quote": "Anti-C3 – GA\nPMDA informal HAI"
+            },
+            {
+              "text": "Anti-C3 GA Ph2 FSS occurred in January (per milestone overview).",
+              "evidence_id": "chunk-cbece200d665",
+              "quote": "Anti-C3 - GA\nPh2 FSS (Jan)"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": []
+        },
+        {
+          "title": "National Advisory Board on DR/DME – Eye Health (July 12th, Shanghai)",
+          "background": [
+            {
+              "text": "National AB on DR/DME planned for July 12th (Saturday, Shanghai). Global Eye Health pipeline to be introduced; clinical development of PKKi and Anti-Sema 3A, and DR/DME in China to be discussed. KEE invitations ongoing.",
+              "evidence_id": "chunk-bf52f9996491",
+              "quote": "National AB on DR/DME (July 12th, Saturday, Shanghai):\nGlobal Eye Health pipeline will be introduced, clinical development of PKKi and Anti-Sema 3A, and DR/DME in China will be discussed.\nKEEs invitation is ongoing."
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": []
+        }
+      ],
+      "reports": [
+        {
+          "topic_index": 0,
+          "passed": [
+            1,
+            2,
+            3,
+            4,
+            6,
+            8,
+            9,
+            11,
+            13,
+            15,
+            16,
+            17
+          ],
+          "corrected": [
+            {
+              "check": 7,
+              "detail": "for_endorsement 为空正确：原文仅记录 'Endorsed by Mar CEC'，属已完成委员会决议，无待提交的背书请求，不应从 decision 反推请求。保持空数组。"
+            },
+            {
+              "check": 14,
+              "detail": "todo 中 owner 和 due date 原文均未说明，已在 text 中注明「原文未说明」，补充完整。"
+            },
+            {
+              "check": 18,
+              "detail": "chunk-2fee97cd5c33 中提及 'China Integration Strategy into NR2B NAM MDD Ph3 was updated (Decisions/Advice provided by TA-CEC)' 及 'MDD adjunctive Ph2 TLR Local Communication Plan was updated (Decisions/Advice provided by TA-CEC)'，后者属独立议题（NR2B NAM TLR Local Communication Plan，chunk-a793be09b3bb 有独立行），不应并入本题；本题覆盖完整。"
+            }
+          ],
+          "not_applicable": [
+            {
+              "check": 5,
+              "detail": "议题含委员会决议（TA-CEC endorsed）和后续行动，非低信息量，不适用过滤。"
+            },
+            {
+              "check": 10,
+              "detail": "无 pending/TBD 状态字段，不适用。"
+            },
+            {
+              "check": 12,
+              "detail": "仅一个议题，无合并判断需要。"
+            }
+          ]
+        },
+        {
+          "topic_index": 1,
+          "passed": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            9,
+            11,
+            13,
+            15,
+            16,
+            17
+          ],
+          "corrected": [
+            {
+              "check": 6,
+              "detail": "Decision字段原文'Endorsed in May CEC'已属TA-CEC委员会决议，边界正确；但原稿decision文本中括号注'(TA-CEC)'系从slide表头推断，已在修正版title中保留'TA-CEC'标注，符合原文'TA-CEC Decisions/Advice'列。"
+            },
+            {
+              "check": 8,
+              "detail": "原稿decision写'May CEC (TA-CEC)'，来源层级应统一为TA-CEC；修正为'endorsed by TA-CEC in May CEC'，与原文表头'TA-CEC Decisions/Advice'一致。"
+            },
+            {
+              "check": 14,
+              "detail": "todo条目缺少owner和due date，原文未说明，已在text中注明'原文未说明'。"
+            }
+          ],
+          "not_applicable": [
+            {
+              "check": 7,
+              "detail": "for_endorsement为空；原文仅记录已背书结果，无待提交请求，不适用。"
+            },
+            {
+              "check": 10,
+              "detail": "无pending/TBD状态，不适用。"
+            },
+            {
+              "check": 12,
+              "detail": "单一议题，无合并情形，不适用。"
+            }
+          ]
+        },
+        {
+          "topic_index": 2,
+          "passed": [],
+          "corrected": [],
+          "not_applicable": []
+        },
+        {
+          "topic_index": 3,
+          "passed": [],
+          "corrected": [],
+          "not_applicable": []
+        },
+        {
+          "topic_index": 4,
+          "passed": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            9,
+            11,
+            13,
+            15,
+            16,
+            18
+          ],
+          "corrected": [
+            {
+              "check": 6,
+              "detail": "Decision field originally read 'GA Evidence Gap Analysis endorsed in May CEC (TA-CEC)' — TA-CEC is the correct committee layer; retained and made explicit in title as 'endorsed by TA-CEC in May CEC'."
+            },
+            {
+              "check": 8,
+              "detail": "Original decision text had '(TA-CEC)' parenthetically; corrected to explicitly state 'TA-CEC' as the committee layer in the decision fact text."
+            },
+            {
+              "check": 14,
+              "detail": "Todo owner and due date are not stated in source; added note '原文未说明' to the todo text to comply with schema requirement."
+            },
+            {
+              "check": 17,
+              "detail": "Decision date is 'May CEC' (month-level precision); no day-level date available in source. FPI date is 'May/Jun' — retained as-is per original precision."
+            }
+          ],
+          "not_applicable": [
+            {
+              "check": 7,
+              "detail": "No for_endorsement items present; boundary check not applicable."
+            },
+            {
+              "check": 10,
+              "detail": "No pending/TBD decision items; check not applicable."
+            },
+            {
+              "check": 12,
+              "detail": "Single topic, no merging involved."
+            }
+          ]
+        },
+        {
+          "topic_index": 5,
+          "passed": [],
+          "corrected": [],
+          "not_applicable": []
+        },
+        {
+          "topic_index": 6,
+          "passed": [
+            1,
+            2,
+            3,
+            4,
+            6,
+            8,
+            9,
+            11,
+            13,
+            17
+          ],
+          "corrected": [
+            {
+              "check": 18,
+              "detail": "chunk-cbece200d665 (Slide 8 milestone overview) also references the Nintedanib IVT XR termination and was not cited in the original draft; added as second background fact."
+            }
+          ],
+          "not_applicable": [
+            {
+              "check": 5,
+              "detail": "Topic has substantive termination decision (HPSC) and causal reason (animal toxicity); not low-information."
+            },
+            {
+              "check": 7,
+              "detail": "No endorsement request present; termination was decided at HPSC, not submitted to PEC/CEC for endorsement."
+            },
+            {
+              "check": 10,
+              "detail": "No pending/TBD items in this topic."
+            },
+            {
+              "check": 12,
+              "detail": "Single asset/indication; no merging question."
+            },
+            {
+              "check": 14,
+              "detail": "No todo items recorded; none present in source."
+            },
+            {
+              "check": 15,
+              "detail": "No completed action items to verify."
+            },
+            {
+              "check": 16,
+              "detail": "No for_endorsement or decision fields populated; termination was an HPSC-level decision, not a PEC/CEC/TA-CEC decision recorded here."
+            }
+          ]
+        },
+        {
+          "topic_index": 7,
+          "passed": [
+            1,
+            2,
+            3,
+            4,
+            6,
+            8,
+            9,
+            11,
+            12,
+            13,
+            17
+          ],
+          "corrected": [
+            {
+              "check": 5,
+              "detail": "初稿仅保留一条 background 事实，遗漏了同一 chunk 中 PMDA informal HAI 结果和 Ph2 FSS 里程碑两条有实质内容的信息，已补入。"
+            },
+            {
+              "check": 7,
+              "detail": "PMDA informal HAI 结果（positive/non-binding）属于监管流程状态，不是委员会背书请求，已保留在 background 并注明原文未说明是否提交委员会。"
+            },
+            {
+              "check": 18,
+              "detail": "chunk-cbece200d665 中 PMDA informal HAI 和 Ph2 FSS (Jan) 两条信息在初稿中未体现，已补入 background。"
+            }
+          ],
+          "not_applicable": [
+            {
+              "check": 10,
+              "detail": "无 pending/TBD 对象需要具体化。"
+            },
+            {
+              "check": 14,
+              "detail": "无 todo 行动项，负责人/期限/状态字段不适用。"
+            },
+            {
+              "check": 15,
+              "detail": "无已完成行动项需核查。"
+            },
+            {
+              "check": 16,
+              "detail": "无 for_endorsement 或 decision 条目，不涉及反推检查。"
+            }
+          ]
+        },
+        {
+          "topic_index": 8,
+          "passed": [
+            1,
+            2,
+            3,
+            4,
+            17
+          ],
+          "corrected": [
+            {
+              "check": 5,
+              "detail": "议题仅含会议安排进度（日期、地点、议程、邀请状态），无风险、请求、决议或行动项，属于低信息量进度条目，但因原始输入已作为候选议题提交且含具体事项（PKKi/Anti-Sema 3A 临床开发讨论），保留为候选；若会议范围内无其他关联内容，可降级为 progress_only。"
+            },
+            {
+              "check": 14,
+              "detail": "todo 字段为空，但原文提及 'KEEs invitation is ongoing'，有隐含行动但无明确 owner/due/status，原文未说明负责人及截止日期，无法补全。"
+            },
+            {
+              "check": 16,
+              "detail": "for_endorsement 和 decision 均为空，原文无提交委员会的请求或委员会决议记录，保持为空正确，不反推。"
+            }
+          ],
+          "not_applicable": [
+            {
+              "check": 6,
+              "detail": "无流程状态或委员会决议内容，不适用。"
+            },
+            {
+              "check": 7,
+              "detail": "无背书请求，不适用。"
+            },
+            {
+              "check": 8,
+              "detail": "无委员会来源层级信息，不适用。"
+            },
+            {
+              "check": 9,
+              "detail": "无决议状态，不适用。"
+            },
+            {
+              "check": 10,
+              "detail": "无 pending/TBD 对象，不适用。"
+            },
+            {
+              "check": 11,
+              "detail": "议题为单一会议事件，无多适应症或研究拆分需求，不适用。"
+            },
+            {
+              "check": 12,
+              "detail": "仅一个议题，无合并判断，不适用。"
+            },
+            {
+              "check": 13,
+              "detail": "仅一个来源 chunk，无重复格式问题，不适用。"
+            },
+            {
+              "check": 15,
+              "detail": "无已完成行动项，不适用。"
+            },
+            {
+              "check": 18,
+              "detail": "原文 chunk-bf52f9996491 同页还含 GA ECR 合同签署及 FPI 预期信息，与本议题不同事项，已在同一 evidence 中区分，未遗漏本议题相关内容。"
+            }
+          ]
+        }
+      ],
+      "excluded": [],
+      "coverage": "原文两个 chunk（chunk-79eefc6c5ef8、chunk-2fee97cd5c33）均已覆盖；TA-CEC Mar CEC 决议、China 提案背景、Leading PI 确认、内部培训进度及后续行动均已收录。chunk-a793be09b3bb 中 NR2B NAM TLR Local Communication Plan 为独立议题，不属于本题范围，未纳入。；议题覆盖chunk-a793be09b3bb全部实质内容（背景、TA-CEC决议、后续行动）；其余chunks（slide1/2/4/5/6/7/8/9等）属于其他议题或纯标题/进度，与本议题无关，未纳入。；本议题质检引用未通过，保留抽取初稿；本议题质检结果未被采纳，保留抽取初稿；All four original facts (F0001–F0004) are retained and mapped: background delay/proposals (chunk-021dab6c359f), ECR contract status (chunk-bf52f9996491), TA-CEC endorsement decision (chunk-021dab6c359f), and todo actions (chunk-021dab6c359f). Slides from unrelated Mental Health topics in the evidence markdown are correctly excluded as out-of-scope for this candidate topic.；本议题质检引用未通过，保留抽取初稿；All source evidence referencing Nintedanib IVT XR termination (chunk-c1425ec2c62f and chunk-cbece200d665) is now captured. No for_endorsement or PEC/CEC/TA-CEC decision is present in the source; the termination authority is HPSC. No todo items exist. The topic is retained because it records a substantive program termination with a stated causal reason.；议题保留：Anti-C3 GA CDE Type 3 HAI 延期及 PMDA informal HAI 结果均来自 chunk-cbece200d665；初稿遗漏的 PMDA 结果和 Ph2 FSS 里程碑已补入 background。Slide 9 表格（chunk-78d9b2b9fcfa）仅含列标题，无 Eye Health TA-CEC 决议内容可补充。其余 slides 均属 Mental Health 议题，与本议题无关。；议题覆盖 chunk-bf52f9996491 中 National AB on DR/DME 相关全部原文内容；同页 GA ECR 条目属于不同事项，未纳入本议题。其余 slides（chunk-bbb84bd9d212 等）均属 Mental Health TA 内容，与本 Eye Health 议题无关，正确排除。",
+      "unresolved": [
+        "todo 中 owner 和具体 due date 原文未说明，仅有事件触发条件（Ph2 readouts 后）。",
+        "todo条目的owner及具体due date原文未说明，无法补全。",
+        "本议题质检引用未通过，保留抽取初稿",
+        "本议题质检结果未被采纳，保留抽取初稿",
+        "Todo owner and due date for 'close engagement with sites' and 'evaluate HAI proposal' are not specified in the source document.",
+        "The quote 'Endorsed in May CEC' is brief; the exact May CEC date is not provided beyond month-level precision.",
+        "本议题质检引用未通过，保留抽取初稿",
+        "The HPSC termination decision is noted as background context; it is unclear whether any follow-up PEC/CEC communication or wind-down action was required — original text does not say.",
+        "chunk-78d9b2b9fcfa（Eye Health TA-CEC 决议表）仅有列标题，无实质行内容，无法判断是否存在与 Anti-C3 GA 相关的委员会决议。",
+        "KEE 邀请行动的负责人及截止日期原文未说明，无法补全 todo 字段。",
+        "议题整体为会议安排进度，无风险、请求、决议或行动项，若会议范围内无其他关联内容，可考虑降级为 progress_only 排除。"
+      ]
+    }
+  ],
+  "final_topic_ids": [
+    "topic-9f7662dd91b454ad199b",
+    "topic-7fdb1927468a19394fa4",
+    "topic-b836bf5efecd5bb88bf5",
+    "topic-1560fa776fca7eeea548",
+    "topic-9121e0022bfabc808eef",
+    "topic-8863baba1161edd1769c",
+    "topic-efdf49d8f81c2a086149",
+    "topic-288c604715a3aff7ef37"
+  ],
+  "document_grouping": "all_candidates_accounted_for"
+}

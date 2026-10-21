@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
+import re
 from threading import RLock
 from typing import Any
 from uuid import uuid4
@@ -165,6 +166,7 @@ class AgentWebService:
                 {
                     "user_query": message.strip(),
                     "request_id": uuid4().hex,
+                    "agent_session_id": session.session_id,
                     "document_artifacts": dict(session.documents),
                     "warnings": [],
                     "memory_scope": {
@@ -248,7 +250,30 @@ class AgentWebService:
     ) -> list[dict[str, str]]:
         downloads: list[dict[str, str]] = []
         for artifact in result.get("tool_artifacts") or []:
-            if artifact.get("tool_name") != "export_dmf_excel":
+            tool_name = artifact.get("tool_name")
+            if tool_name in {"generate_project_slide", "modify_project_slide"}:
+                match = re.search(
+                    rf"/api/agent/sessions/{re.escape(session.session_id)}/project-slides/([0-9a-f]{{32}})",
+                    str(artifact.get("result") or ""),
+                )
+                if not match:
+                    continue
+                from src.services.slide_generator_services import load_job_meta
+
+                job_id = match.group(1)
+                try:
+                    metadata = load_job_meta(session.session_id, job_id)
+                except (FileNotFoundError, ValueError):
+                    continue
+                downloads.append(
+                    {
+                        "file_id": job_id,
+                        "file_name": str(metadata["filename"]),
+                        "url": str(metadata["download_url"]),
+                    }
+                )
+                continue
+            if tool_name != "export_dmf_excel":
                 continue
             export_result = artifact.get("result") or {}
             if not export_result.get("success"):
@@ -467,6 +492,64 @@ async def upload_document(session_id: str, file: UploadFile) -> dict[str, Any]:
             detail=result["errors"][0]["message"],
         )
     return {**result, "document": result["documents"][-1]}
+
+
+@router.post("/sessions/{session_id}/project-slides/files", status_code=status.HTTP_201_CREATED)
+async def upload_project_slide_file(
+    session_id: str,
+    file: UploadFile,
+    http_request: Request,
+) -> dict[str, str]:
+    authenticated_user, authenticated_tenant = (
+        agent_web_service.identity_from_headers(http_request.headers)
+        if agent_web_service.settings.agent_trust_proxy_identity
+        else ("", "")
+    )
+    session = agent_web_service.get_session(
+        session_id, user_id=authenticated_user or "", tenant_id=authenticated_tenant or ""
+    )
+    filename = Path(file.filename or "").name
+    if Path(filename).suffix.lower() != ".pptx":
+        raise HTTPException(status_code=400, detail="Project Slide 仅支持 PPTX 数据文件")
+    content = await file.read(agent_web_service.settings.max_file_size_bytes + 1)
+    if len(content) > agent_web_service.settings.max_file_size_bytes:
+        raise HTTPException(status_code=413, detail="PPTX 文件超过上传大小限制")
+    from src.services.slide_generator_services import store_uploaded_pptx
+
+    try:
+        return await run_in_threadpool(
+            store_uploaded_pptx, session.session_id, filename, content
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.get("/sessions/{session_id}/project-slides/{job_id}")
+def download_project_slide(
+    session_id: str,
+    job_id: str,
+    http_request: Request,
+) -> FileResponse:
+    authenticated_user, authenticated_tenant = (
+        agent_web_service.identity_from_headers(http_request.headers)
+        if agent_web_service.settings.agent_trust_proxy_identity
+        else ("", "")
+    )
+    session = agent_web_service.get_session(
+        session_id, user_id=authenticated_user or "", tenant_id=authenticated_tenant or ""
+    )
+    from src.services.slide_generator_services import job_output_path, load_job_meta
+
+    try:
+        metadata = load_job_meta(session.session_id, job_id)
+        path = job_output_path(session.session_id, job_id)
+    except (FileNotFoundError, ValueError) as exc:
+        raise HTTPException(status_code=404, detail="Project Slide 不存在或不可访问") from exc
+    return FileResponse(
+        path,
+        filename=str(metadata["filename"]),
+        media_type="application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    )
 
 
 @router.delete("/sessions/{session_id}/documents/{document_id}")

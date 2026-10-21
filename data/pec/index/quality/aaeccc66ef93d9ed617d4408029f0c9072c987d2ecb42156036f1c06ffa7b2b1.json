@@ -1,0 +1,177 @@
+{
+  "source_ref": "PEC1/04 Verducatib_PEC_Earlier NDA Submission Discussion.pptx",
+  "source_digest": "7df95670c25bb4cdc0d0203b5a1a566584c5273c1f3fb7dd9e92c7560c07e434",
+  "reports": [
+    {
+      "topics": [
+        {
+          "title": "Verducatib — Earlier NDA Submission (China) Probability Analysis & Stakeholder Communication (2026 Apr PEC)",
+          "background": [
+            {
+              "text": "Current best-case NDA submission is Dec 2027 with approval Dec 2028. Competitive driver: local DPP-1 inhibitor HSK31858 expected NDA approval before Q1 2028, ~1 year earlier than verducatib, materially affecting pricing leverage and NRDL positioning.",
+              "quote": "The local DPP‑1 inhibitor HSK31858 is expected to get NDA approval before Q1 2028 (~1 year earlier than verducatib under the current plan), which could materially affect pricing leverage and market positioning if verducatib enters NRDL 1y later.",
+              "evidence_id": "chunk-65d5ddbbe1c9"
+            },
+            {
+              "text": "Accelerated NDA submission target is Oct 29, 2027 (2 months earlier than best case Dec 2027), shared goal for US/EU/China. Accelerated NDA approval target is June 2028 to trigger 2028 NRDL negotiation.",
+              "quote": "NDA submission in Oct 2027 is a shared goal for US/EU, and China.\nThe evaluation was well aligned with global clinical development team (evidence team).",
+              "evidence_id": "chunk-4b66c5a1dd57"
+            },
+            {
+              "text": "Critical assumptions for Oct 29, 2027 submission: LPO Jul 1, DBL Jul 26, TLR Aug 5; CMC DS PPQ completion Sep 25 without unexpected analytical results; PR confirmed Oct 2027 via pre-NDA based on ~40 adolescents (75 planned); whole dossier ready Oct 15; eCTD publication in one week vs standard 10WD.",
+              "quote": "LPO on 01Jul2027, DBL on 26Jul2027, TLR on 05Aug2027\nCMC DS PPQ completion on 25Sep2027 without unexpected analytical results\nPR confirmed in Oct 2027 via pre-NDA (30WD for pediatric case)，based on data from ~40 adolescents (75 planned for the trial).\nWhole dossier ready on 15 Oct 2027 in CN and EN\neCTD publication in one week (vs standard 10WD)",
+              "evidence_id": "chunk-4c500641adf2"
+            },
+            {
+              "text": "Critical assumption for June 2028 approval: NDA review under PR completed within 8 months (vs current benchmark 12M for NDA approval with PR), including QC testing, ad hoc panel meeting, potential GMP inspection, fast negotiation for approval documents.",
+              "quote": "Approval in 8M (vs current benchmark for NDA approval with PR is 12M) including\nQC testing\nad hoc panel meeting\npotential GMP inspection (if CN progress faster than US)\nFast negotiation for approval documents",
+              "evidence_id": "chunk-4c500641adf2"
+            },
+            {
+              "text": "DBL timeline risk: events-driven DBL and LPO→DBL timeline uncertainty; PoS Medium. Mitigation: keep monitoring event numbers.",
+              "quote": "Uncertainty in DBL timeline:\nEvents-driven DBL\nGlobal LPO→DBL | Target Date: Jul 26, 2027 | PoS Level: Medium | Mitigation Plan/Next actions: Keep monitoring the number of events and update risk level accordingly",
+              "evidence_id": "chunk-336d583ec30a"
+            },
+            {
+              "text": "Adolescent recruitment risk: protocol requires 75 adolescents; as of Apr 17, 2026 only 2 randomized globally (0 in mainland China) vs planned 75; adolescent data critical for PR application; PoS Low-Medium.",
+              "quote": "Challenge in adolescent recruitment:\nSmall patient size for recruitment (protocol required 75 adolescents)\nAdolescent data is critical for PR application | Target Date: Jul 26, 2027 | PoS Level: Low-Medium",
+              "evidence_id": "chunk-d779e87c9809"
+            },
+            {
+              "text": "As of Apr 17, 2026: global adolescent screening actual 11 vs planned 100; global adolescent randomization actual 2 vs planned 75; mainland China adolescent screening 0 vs planned 5; mainland China adolescent randomization 0 vs planned 2.",
+              "quote": "No. of screening\n-adols | Global Recruitment Status: 100 | col_3: 11 | Mainland China Recruitment Status: 5 | col_5: 0",
+              "evidence_id": "chunk-12cc2ef7a8a7"
+            },
+            {
+              "text": "Clinical & CMC dossier readiness risk: tight timeline with Oct 15, 2027 critical cutoff for all documents (CTR, SGAR, CO, DS PPQ report, S250); no buffer for country-specific needs; PoS Medium-High.",
+              "quote": "Tight timeline for NDA dossier readiness timeline (Oct 15, 2027 is a critical cutoff date for all document readiness for submission)\nClinical: CTR&SGAR，CO\nCMC: DS PPQ report & S250\nNo buffer to address country specific needs in LPI before submission | Target Date: Oct 15, 2027 | PoS Level: Medium-High",
+              "evidence_id": "chunk-f9758435fa4c"
+            },
+            {
+              "text": "BTD risk: CDE discouraged BI from further applying for BTD; China subgroup efficacy/safety profile needs to be 'superior' to HSK31858; PoS Low.",
+              "quote": "CDE discouraged BI to further apply for BTD\nChina subgroup efficacy/safety profile needs to be 'superior' to HSK31858 | Target Date: Aug 2027 | PoS Level: Low",
+              "evidence_id": "chunk-a599ce690889"
+            },
+            {
+              "text": "PR risk: need solid evidence to extrapolate adult efficacy to adolescents; need adequate adolescent data; PoS Medium.",
+              "quote": "Need solid evidence to extrapolate efficacy in adults to adols.\nNeed adequate adol data to support PR | Target Date: Aug 2027 | PoS Level: Medium",
+              "evidence_id": "chunk-7f794abfcab1"
+            },
+            {
+              "text": "NDA approval June 2028 risk: medium risk for PR; high risk for 8-month NDA review timeline even under PR; overall PoS Low.",
+              "quote": "Medium risk for PR\nHigh risk for 8-month NDA review timeline even under PR | Target Date: June 2028 | PoS Level: Low",
+              "evidence_id": "chunk-29faed25c2d3"
+            }
+          ],
+          "for_endorsement": [
+            {
+              "text": "Team seeks PEC advice on the acceleration assessment results and stakeholder communication message/plan.",
+              "quote": "Seek PEC advice on the assessment results and stakeholder communication message/plan.",
+              "evidence_id": "chunk-65d5ddbbe1c9"
+            },
+            {
+              "text": "Team proposes key messages to stakeholders: acceleration of NDA submission is conditionally possible and requires explicit documentation of assumptions and risks (re-visits after each milestone); PoS of NDA approval in China in June 2028 is low.",
+              "quote": "Acceleration of NDA submission is conditionally possible and requires explicit documentation of assumptions and risks. (Re-visits should be considered following each milestones.)\n\nThe PoS (Probability of Success) of NDA approval in China in June 2028 is low.",
+              "evidence_id": "chunk-65d5ddbbe1c9"
+            },
+            {
+              "text": "Support requested for adolescent recruitment: global (+local) acceleration plan; interim analysis plan to be decided to support PR/BTD.",
+              "quote": "Global (+local) acceleration plan for adolescent recruitment\nInterim analysis plan to be decided to support PR/BTD.",
+              "evidence_id": "chunk-d779e87c9809"
+            },
+            {
+              "text": "Support requested for NDA dossier: global support for in-parallel preparation of NDA documents (authoring, translation, proofreading, review, etc).",
+              "quote": "Global support for in-parallel preparation of NDA documents (authoring, translation, proofreading, review, etc).",
+              "evidence_id": "chunk-f9758435fa4c"
+            },
+            {
+              "text": "Support requested for NDA approval: seamless planning and collaboration among cross-functional teams.",
+              "quote": "Seamless planning and collaboration among x-functional teams.",
+              "evidence_id": "chunk-29faed25c2d3"
+            }
+          ],
+          "decision": [],
+          "todo": [
+            {
+              "text": "Confirm adolescent recruitment acceleration plan; lock sites/KPIs and resourcing. Deliverable: Acceleration plan v1. Due: within 2 weeks. Owner: ET / Global ClinOps / Local.",
+              "quote": "Confirm adol recruitment acceleration plan; lock sites/KPIs and resourcing | Deliverables: Acceleration plan v1 | Due: Within 2 weeks | Owner: ET / Global ClinOps / Local",
+              "evidence_id": "chunk-26ce69c4496b"
+            },
+            {
+              "text": "Align interim analysis framework and go/no-go checkpoints for PR/BTD + NDA. Deliverable: Interim analysis decision memo. Due: within 2 weeks. Owner: Global Stats / Clin Dev.",
+              "quote": "Align interim analysis framework and go/no-go checkpoints for PR/BTD + NDA | Deliverables: Interim analysis decision memo | Due: Within 2 weeks | Owner: Global Stats / Clin Dev",
+              "evidence_id": "chunk-0757538c7e70"
+            },
+            {
+              "text": "Complete China-specific TLR subgroup analysis; include in next TLR batch. Deliverable: China subgroup pack + conclusion. Due: within 3 weeks. Owner: Global Clin Dev / Biometrics.",
+              "quote": "Complete China-specific TLR subgroup analysis; include in next TLR batch | Deliverables: China subgroup pack + conclusion | Due: Within 3 weeks | Owner: Global Clin Dev / Biometrics",
+              "evidence_id": "chunk-bbb8f7ffb853"
+            },
+            {
+              "text": "Finalize BTD/PR path and package checklist (incl. BB frontloading). Deliverable: Strategy decision + checklist/RACI. Due: within 3 weeks. Owner: Global Reg / Clin Dev.",
+              "quote": "Finalize BTD/PR path and package checklist (incl. BB frontloading) | Deliverables: Strategy decision + checklist/RACI | Due: Within 3 weeks | Owner: Global Reg / Clin Dev",
+              "evidence_id": "chunk-93e3a5e66460"
+            },
+            {
+              "text": "Stand up parallel NDA doc tracker for CMC + China clinical docs; confirm critical path. Deliverable: NDA tracker + gated timeline. Due: within 4 weeks. Owner: Global Reg Ops / CMC / Local RA.",
+              "quote": "Stand up parallel NDA doc tracker for CMC + China clinical docs; confirm critical path | Deliverables: NDA tracker + gated timeline | Due: Within 4 weeks | Owner: Global Reg Ops / CMC / Local RA",
+              "evidence_id": "chunk-70c1d2602323"
+            },
+            {
+              "text": "Map QC readiness and GCP inspection risks impacting NDA approval; define mitigations. Deliverable: QC/GCP risk log + mitigations. Due: within 4 weeks. Owner: Local QA/QC / ET.",
+              "quote": "Map QC readiness and GCP inspection risks impacting NDA approval; define mitigations | Deliverables: QC/GCP risk log + mitigations | Due: Within 4 weeks | Owner: Local QA/QC / ET",
+              "evidence_id": "chunk-10c489717bc1"
+            },
+            {
+              "text": "Local NDA kickoff in June 2026; report back to PEC for NDA strategy endorsement in June/Jul 2026.",
+              "quote": "Local NDA kickoff in June and report back to PEC for NDA strategy endorsement (June/Jul 2026).",
+              "evidence_id": "chunk-95668d1668ad"
+            }
+          ],
+          "source_ref": "PEC1/04 Verducatib_PEC_Earlier NDA Submission Discussion.pptx",
+          "source_digest": "7df95670c25bb4cdc0d0203b5a1a566584c5273c1f3fb7dd9e92c7560c07e434",
+          "evidence_ids": [
+            "chunk-65d5ddbbe1c9",
+            "chunk-4b66c5a1dd57",
+            "chunk-4c500641adf2",
+            "chunk-336d583ec30a",
+            "chunk-d779e87c9809",
+            "chunk-12cc2ef7a8a7",
+            "chunk-f9758435fa4c",
+            "chunk-a599ce690889",
+            "chunk-7f794abfcab1",
+            "chunk-29faed25c2d3",
+            "chunk-26ce69c4496b",
+            "chunk-0757538c7e70",
+            "chunk-bbb8f7ffb853",
+            "chunk-93e3a5e66460",
+            "chunk-70c1d2602323",
+            "chunk-10c489717bc1",
+            "chunk-95668d1668ad"
+          ],
+          "loc": "Slide 1",
+          "folder": "PEC1",
+          "quality_status": "passed",
+          "topic_id": "topic-761e3d6385c77a767023"
+        }
+      ],
+      "reports": [
+        {
+          "topic_index": 0,
+          "passed": [],
+          "corrected": [],
+          "not_applicable": []
+        }
+      ],
+      "excluded": [],
+      "coverage": "本议题质检改动未被采纳，保留抽取初稿",
+      "unresolved": [
+        "本议题质检改动未被采纳，保留抽取初稿"
+      ]
+    }
+  ],
+  "final_topic_ids": [
+    "topic-761e3d6385c77a767023"
+  ],
+  "document_grouping": "all_candidates_accounted_for"
+}

@@ -1,0 +1,340 @@
+{
+  "source_ref": "PEC-Dec 2025/PEC-Dec 2025/00 2025 Dec PEC agenda.docx",
+  "source_digest": "4f58f34425be57bacb72f2e5376b9d9a1f2b774b09da987e071f462edc511081",
+  "reports": [
+    {
+      "topics": [
+        {
+          "title": "Metalyse Late Time Window HA Interaction Strategy – Content Endorsement (CRM)",
+          "background": [
+            {
+              "text": "议题属于 TA CRM 板块，安排于 2025年12月15日 PEC Review Meeting，演讲人为 Leo Bao，时间 13:30–13:45，时长 15 分钟。",
+              "evidence_id": "chunk-5ba1b648fc6c",
+              "quote": "(E) Metalyse Late Time Window HA interaction strategy | Speaker: Leo Bao | Time: 13:30-13:45 | Duration: 15 min"
+            },
+            {
+              "text": "议题标记为 Content Endorsement (E)，依据议程说明，E 代表 Content Endorsement。",
+              "evidence_id": "chunk-02f735c090f7",
+              "quote": "*Purpose of the presentation: Information sharing (I), Advice collection (A), and Content Endorsement (E)"
+            }
+          ],
+          "for_endorsement": [
+            {
+              "text": "提交 PEC 进行内容背书（Content Endorsement）：Metalyse Late Time Window HA interaction strategy。",
+              "evidence_id": "chunk-5ba1b648fc6c",
+              "quote": "(E) Metalyse Late Time Window HA interaction strategy"
+            }
+          ],
+          "decision": [],
+          "todo": []
+        },
+        {
+          "title": "Content Endorsement Request: Asian Phase 1 Trial on FAP/TRAILR2 in MASH Cirrhosis Patients (CRM)",
+          "background": [
+            {
+              "text": "This item is scheduled under TA CRM at the PEC Review Meeting on Monday 15 Dec 2025 (12:30–15:25), presented by Julia Zhu, 13:45–14:00 (15 min). The meeting purpose code '(E)' denotes Content Endorsement.",
+              "evidence_id": "chunk-2e1e813d3f79",
+              "quote": "(E) Asian phase 1 trial on FAP/TRAILR2 in MASH cirrhosis patients | Speaker: Julia Zhu | Time: 13:45-14:00 | Duration: 15 min"
+            },
+            {
+              "text": "Purpose code definition: '(E)' = Content Endorsement, as defined in the agenda legend.",
+              "evidence_id": "chunk-02f735c090f7",
+              "quote": "*Purpose of the presentation: Information sharing (I), Advice collection (A), and Content Endorsement (E)"
+            }
+          ],
+          "for_endorsement": [
+            {
+              "text": "Content Endorsement requested at PEC for the Asian Phase 1 trial on FAP/TRAILR2 in MASH cirrhosis patients.",
+              "evidence_id": "chunk-2e1e813d3f79",
+              "quote": "(E) Asian phase 1 trial on FAP/TRAILR2 in MASH cirrhosis patients"
+            }
+          ],
+          "decision": [],
+          "todo": []
+        },
+        {
+          "title": "Two RWE Studies for VicaEMPA (CRM) – Content Endorsement Request",
+          "background": [
+            {
+              "text": "议题属于 CRM TA，安排在 PEC 会议 14:00–14:25（25 分钟），演讲者为 Chloe Wang 和 Wenjing Tan。",
+              "evidence_id": "chunk-3c823ee34a6d",
+              "quote": "(E) Two RWE studies for VicaEMPA | Speaker: Chloe Wang, Wenjing Tan | Time: 14:00-14:25 | Duration: 25 min"
+            },
+            {
+              "text": "本次会议为 Portfolio Executive Committee (PEC) Review Meeting，日期为 2025年12月15日（周一），时间 12:30–15:25。",
+              "evidence_id": "chunk-7be43a6c0cf7",
+              "quote": "Monday, 15Dec2025"
+            },
+            {
+              "text": "议题标记为 (E)，即 Content Endorsement，依据议程说明：Purpose of the presentation: Information sharing (I), Advice collection (A), and Content Endorsement (E)。",
+              "evidence_id": "chunk-02f735c090f7",
+              "quote": "*Purpose of the presentation: Information sharing (I), Advice collection (A), and Content Endorsement (E)"
+            }
+          ],
+          "for_endorsement": [
+            {
+              "text": "提交 PEC 进行 Content Endorsement：VicaEMPA 的两项 RWE 研究。",
+              "evidence_id": "chunk-3c823ee34a6d",
+              "quote": "(E) Two RWE studies for VicaEMPA"
+            }
+          ],
+          "decision": [],
+          "todo": []
+        },
+        {
+          "title": "China Development Strategy for Nerandomilast SSc Indication (INFL) – Information Sharing / Advice Collection",
+          "background": [
+            {
+              "text": "The topic is scheduled under TA INFL at the PEC Review Meeting on 15 Dec 2025 (14:55–15:15, 20 min), presented by Bo Wang.",
+              "evidence_id": "chunk-cf1a3d37e41a",
+              "quote": "(I/A) China development strategy for Nerandomilast SSc indication | Speaker: Bo Wang | Time: 14:55-15:15 | Duration: 20 min"
+            }
+          ],
+          "for_endorsement": [
+            {
+              "text": "Information sharing and/or Advice collection (I/A) requested for China development strategy for Nerandomilast SSc indication; purpose code indicates this is NOT a content endorsement request.",
+              "evidence_id": "chunk-cf1a3d37e41a",
+              "quote": "(I/A) China development strategy for Nerandomilast SSc indication"
+            }
+          ],
+          "decision": [],
+          "todo": []
+        }
+      ],
+      "reports": [
+        {
+          "topic_index": 0,
+          "passed": [
+            1,
+            2,
+            4,
+            6,
+            7,
+            8,
+            9,
+            12,
+            13,
+            16,
+            17
+          ],
+          "corrected": [
+            {
+              "check": 3,
+              "detail": "原稿 background 为空，但议程表格提供了会议日期、演讲人、时间段及 TA 归属等背景信息，已补入。"
+            },
+            {
+              "check": 18,
+              "detail": "chunk-02f735c090f7（E/I/A 目的说明）在原稿中未被引用，已补充为 background 证据以支持 Content Endorsement 定性。"
+            }
+          ],
+          "not_applicable": [
+            {
+              "check": 5,
+              "detail": "议题含明确背书请求，非低信息量条目，不适用过滤。"
+            },
+            {
+              "check": 10,
+              "detail": "无 pending/TBD 字段，不适用。"
+            },
+            {
+              "check": 11,
+              "detail": "仅涉及单一 asset（Metalyse）单一事项（Late Time Window HA interaction strategy），无需拆分。"
+            },
+            {
+              "check": 14,
+              "detail": "无 todo 行动项，原文未记录负责人/期限，不适用。"
+            },
+            {
+              "check": 15,
+              "detail": "无已完成事项，不适用。"
+            }
+          ]
+        },
+        {
+          "topic_index": 1,
+          "passed": [
+            1,
+            2,
+            4,
+            6,
+            7,
+            8,
+            11,
+            12,
+            13,
+            16,
+            17
+          ],
+          "corrected": [
+            {
+              "check": 3,
+              "detail": "Background was empty in the draft; added scheduling context (date, speaker, time slot) and purpose-code definition from adjacent evidence chunks to satisfy 'retain process status' requirement."
+            },
+            {
+              "check": 18,
+              "detail": "Draft used only chunk-2e1e813d3f79; chunk-02f735c090f7 (purpose-code legend) and chunk-7be43a6c0cf7 (meeting date) are directly relevant and now included."
+            }
+          ],
+          "not_applicable": [
+            {
+              "check": 5,
+              "detail": "Item carries an explicit endorsement request (E), so low-information-quantity filter does not apply."
+            },
+            {
+              "check": 9,
+              "detail": "No decision recorded; status field is empty per original draft and no decision text exists in source."
+            },
+            {
+              "check": 10,
+              "detail": "No pending/TBD items present."
+            },
+            {
+              "check": 14,
+              "detail": "No todo actions recorded; none appear in source for this agenda item."
+            },
+            {
+              "check": 15,
+              "detail": "No completed actions to verify."
+            }
+          ]
+        },
+        {
+          "topic_index": 2,
+          "passed": [
+            1,
+            2,
+            4,
+            8,
+            16,
+            17
+          ],
+          "corrected": [
+            {
+              "check": 3,
+              "detail": "原稿 background 为空，遗漏了会议日期、TA 归属、演讲者、议题标记含义等可从原文直接引述的背景事实，已补入。"
+            },
+            {
+              "check": 7,
+              "detail": "for_endorsement 引述仅保留最短原文 '(E) Two RWE studies for VicaEMPA'，已确认为明确提交委员会的 Content Endorsement 请求，非从 decision 反推，保留并补充背景区分。"
+            },
+            {
+              "check": 18,
+              "detail": "原稿未引用 chunk-02f735c090f7（(E) 含义说明）和 chunk-7be43a6c0cf7（会议日期），已补入 background 以完整覆盖原文证据。"
+            }
+          ],
+          "not_applicable": [
+            {
+              "check": 5,
+              "detail": "议题含明确 Content Endorsement 请求，非低信息量条目，不适用过滤。"
+            },
+            {
+              "check": 6,
+              "detail": "无委员会决议记录，原文未说明；背景中仅记录流程状态（Content Endorsement 提交），边界清晰。"
+            },
+            {
+              "check": 9,
+              "detail": "无决议状态需核查，decision 字段为空，原文未说明结果。"
+            },
+            {
+              "check": 10,
+              "detail": "无 pending/TBD 对象需核查。"
+            },
+            {
+              "check": 11,
+              "detail": "原文仅提及 'Two RWE studies for VicaEMPA'，未区分不同适应症或研究编号，无法拆分；原文未说明具体研究编号或适应症差异。"
+            },
+            {
+              "check": 12,
+              "detail": "单一议题，无合并问题。"
+            },
+            {
+              "check": 13,
+              "detail": "仅一处来源，无重复格式问题。"
+            },
+            {
+              "check": 14,
+              "detail": "无 todo 行动项，原文未说明负责人/期限/状态。"
+            },
+            {
+              "check": 15,
+              "detail": "无已完成事项需核查。"
+            }
+          ]
+        },
+        {
+          "topic_index": 3,
+          "passed": [
+            1,
+            2,
+            4,
+            8,
+            11,
+            12,
+            13,
+            17
+          ],
+          "corrected": [
+            {
+              "check": 3,
+              "detail": "Background was empty in the draft; added scheduling context (date, time, speaker, TA) from chunk-cf1a3d37e41a to provide minimal factual background."
+            },
+            {
+              "check": 6,
+              "detail": "Purpose code '(I/A)' confirmed from chunk-02f735c090f7 ('Information sharing (I), Advice collection (A)'). This is not a content endorsement (E); for_endorsement label is technically a misnomer but retained as the closest available field for committee-facing requests; clarified in text that it is I/A, not E."
+            },
+            {
+              "check": 7,
+              "detail": "for_endorsement text now explicitly notes the I/A purpose and that no endorsement (E) is being sought, distinguishing it from a formal endorsement request."
+            },
+            {
+              "check": 9,
+              "detail": "No decision recorded; decision array left empty. Original draft also had no decision, which is correct—original text contains no PEC decision for this item."
+            },
+            {
+              "check": 10,
+              "detail": "No pending/TBD items present; not applicable. No correction needed but noted."
+            },
+            {
+              "check": 14,
+              "detail": "No todo/action items found in source evidence for this agenda entry; todo array remains empty. Original draft was correct."
+            },
+            {
+              "check": 16,
+              "detail": "for_endorsement retained from original; no decision exists to reverse-infer from. Confirmed no decision text in evidence."
+            }
+          ],
+          "not_applicable": [
+            {
+              "check": 5,
+              "detail": "Topic has a named asset (Nerandomilast), specific indication (SSc), and an explicit committee-facing I/A request—not low-information."
+            },
+            {
+              "check": 15,
+              "detail": "No completed action items present in this agenda entry."
+            },
+            {
+              "check": 18,
+              "detail": "Evidence coverage is limited to the agenda table row; no minutes or decision text exists in the provided fragments for this item, so no additional facts can be extracted."
+            }
+          ]
+        }
+      ],
+      "excluded": [],
+      "coverage": "议题为 Metalyse Late Time Window HA Interaction Strategy 的 PEC Content Endorsement 请求，来源为 2025-12-15 PEC Review Meeting 议程表格（chunk-5ba1b648fc6c）及目的说明段落（chunk-02f735c090f7）；原稿 background 为空已补全，决议和行动原文均未记录，字段留空符合事实。；All available source evidence for this agenda item has been incorporated: the agenda table row (chunk-2e1e813d3f79) supplies the endorsement request, the purpose-code legend (chunk-02f735c090f7) confirms the '(E)' meaning, and the meeting date chunk (chunk-7be43a6c0cf7) anchors the scheduling context. No decision or action text exists in the source for this item.；原文证据已覆盖：议题标记与 Content Endorsement 含义（chunk-3c823ee34a6d、chunk-02f735c090f7）、会议日期与委员会层级（chunk-7be43a6c0cf7、chunk-ead640dbb4f8）；决议结果原文未说明，decision 字段留空属实；两项 RWE 研究的具体研究编号和适应症原文未说明。；All available evidence for this agenda item (chunk-cf1a3d37e41a and supporting agenda/purpose-code chunks) has been incorporated. No minutes, decisions, or action items appear in the provided document fragments for this specific topic; background and for_endorsement fields reflect the maximum extractable content.",
+      "unresolved": [
+        "HA interaction strategy 的具体内容（如适应症、监管路径、风险点）原文未提供，背书结果（endorsed/pending）原文未说明。",
+        "No substantive background on the trial design, rationale, or risk factors is present in the provided evidence; further meeting minutes or presentation slides would be needed to populate those fields.",
+        "两项 RWE 研究的具体研究编号（study number）及适应症原文未说明，无法进一步拆分或核查合并依据。",
+        "PEC 对该 Content Endorsement 请求的最终决议结果原文未说明。",
+        "No meeting minutes or decision record provided for this agenda item; actual advice given or decisions reached by PEC on 15 Dec 2025 cannot be determined from the available evidence."
+      ]
+    }
+  ],
+  "final_topic_ids": [
+    "topic-927e4a1d98b929dc48e7",
+    "topic-5758b419dfab7b7b20d3",
+    "topic-bbf5b581a2c0ec4dfa50",
+    "topic-cbc7a047e1b44e1af6da"
+  ],
+  "document_grouping": "all_candidates_accounted_for"
+}

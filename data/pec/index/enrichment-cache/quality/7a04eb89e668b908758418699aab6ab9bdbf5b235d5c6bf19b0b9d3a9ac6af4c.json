@@ -1,0 +1,1 @@
+{"topics": [], "reports": [], "excluded": [{"fact_id": "F0001", "reason": "progress_only", "detail": "该议题仅记录 EASi-PROTKT（1378-0041）的招募进展数据（中国28例 vs 计划12例，全球479例 vs 计划100例）及时间线里程碑，无风险讨论、阻塞、背书请求、委员会决策或跟进行动，属于纯进度汇报，应过滤。"}], "coverage": "原始议题仅含一条招募进度事实（F0001），无实质讨论、风险、请求或决议，整题作为 progress_only 过滤；证据文档中其余内容（Metalyse、Jardiance NIS、CRM TA 成就等）均属其他议题，不在本候选范围内。", "unresolved": []}

@@ -1,8 +1,22 @@
+import importlib
 from pathlib import Path
 
 import pytest
 
 from src.pec.knowledge import paths
+
+
+def test_default_knowledge_root_preserves_existing_data_directory(monkeypatch) -> None:
+    names = ("KNOWLEDGE_ROOT", "PEC_KNOWLEDGE_ROOT")
+    original = {name: getattr(paths, name) for name in ("ROOT", "KNOWLEDGE_ROOT", "SOURCES_DIR", "INDEX_DIR", "MANIFEST_FILE", "CHUNKS_FILE", "EMBEDDINGS_FILE")}
+    for name in names:
+        monkeypatch.delenv(name, raising=False)
+    try:
+        importlib.reload(paths)
+        assert paths.KNOWLEDGE_ROOT == Path(__file__).resolve().parents[1] / "data" / "pec"
+    finally:
+        for name, value in original.items():
+            setattr(paths, name, value)
 
 
 def _set_root(tmp_path: Path, monkeypatch) -> Path:

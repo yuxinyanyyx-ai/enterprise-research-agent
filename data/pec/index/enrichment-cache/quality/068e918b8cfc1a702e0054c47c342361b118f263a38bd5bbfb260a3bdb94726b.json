@@ -1,0 +1,1 @@
+{"topics": [], "reports": [], "excluded": [{"fact_id": "F0001", "reason": "noise", "detail": "仅为会议议程条目，记录演讲者和时间安排，无任何讨论内容、风险、请求、决议或行动事项。"}], "coverage": "原始证据仅包含 MAP 会议议程表中的一行条目（TA CRM Update，演讲者 Emma Xie/Hongzi Liang，10:35，30 min），无实质内容，整题作为噪音排除。", "unresolved": []}

@@ -1,0 +1,402 @@
+{
+  "source_ref": "MAP 2025 May/07 Metalyse PMS Follow-up for MAP comments.pptx",
+  "source_digest": "ee707b57ddfb0b3df872b8d04c1e8874234088372cb4d497fffce0fe82a6fb6a",
+  "reports": [
+    {
+      "topics": [
+        {
+          "title": "TREASURE – Tenecteplase before interhospital transfer for thrombectomy (4.5–24h anterior LVO): MAP follow-up feedback",
+          "background": [
+            {
+              "text": "MAP agreed with the TREASURE study proposal and raised 5 follow-up suggestions covering transferring time distribution, power/interim analysis, drop-out rate, budget feasibility, and RA confirmation on IIS for registration.",
+              "evidence_id": "chunk-fd56b2378798",
+              "quote": "MAP agrees with the study proposal, with the following suggestions.\nStudy design\n1.Include distribution of transferring time in the results analysis.\n2.Work with statisticians to assess the study power reduction and the scenarios of interim analysis\n3.Re-evaluate the drop-out rate, leveraging ORIGINAL study results\n4.Confirm the feasibility of current total budget proposal with PI\n5.Confirm with RA regarding the current regulation on leveraging IIS study results for registration."
+            },
+            {
+              "text": "Feedback on all 5 MAP suggestions: (1) transferring time distribution included in TREASURE; (2) power updated to 0.85, interim analysis not recommended by PI or BDS; (3) drop-out rate updated from 10% to 5% (ORIGINAL early discontinuation 4.4%); (4) sample size reduced from 706 to 572 with ≥1:1 hospital fund matching confirmed; (5) RA confirmed IIS cannot directly support registration.",
+              "evidence_id": "chunk-fd56b2378798",
+              "quote": "Study power has been updated from 0.9 to 0.85. Interim analysis is not recommended from neither PI or BDS.\nDrop out rate has been updated from 10% to 5%. (early discontinuation rate of 4.4% in the ORIGINAL).\nSample size has been reduced from 706 to 572. The study team has confirmed at least a 1:1 matching of funds from the hospital, and the current budget is feasible.\nConfirmed with RA, these IIS cannot directly support the registration."
+            },
+            {
+              "text": "Power scenarios: observed case N=544 power 85.5% min cOR 1.345; imputed case N=572 power 86.8% min cOR 1.340.",
+              "evidence_id": "chunk-d947123ef895",
+              "quote": "Scenario: Imputed case | N: 572 | Power: 86.8% | Min. detectable cOR: 1.340"
+            },
+            {
+              "text": "Futility interim not recommended: less uncertainty on treatment effect, small sample size reduces reliability, investigator does not accept early stop; DMC recommended for safety and efficacy evaluation.",
+              "evidence_id": "chunk-2a96ce56201f",
+              "quote": "Futility interim is not recommended\nThere is less uncertainty on the treatment effect.\nSmall sample size result in low reliability.\nEfficacy Interim benefits less\nThe investigator doesn’t accept early stop at interim considering low reliability result and potential challenge from reviewer.\nDMC is recommended for safety and efficacy evaluation"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": []
+        },
+        {
+          "title": "ANGEL-MeVO-TNK – Intra-arterial tenecteplase for acute primary medium vessel occlusion stroke: MAP suggestions and team feedback",
+          "background": [
+            {
+              "text": "MAP agreed with the ANGEL-MeVO-TNK study proposal and raised 3 suggestions: (1) re-evaluate drop-out rate using ORIGINAL results, (2) assess timing of interim analysis, (3) check Tiantan Hospital registry for MeVO patients treated with IAT for more accurate treatment effect.",
+              "evidence_id": "chunk-39f4d9eaa073",
+              "quote": "MAP agrees with the study proposal, with the following suggestions.\nStudy design\n1.Re-evaluate the drop-out rate, leveraging ORIGINAL study results\n2.Assess the timing of interim analysis, ensuring a balance between the data amount for IA and the remaining study duration\n3.Check the registry study database from Tiantan Hospital regarding the condition of patients with MevO treated with IAT, for a more accurate treatment effect proposal"
+            },
+            {
+              "text": "Team feedback to MAP suggestions: drop-out rate maintained at 5% (ORIGINAL early discontinuation rate 4.4%); interim analysis not recommended by PI or BDS; treatment effect kept at 13% based on PI clinical assumption; no available Tiantan Hospital database for IA efficacy in MeVO, but IA with rtPA/TNK in anti-bridging LVO and IA with Urokinase in M1/M2 occlusions referenced.",
+              "evidence_id": "chunk-39f4d9eaa073",
+              "quote": "Drop-out rate maintain 5% (early discontinuation rate of 4.4% in ORIGINAL study).\nInterim analysis is not recommended from neither PI or BDS..\nTreatment effect keep as 13% based on PI’s clinical assumption (No available database from Tiantan Hospital to evaluate the efficacy of IA in Mevo. While the efficacy of IA with rtPA/TNK in anti-bridging in LVO and IA with Urokinase in M1/M2 occlusions could be referred.)"
+            },
+            {
+              "text": "Power re-evaluation for ANGEL-MeVO-TNK (Tiantan Hospital): control group mRS 0-1 benchmark 40.3% (pooled from ESCAPE-MeVO 43.1% and DISTAL 37.5%); treatment difference assumption 13%; sample size 488 (244 per group) with 5% dropout, two-sided α=0.05, power 80%.",
+              "evidence_id": "chunk-8064d35da987",
+              "quote": "Historical trial data for mRS 0–1 outcomes:\n43.1% in ESCAPE-MeVO Trial and 37.5% in DISTAL Trial\nPooled Average: 40.3%\nTreatment effect assumption\nAssume treatment difference of 13%, the proportion mRS 0–1 is 53.3% in the treatment group.\nSample size calculation\nWith a two-sided α=0.05 , power 1-β=0.80, 1:1 treatment allocation ratio, without interim analysis, sample size=462\nAttrition adjustment: 5% dropout rate → Total sample size = 488 (244 per group)"
+            },
+            {
+              "text": "Interim analysis for ANGEL-MeVO-TNK (Tiantan Hospital): futility interim not recommended; DMC recommended for safety and efficacy evaluation.",
+              "evidence_id": "chunk-6a3a0422e4fb",
+              "quote": "Futility interim is not recommended\nFor superiority trial, there is less uncertainty on the treatment effect.\nSmall sample size result in low reliability.\nEfficacy Interim benefits less\nThe investigator doesn’t accept early stop at interim considering low reliability result and potential challenge from reviewer.\nDMC is recommended for safety and efficacy evaluation."
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [
+            {
+              "text": "MAP agreed with the ANGEL-MeVO-TNK study proposal (MAP-level decision).",
+              "evidence_id": "chunk-39f4d9eaa073",
+              "quote": "MAP agrees with the study proposal, with the following suggestions."
+            }
+          ],
+          "todo": []
+        },
+        {
+          "title": "ECR vs. IIS – Contract wording and IMP supply strategy for Metalyse studies",
+          "background": [
+            {
+              "text": "MAP suggested the team consult Legal on the wording of 'BI study invention' in the ECR contract, and agreed to the team's IMP supply strategy for Metalyse ECR/IIS studies.",
+              "quote": "MAP suggested team to consult with Legal on the wording of “BI study invention” in the ECR contract.\nIMP\nMAP agrees to the team’s  IMP supply strategy for Metalyse ECR/IIS studies.",
+              "evidence_id": "chunk-268836c13852"
+            },
+            {
+              "text": "Feedback provided to Legal; Legal will discuss modification of the Chinese translation internally with the intellectual property attorney.",
+              "quote": "Already provided feedback to the legal department, and they will discuss the modification of the Chinese translation internally with the intellectual property attorney.",
+              "evidence_id": "chunk-268836c13852"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [
+            {
+              "text": "MAP agreed to the team's IMP supply strategy for Metalyse ECR/IIS studies.",
+              "quote": "MAP agrees to the team’s  IMP supply strategy for Metalyse ECR/IIS studies.",
+              "evidence_id": "chunk-268836c13852"
+            }
+          ],
+          "todo": [
+            {
+              "text": "Legal department to discuss modification of the Chinese translation of 'BI study invention' internally with the intellectual property attorney.",
+              "quote": "they will discuss the modification of the Chinese translation internally with the intellectual property attorney.",
+              "evidence_id": "chunk-268836c13852"
+            }
+          ]
+        },
+        {
+          "title": "Tiantan Hospital MeVO研究——样本量、入组计划与期中分析设计",
+          "background": [
+            {
+              "text": "把握度重新评估：观察病例场景N=462时把握度80.2%，最小可检测差异9.1%；填补病例场景N=488时把握度82.2%，最小可检测差异9.0%。",
+              "quote": "Scenario: Observed case | N: 462 | Power: 80.2% | Min. detectable diff.: 9.1%",
+              "evidence_id": "chunk-92fd567b66f8"
+            },
+            {
+              "text": "填补病例场景N=488，把握度82.2%，最小可检测差异9.0%。",
+              "quote": "Scenario: Imputed case | N: 488 | Power: 82.2% | Min. detectable diff.: 9.0%",
+              "evidence_id": "chunk-b73277691c60"
+            },
+            {
+              "text": "入组计划（另一方案）：第12月累计入组332例（58%），触发Futility Interim；第15月累计入组452例（79%），触发Efficacy Interim；第17月累计入组532例（93%），触发第二次Efficacy Interim；第18月累计入组572例（100%），Last patient in。",
+              "quote": "月数: 12 | 每月入组例数: 40 | 累计入组: 332 | 累计入组%: 58% | Note: Futility Interim",
+              "evidence_id": "chunk-c0e904267d36"
+            },
+            {
+              "text": "第15月累计入组452例（79%），触发Efficacy Interim。",
+              "quote": "月数: 15 | 每月入组例数: 40 | 累计入组: 452 | 累计入组%: 79% | Note: Efficacy Interim",
+              "evidence_id": "chunk-69c3bd3534ef"
+            },
+            {
+              "text": "第17月累计入组532例（93%），触发第二次Efficacy Interim。",
+              "quote": "月数: 17 | 每月入组例数: 40 | 累计入组: 532 | 累计入组%: 93% | Note: Efficacy Interim",
+              "evidence_id": "chunk-ebb19d27d562"
+            },
+            {
+              "text": "第18月累计入组572例（100%），Last patient in。",
+              "quote": "月数: 18 | 每月入组例数: 40 | 累计入组: 572 | 累计入组%: 100% | Note: Last patient in",
+              "evidence_id": "chunk-6b300f0f597e"
+            },
+            {
+              "text": "期中分析统计特性：信息分数50%时期中把握度22%，最小可检测cOR 1.87，总体把握度85.5%，最终最小可检测cOR 1.34；信息分数66.7%时期中把握度48.9%，最小可检测cOR 1.58，总体把握度86%。",
+              "quote": "Infor. fraction: 50% | Power for interim: 22% | Min. Detectable cOR - interim: 1.87 | Overall power: 85.5% | Min. Detectable cOR - final: 1.34",
+              "evidence_id": "chunk-c5659629612c"
+            },
+            {
+              "text": "信息分数66.7%时期中把握度48.9%，最小可检测cOR 1.58，总体把握度86%。",
+              "quote": "Infor. fraction: 66.7% | Power for interim: 48.9% | Min. Detectable cOR - interim: 1.58 | Overall power: 86%",
+              "evidence_id": "chunk-adee03ad5e8b"
+            },
+            {
+              "text": "Tiantan医院MeVO研究另一入组方案：第1月10例（2%，First patient in），第6月累计126例（25%），第7月累计156例（31%），第8月累计186例（38%）。",
+              "quote": "月数: 1 | 每月入组例数: 10 | 累计入组: 10 | 累计入组%: 2% | Note: First patient in",
+              "evidence_id": "chunk-300dd9633e24"
+            },
+            {
+              "text": "不推荐无效性期中分析：优效性试验对治疗效果不确定性较小；小样本导致可靠性低；研究者考虑到结果可靠性低及审查方潜在质疑，不接受期中提前终止；推荐设立DMC进行安全性和有效性评估。",
+              "quote": "Futility interim is not recommended\nFor superiority trial, there is less uncertainty on the treatment effect.\nSmall sample size result in low reliability.\nEfficacy Interim benefits less\nThe investigator doesn’t accept early stop at interim considering low reliability result and potential challenge from reviewer.\nDMC is recommended for safety and efficacy evaluation.",
+              "evidence_id": "chunk-6a3a0422e4fb"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": []
+        },
+        {
+          "title": "USTC研究（Tenecteplase vs. Medical Management in 4.5-24h LVO-AIS）Interim Analysis设计与Futility Interim建议",
+          "background": [
+            {
+              "text": "USTC研究基于TRACE3随机试验数据：tenecteplase组90天mRS 0-2为43.6%，标准医疗组为33.4%（差异10.2%）。双侧alpha 0.05、80%把握度、1:1分配，估算每组357例，考虑10%失访后每组397例，最终总样本量794例。",
+              "evidence_id": "chunk-79085b20ad20",
+              "quote": "Based on the TRACE3 randomized trial, the 90-day mRS 0 to 2 in patients treated with tenecteplase was 43.6% compared to 33.4% in the standard medical care group (difference=10.2%).\n\nWith two-sided alpha of 0.05, power of 80%, and 1:1 allocation, the sample size is estimated to be 357 patients per arm. After accounting for 10% attrition or loss to follow-up, there would be 397 patients per arm. The final total sample size was 794 patients."
+            },
+            {
+              "text": "USTC Power重新评估：Observed case场景（N=714）把握度80.0%，最小可检测cOR差异7%；Imputed case场景（N=794）把握度84.4%，最小可检测cOR差异6.8%。",
+              "evidence_id": "chunk-ef95d66cc0b3",
+              "quote": "Scenario: Observed case | N: 714 | Power: 80.0% | Min. detectable cOR: 7%"
+            },
+            {
+              "text": "Imputed case场景（N=794）把握度84.4%，最小可检测cOR差异6.8%。",
+              "evidence_id": "chunk-f9aa0387cfb6",
+              "quote": "Scenario: Imputed case | N: 794 | Power: 84.4% | Min. detectable cOR: 6.8%"
+            },
+            {
+              "text": "原方案（Slide 6）入组计划：第9月累计217例（44%）设Futility Interim，第10月累计248例（50%）设Futility Interim，第13月累计341例（69%）设Efficacy Interim，第16月累计434例（88%）设Efficacy Interim，第18月累计496例（100%）为Last patient in，每月入组31例。",
+              "evidence_id": "chunk-d944847db118",
+              "quote": "月数: 9 | 每月入组例数: 31 | 累计入组: 217 | 累计入组%: 44% | Note: Futility Interim"
+            },
+            {
+              "text": "原方案信息分数50%时：interim把握度16.8%，最小可检测差异18.5%，总体把握度84.3%，最终最小可检测差异9.0%；信息分数66.7%时：interim把握度46.4%，最小可检测差异13.9%，总体把握度82.6%。",
+              "evidence_id": "chunk-476a9a74065e",
+              "quote": "Infor. fraction: 50% | Power for interim: 16.8% | Min. Detectable diff. - interim: 18.5% | Overall power: 84.3% | Min. Detectable diff. - final: 9.0%"
+            },
+            {
+              "text": "修订方案（Slide 8）入组计划：第1月10例（1%）First patient in，第12月累计350例（44%）设Futility Interim，第13月累计387例（49%）设Futility Interim，第18月累计572例（72%）设Efficacy Interim，第21月累计683例（86%）设Efficacy Interim，第24月累计794例（100%）为Last patient in，每月入组37例。",
+              "evidence_id": "chunk-418f90251812",
+              "quote": "月数: 12 | 每月入组例数: 37 | 累计入组: 350 | 累计入组%: 44% | Note: Futility Interim"
+            },
+            {
+              "text": "修订方案信息分数50%时：interim把握度19.3%，最小可检测差异14.1%，总体把握度84.7%，最终最小可检测差异6.8%；信息分数66.7%时：interim把握度46.1%，最小可检测差异10.6%，总体把握度84.3%。",
+              "evidence_id": "chunk-1b2f5c6d8bf5",
+              "quote": "Infor. fraction: 50% | Power for interim: 19.3% | Min. Detectable diff. - interim: 14.1% | Overall power: 84.7% | Min. Detectable diff. - final: 6.8%"
+            },
+            {
+              "text": "MAP对USTC研究的建议包括：重新评估研究把握度、评估interim analysis的场景和时间节点。",
+              "evidence_id": "chunk-cf05a3c7e5b6",
+              "quote": "MAP agrees with the study proposal,  and recommended team to work with statisticians to\n1.Re-evaluate the power of the study\n2.Assess the scenarios and timing of interim analysis"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [
+            {
+              "text": "USTC研究不推荐Futility Interim，理由：治疗效果不确定性降低；小样本导致可靠性低；Efficacy Interim获益有限；研究者不接受基于低可靠性结果的早期停止（考虑审查方潜在质疑）。推荐设立DMC进行安全性和有效性评估。决策层级原文未说明（Slide 8内容，来源标注为MAP follow-up文件）。",
+              "evidence_id": "chunk-8027ba0b1e78",
+              "quote": "Futility interim is not recommended\nThere is less uncertainty on the treatment effect.\nSmall sample size result in low reliability.\nEfficacy Interim benefits less\nThe investigator doesn’t accept early stop at interim considering low reliability result and potential challenge from reviewer.\nDMC is recommended for safety and efficacy evaluation."
+            },
+            {
+              "text": "MAP follow-up表格中确认：80%把握度合理且常见；不推荐Futility Interim，详见后续幻灯片。",
+              "evidence_id": "chunk-cf05a3c7e5b6",
+              "quote": "Confirmed 80% is reasonable and common;\nNot recommend for futility interim, details on subsequent slides."
+            }
+          ],
+          "todo": []
+        }
+      ],
+      "reports": [
+        {
+          "topic_index": 0,
+          "passed": [
+            1,
+            2,
+            3,
+            4,
+            6,
+            7,
+            8,
+            9,
+            11,
+            13,
+            14,
+            15,
+            16,
+            17
+          ],
+          "corrected": [
+            {
+              "check": 5,
+              "detail": "议题包含 MAP 决议（agrees with proposal）、5条具体建议及全部反馈，并有监管风险（IIS不能直接支持注册）和设计决策（interim不推荐、DMC建议），不属于低信息量条目，保留。"
+            },
+            {
+              "check": 10,
+              "detail": "decision 和 for_endorsement 均为空：MAP 已在前次会议 agreed，本次为 follow-up 反馈文档，无新的委员会请求或决议，原文未说明是否需要再次提交 PEC/CEC 背书，保持空数组。"
+            },
+            {
+              "check": 12,
+              "detail": "evidence_markdown 中含 ANGEL-MeVO-TNK（chunk-39f4d9eaa073）和 Tiantan MeVO（chunk-cf05a3c7e5b6、chunk-6a3a0422e4fb 等）及 General ECR/IIS topic（chunk-268836c13852），均为不同研究/议题，已在初稿中正确排除，本议题仅保留 TREASURE 相关内容。"
+            }
+          ],
+          "not_applicable": [
+            {
+              "check": 18,
+              "detail": "evidence_markdown 中 Slide 4 enrollment table（chunk-3fc190642b79 等）为 TREASURE 入组进度明细，属纯进度数据，无风险或决策内容，不纳入本议题背景字段属合理过滤。"
+            }
+          ]
+        },
+        {
+          "topic_index": 1,
+          "passed": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            11,
+            12,
+            13,
+            17
+          ],
+          "corrected": [
+            {
+              "check": 6,
+              "detail": "原稿将 MAP agrees 仅放入 background；MAP 层级的 agrees with the study proposal 属于委员会决议，已移至 decision 字段。"
+            },
+            {
+              "check": 8,
+              "detail": "原稿 decision 字段为空，遗漏了 MAP 层级决议；已补入 decision，来源层级为 MAP。"
+            },
+            {
+              "check": 18,
+              "detail": "Slide 5 (chunk-8064d35da987) 和 Slide 6 (chunk-6a3a0422e4fb) 含 ANGEL-MeVO-TNK 的 power re-evaluation 和 interim analysis 详情，原稿未引用；已补入 background。"
+            }
+          ],
+          "not_applicable": [
+            {
+              "check": 7,
+              "detail": "本议题无 for_endorsement 请求，原文未见明确提交委员会背书的请求。"
+            },
+            {
+              "check": 9,
+              "detail": "MAP agrees 为肯定决议，无否定或条件限制需核查。"
+            },
+            {
+              "check": 10,
+              "detail": "无 pending/TBD 状态字段。"
+            },
+            {
+              "check": 14,
+              "detail": "原文无 todo 行动项（owner/due/status），todo 字段为空。"
+            },
+            {
+              "check": 15,
+              "detail": "无已完成行动项需核查。"
+            },
+            {
+              "check": 16,
+              "detail": "for_endorsement 为空，无需核查请求与决议分别有据；decision 已有原文直接支持。"
+            }
+          ]
+        },
+        {
+          "topic_index": 2,
+          "passed": [],
+          "corrected": [],
+          "not_applicable": []
+        },
+        {
+          "topic_index": 3,
+          "passed": [],
+          "corrected": [],
+          "not_applicable": []
+        },
+        {
+          "topic_index": 4,
+          "passed": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            9,
+            10,
+            11,
+            14,
+            15,
+            17
+          ],
+          "corrected": [
+            {
+              "check": 6,
+              "detail": "原稿decision未区分决策来源层级。原文文件标题为'Follow-up for MAP comment'，Slide 8结论为PI/BDS立场，MAP follow-up表格（chunk-cf05a3c7e5b6）确认'Not recommend for futility interim'。两条证据均已纳入decision，并注明层级原文未说明。"
+            },
+            {
+              "check": 7,
+              "detail": "chunk-cf05a3c7e5b6含MAP建议（re-evaluate power, assess interim scenarios）属于背景/请求，已补入background；其feedback部分'Not recommend for futility interim'属于决议回应，已补入decision，两者边界已区分。"
+            },
+            {
+              "check": 8,
+              "detail": "决策层级原文未明确说明是PEC/CEC/MAP正式决议还是PI/BDS建议，已在decision文本中注明'决策层级原文未说明'。"
+            },
+            {
+              "check": 18,
+              "detail": "原稿遗漏chunk-cf05a3c7e5b6（MAP follow-up表格第4行，含MAP建议及feedback确认不推荐futility interim），已补入background和decision。"
+            }
+          ],
+          "not_applicable": [
+            {
+              "check": 12,
+              "detail": "本议题为单一研究（USTC），无合并问题。"
+            },
+            {
+              "check": 13,
+              "detail": "原文为单一PPT文件，无多格式重复问题。"
+            },
+            {
+              "check": 16,
+              "detail": "for_endorsement为空，无需验证请求与决议分别有据；decision有原文直接支持，未反推。"
+            }
+          ]
+        }
+      ],
+      "excluded": [
+        {
+          "fact_id": "F0001",
+          "reason": "progress_only",
+          "detail": "MAP已同意研究提案并给出建议（重新评估power、评估interim分析时机），后续反馈显示80% power已确认合理、不推荐futility interim，均为已完成的进度更新，无待委员会决议的请求、阻塞或跟进行动。"
+        },
+        {
+          "fact_id": "F0002",
+          "reason": "progress_only",
+          "detail": "80% power确认合理、不推荐futility interim为统计反馈结论，属于执行进度明细，无实质委员会决议、背书请求或行动项。"
+        }
+      ],
+      "coverage": "本议题完整覆盖 TREASURE MAP follow-up 的核心内容：MAP 5条建议原文、全部反馈（含 RA 监管风险确认）、power 重新评估数值及 interim 不推荐理由。enrollment 进度明细表（纯数字进度）和其他研究（ANGEL-MeVO-TNK、Tiantan MeVO、General ECR/IIS）已正确排除在本议题之外。；议题覆盖 chunk-39f4d9eaa073（MAP建议及团队反馈）、chunk-8064d35da987（Tiantan Hospital power re-evaluation）、chunk-6a3a0422e4fb（Tiantan Hospital interim analysis）；其余 slides 属于 TREASURE 或通用议题，不属于本议题范围。；原始两条事实均为MAP先前建议的跟进反馈（power确认、interim分析结论），属于进度/执行明细，不含新的委员会请求、决议或待办行动；整题筛除。；本议题质检改动未被采纳，保留抽取初稿；本议题质检结果未被采纳，保留抽取初稿；议题覆盖USTC研究样本量设计、原方案与修订方案入组及interim analysis参数对比、MAP建议及PI/BDS不推荐Futility Interim的结论，补入了原稿遗漏的MAP follow-up表格证据（chunk-cf05a3c7e5b6），决策层级已注明原文未说明。",
+      "unresolved": [
+        "原文未说明本次 follow-up 反馈是否需要再次提交 PEC/CEC 或 MAP 进行正式背书/决议，for_endorsement 和 decision 均保持空。",
+        "原文未说明 ANGEL-MeVO-TNK 是否已提交 PEC/CEC 层级审批，MAP agrees 为当前最高可见决议层级。",
+        "文档中另有TREASURE（chunk-fd56b2378798）、ANGEL-MeVO-TNK（chunk-39f4d9eaa073）、General ECR/IIS（chunk-268836c13852）等议题，但均不属于本候选议题范围，未纳入处理。",
+        "本议题质检改动未被采纳，保留抽取初稿",
+        "本议题质检结果未被采纳，保留抽取初稿",
+        "决策层级不明确：Slide 8结论及MAP follow-up表格均未明确说明该建议是否经PEC/CEC正式审议通过，原文仅显示为MAP follow-up文件中的PI/BDS立场。"
+      ]
+    }
+  ],
+  "final_topic_ids": [
+    "topic-1eb0b3242ed7d69353fd",
+    "topic-dc9c25c2e4a55d2ab2fd",
+    "topic-f23f9902c0305a8573b8",
+    "topic-adcceb9599a814d0ad48"
+  ],
+  "document_grouping": "all_candidates_accounted_for"
+}

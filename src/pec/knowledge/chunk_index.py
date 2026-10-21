@@ -4,49 +4,34 @@ from __future__ import annotations
 
 import json
 import hashlib
-import argparse
 import os
-import threading
-import uuid
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 
 import numpy as np
 
-from src.llm.apollo import (
-    embed_texts,
-    get_access_token,
-    load_env,
-    rerank_documents,
-)
-
+from src.llm.apollo import embed_texts, get_access_token, load_env, rerank_documents
 from src.pec.knowledge.chunk_ingest import (
     chunk_draft_to_dict,
     file_sha256,
     ingest_file,
-    scan_source_files,
 )
-
-from src.pec.knowledge.preview_build import (
-    build_file_previews,
-    previews_enabled,
-    remove_file_previews,
-)
-
+from src.pec.knowledge.storage import active_dir, publish, WriterLock
+from src.pec.knowledge.sources import LocalSourceProvider, normalize_scope
+from src.pec.knowledge.quality import inspect_quality
+from src.pec.knowledge.lifecycle import visible, related_evidence
+from src.pec.knowledge.retrieval import recall_queries as build_recall_queries, lexical_scores_many, fuse, diverse, excerpt, neighbors
+from src.pec.knowledge.enrichment import extract_topics, topic_chunks, recipe, VERSION, quality_report_path
+from src.pec.knowledge.meetings import build_meeting_plans, meeting_topics, meeting_evidence
+from src.pec.knowledge.markdown import evidence_markdown
+from src.pec.knowledge.preview_build import build_file_previews, previews_enabled
 from src.pec.knowledge.paths import (
-    CHUNKS_FILE,
-    EMBEDDINGS_FILE,
     MANIFEST_FILE,
+    INDEX_DIR,
     SOURCES_DIR,
     ensure_dirs,
-    normalize_source_scope,
-    source_in_scope,
-    source_relative,
 )
-
-
-_index_lock = threading.RLock()
 
 
 @dataclass
@@ -58,11 +43,10 @@ class ChunkHit:
     loc: str
     method: str
     embed_score: float
-    render_mode: str = ""
-    vision_model: str = ""
-    vision_prompt_version: str = ""
-    source_digest: str = ""
     rerank_score: float | None = None
+    evidence: list[dict] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
+    query: str = ""
 
 
 def _now_iso() -> str:
@@ -74,114 +58,30 @@ def _rerank_min_score() -> float:
     return float(os.getenv("RERANK_MIN_SCORE", "0.4"))
 
 
-def _load_manifest() -> dict:
-    if not MANIFEST_FILE.is_file():
+def _load_manifest(directory: Path | None = None) -> dict:
+    path = (directory or active_dir()) / "manifest.json"
+    if not path.is_file():
         return {"version": 1, "files": {}, "embedding_model": "", "updated_at": ""}
-    return json.loads(MANIFEST_FILE.read_text(encoding="utf-8"))
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
-def _save_manifest(manifest: dict) -> None:
-    MANIFEST_FILE.parent.mkdir(parents=True, exist_ok=True)
-    MANIFEST_FILE.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
-
-
-def _load_chunks() -> list[dict]:
-    if not CHUNKS_FILE.is_file():
+def _load_chunks(directory: Path | None = None) -> list[dict]:
+    path = (directory or active_dir()) / "chunks.jsonl"
+    if not path.is_file():
         return []
     chunks: list[dict] = []
-    for line in CHUNKS_FILE.read_text(encoding="utf-8").splitlines():
+    for line in path.read_text(encoding="utf-8").splitlines():
         line = line.strip()
         if line:
             chunks.append(json.loads(line))
     return chunks
 
 
-def _save_chunks(chunks: list[dict]) -> None:
-    CHUNKS_FILE.parent.mkdir(parents=True, exist_ok=True)
-    with CHUNKS_FILE.open("w", encoding="utf-8") as fh:
-        for item in chunks:
-            fh.write(json.dumps(item, ensure_ascii=False) + "\n")
-
-
-def _load_embeddings() -> np.ndarray | None:
-    if not EMBEDDINGS_FILE.is_file():
+def _load_embeddings(directory: Path | None = None, *, mmap: bool = False) -> np.ndarray | None:
+    path = (directory or active_dir()) / "embeddings.npy"
+    if not path.is_file():
         return None
-    return np.load(EMBEDDINGS_FILE)
-
-
-def _save_embeddings(matrix: np.ndarray) -> None:
-    EMBEDDINGS_FILE.parent.mkdir(parents=True, exist_ok=True)
-    np.save(EMBEDDINGS_FILE, matrix.astype(np.float32))
-
-
-def _chunk_fingerprint(chunk: dict) -> str:
-    payload = json.dumps(
-        {
-            "chunk_id": chunk.get("chunk_id"),
-            "text": chunk.get("text"),
-            "source_ref": chunk.get("source_ref"),
-            "loc": chunk.get("loc"),
-            "method": chunk.get("method"),
-        },
-        ensure_ascii=False,
-        sort_keys=True,
-    )
-    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
-
-
-def _validate_matrix(matrix: np.ndarray, expected_rows: int) -> bool:
-    return (
-        matrix.ndim == 2
-        and len(matrix) == expected_rows
-        and (expected_rows == 0 or matrix.shape[1] > 0)
-        and bool(np.isfinite(matrix).all())
-    )
-
-
-def _chunks_digest(chunks: list[dict]) -> str:
-    payload = "".join(json.dumps(item, ensure_ascii=False, sort_keys=True) + "\n" for item in chunks)
-    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
-
-
-def _matrix_digest(matrix: np.ndarray) -> str:
-    normalized = np.ascontiguousarray(matrix.astype(np.float32))
-    return hashlib.sha256(normalized.tobytes()).hexdigest()
-
-
-def _atomic_write_text(path: Path, content: str, token: str) -> Path:
-    temporary = path.with_name(f".{path.name}.{token}.tmp")
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with temporary.open("w", encoding="utf-8", newline="\n") as handle:
-        handle.write(content)
-        handle.flush()
-        os.fsync(handle.fileno())
-    return temporary
-
-
-def _commit_snapshot(chunks: list[dict], matrix: np.ndarray, manifest: dict) -> None:
-    if not _validate_matrix(matrix, len(chunks)):
-        raise RuntimeError("embedding 矩阵与 chunk 快照不一致")
-    token = uuid.uuid4().hex
-    chunk_text = "".join(json.dumps(item, ensure_ascii=False) + "\n" for item in chunks)
-    chunk_tmp = _atomic_write_text(CHUNKS_FILE, chunk_text, token)
-    manifest_tmp = _atomic_write_text(
-        MANIFEST_FILE,
-        json.dumps(manifest, ensure_ascii=False, indent=2),
-        token,
-    )
-    embedding_tmp = EMBEDDINGS_FILE.with_name(f".{EMBEDDINGS_FILE.name}.{token}.tmp")
-    try:
-        EMBEDDINGS_FILE.parent.mkdir(parents=True, exist_ok=True)
-        with embedding_tmp.open("wb") as handle:
-            np.save(handle, matrix.astype(np.float32))
-            handle.flush()
-            os.fsync(handle.fileno())
-        chunk_tmp.replace(CHUNKS_FILE)
-        embedding_tmp.replace(EMBEDDINGS_FILE)
-        manifest_tmp.replace(MANIFEST_FILE)
-    finally:
-        for temporary in (chunk_tmp, embedding_tmp, manifest_tmp):
-            temporary.unlink(missing_ok=True)
+    return np.load(path, allow_pickle=False, mmap_mode="r" if mmap else None)
 
 
 def _cosine(query: np.ndarray, matrix: np.ndarray) -> np.ndarray:
@@ -209,293 +109,262 @@ def _remove_file_chunks(chunks: list[dict], source_ref: str) -> list[dict]:
     return [c for c in chunks if c.get("source_ref") != source_ref]
 
 
-def _embeddings_ready(manifest: dict, chunks: list[dict], matrix: np.ndarray | None) -> bool:
-    chunk_count = len(chunks)
+def _embeddings_ready(manifest: dict, chunk_count: int, matrix: np.ndarray | None) -> bool:
     if chunk_count == 0:
-        return bool(manifest.get("embeddings_ready", False))
-    if matrix is None or not _validate_matrix(matrix, chunk_count):
+        return True
+    if matrix is None or matrix.ndim != 2 or len(matrix) == 0 or matrix.shape[1] == 0:
         return False
-    configured_model = (os.getenv("APOLLO_EMBEDDING_MODEL") or "").strip()
-    if configured_model and manifest.get("embedding_model") != configured_model:
+    if len(matrix) != chunk_count:
         return False
-    if manifest.get("version", 1) >= 2 and (
-        manifest.get("chunks_sha256") != _chunks_digest(chunks)
-        or manifest.get("embeddings_sha256") != _matrix_digest(matrix)
-    ):
-        return False
-    return bool(manifest.get("embeddings_ready", False))
-
-
-def _build_incremental_embeddings(
-    chunks: list[dict],
-    old_chunks: list[dict],
-    old_matrix: np.ndarray | None,
-    *,
-    reuse_old: bool,
-) -> tuple[np.ndarray, int]:
-    vectors: dict[str, np.ndarray] = {}
-    if reuse_old and old_matrix is not None:
-        for index, chunk in enumerate(old_chunks):
-            fingerprint = _chunk_fingerprint(chunk)
-            if fingerprint in vectors:
-                raise RuntimeError("旧索引包含重复 chunk 内容标识")
-            vectors[fingerprint] = old_matrix[index]
-
-    missing = [chunk for chunk in chunks if _chunk_fingerprint(chunk) not in vectors]
-    if missing:
-        embedded = _batch_embed([chunk["text"] for chunk in missing])
-        if len(embedded) != len(missing):
-            raise RuntimeError("embedding 返回数量与新增 chunk 数量不一致")
-        for chunk, vector in zip(missing, embedded):
-            vectors[_chunk_fingerprint(chunk)] = np.asarray(vector, dtype=np.float32)
-
-    if not chunks:
-        return np.zeros((0, 0), dtype=np.float32), len(missing)
-    dimensions = {len(vector) for vector in vectors.values()}
-    if len(dimensions) != 1:
-        raise RuntimeError("新旧 embedding 向量维度不一致，请执行全量重建")
-    matrix = np.stack([vectors[_chunk_fingerprint(chunk)] for chunk in chunks]).astype(np.float32)
-    if not _validate_matrix(matrix, len(chunks)):
-        raise RuntimeError("生成的 embedding 矩阵无效")
-    return matrix, len(missing)
+    return manifest.get("embeddings_ready", True)
 
 
 def rebuild_embeddings_only() -> dict:
-    """仅根据已有 chunks.jsonl 重算向量（ingest 已完成、embed 中断时用）。"""
+    return update_knowledge_index(embed_only=True)
+
+
+def update_knowledge_index(scope: str = "", *, force: bool = False,
+                           embed_only: bool = False, tags_only: bool = False, progress=None,
+                           inspect_only: bool = False, _locked: bool = False,
+                           provider=None) -> dict:
+    """Independent ingestion service. Publish only after every stage succeeds."""
+    if not _locked:
+        with WriterLock():
+            return update_knowledge_index(scope, force=force, embed_only=embed_only,
+                progress=progress, inspect_only=inspect_only, tags_only=tags_only, _locked=True, provider=provider)
+    if tags_only:
+        raise ValueError("已取消标签补充")
+    if embed_only and inspect_only:
+        raise ValueError("入库模式不能同时启用")
     load_env()
     ensure_dirs()
-    embedding_model = os.getenv("APOLLO_EMBEDDING_MODEL", "openai-text-embedding-3-large")
-
-    with _index_lock:
-        chunks = _load_chunks()
-        if not chunks:
-            raise RuntimeError("chunks.jsonl 为空，请先运行完整索引（勿加 --embed-only）。")
-
-        print(f"重算 embedding：{len(chunks)} 个 chunk ...")
-        matrix = _rebuild_embeddings(chunks)
-        manifest = _load_manifest()
-        manifest.update({
-            "version": 2,
-            "generation": uuid.uuid4().hex,
-            "embedding_model": embedding_model,
-            "chunk_count": len(chunks),
-            "chunks_sha256": _chunks_digest(chunks),
-            "embeddings_sha256": _matrix_digest(matrix),
-            "embeddings_ready": True,
-            "updated_at": _now_iso(),
-            "source_root": str(SOURCES_DIR),
-        })
-        _commit_snapshot(chunks, matrix, manifest)
-
-    return {
-        "added": [],
-        "updated": [],
-        "removed": [],
-        "skipped": [],
-        "chunk_count": len(chunks),
-        "new_chunks": 0,
-        "scope": "(embed-only)",
-        "mode": "embed_only",
-    }
-
-#索引到底怎么建、怎么存在磁盘、怎么更新
-def update_knowledge_index(
-    scope: str = "", *, force: bool = False, embed_only: bool = False
-) -> dict:
-    """增量更新索引。通过 manifest 里的 sha256 判断文件是否变化。"""
-    if embed_only:
-        return rebuild_embeddings_only()
-
-    load_env()
-    ensure_dirs()
-    embedding_model = os.getenv("APOLLO_EMBEDDING_MODEL", "openai-text-embedding-3-large")
-    normalized_scope, _ = normalize_source_scope(scope)
-
-    with _index_lock:
-        manifest = _load_manifest()
-        old_chunks = _load_chunks()
-        old_matrix = _load_embeddings()
-        chunks = list(old_chunks)
-        files_meta: dict = dict(manifest.get("files", {}))
-
-        disk_files = scan_source_files(normalized_scope)
-        disk_map = {source_relative(f): f for f in disk_files}
-
-        added: list[str] = []
-        updated: list[str] = []
-        removed: list[str] = []
-        skipped: list[str] = []
-        new_chunk_count = 0
-        stale_previews: list[str] = []
-        for source_ref in list(files_meta.keys()):
-            if not source_in_scope(source_ref, normalized_scope):
+    scope = normalize_scope(scope)
+    report = progress or (lambda **event: None)
+    directory = active_dir()  # pin a coherent version for this operation
+    manifest = _load_manifest(directory)
+    old_chunks = _load_chunks(directory)
+    old_matrix = _load_embeddings(directory)
+    chunks = list(old_chunks)
+    files_meta = dict(manifest.get("files", {}))
+    topics_path = directory / "topics.json"
+    topics = json.loads(topics_path.read_text(encoding="utf-8")) if topics_path.is_file() else []
+    model = os.getenv("APOLLO_EMBEDDING_MODEL", "openai-text-embedding-3-large")
+    added, updated, skipped = [], [], []
+    diagnostics = []
+    new_count = 0
+    report(stage="scan", message="扫描本地资料")
+    before_tags = json.dumps(topics, sort_keys=True)
+    before_meetings = json.dumps(manifest.get("meeting_plans", {}), sort_keys=True)
+    if not embed_only and not tags_only:
+        documents = (provider or LocalSourceProvider()).discover(scope)
+        if not documents:
+            raise ValueError("所选范围没有支持的文件，请先上传 PPTX / DOCX / PDF / XLSX")
+        for i, document in enumerate(documents, 1):
+            path, ref = document.path, document.source_ref
+            report(stage="parse", message=f"解析 {ref}", completed=i-1, total=len(documents))
+            prev = files_meta.get(ref)
+            if prev and prev.get("state") == "withdrawn":
+                skipped.append(ref)
+                diagnostics.append({"source_ref": ref, "status": "withdrawn", "chunk_count": 0, "warnings": [{"loc": "文件", "reason": "已撤销，需先在文件管理中恢复"}]})
                 continue
-            if source_ref not in disk_map:
-                chunks = _remove_file_chunks(chunks, source_ref)
-                prev_digest = (files_meta.get(source_ref) or {}).get("sha256")
-                if prev_digest:
-                    stale_previews.append(prev_digest)
-                removed.append(source_ref)
-                del files_meta[source_ref]
-
-        for source_ref, path in disk_map.items():
             digest = file_sha256(path)
-            stat = path.stat()
-            prev = files_meta.get(source_ref)
-            if not force and prev and prev.get("sha256") == digest and prev.get("size") == stat.st_size:
-                skipped.append(source_ref)
+            if not force and not inspect_only and prev and prev.get("sha256") == digest and prev.get("parser_version") == VERSION and prev.get("recipe") == recipe():
+                skipped.append(ref)
+                diagnostics.append({"source_ref": ref, "status": prev.get("parse_status", "unchanged"), "chunk_count": prev.get("chunk_count", 0), "warnings": prev.get("warnings", []), "topic_count": prev.get("topic_count", 0), "vision_pages": 0})
                 continue
-
-            preview_meta: dict = {"enabled": False}
-            if previews_enabled():
-                try:
-                    preview_meta = build_file_previews(path, source_ref, digest)
-                except Exception as exc:
-                    print(f"    预览生成失败: {exc}")
-                    preview_meta = {"enabled": True, "error": str(exc), "pages": []}
-
-            chunks = _remove_file_chunks(chunks, source_ref)
-            print(f"  抽取: {source_ref}")
-            drafts = ingest_file(path)
-            chunks.extend(chunk_draft_to_dict(draft) for draft in drafts)
-            new_chunk_count += len(drafts)
-
-            files_meta[source_ref] = {
-                "sha256": digest,
-                "size": stat.st_size,
-                "mtime": stat.st_mtime,
-                "chunk_count": len(drafts),
-                "preview_pages": len(preview_meta.get("pages", [])),
-                "preview_type": preview_meta.get("file_type", ""),
-                "preview_error": preview_meta.get("error", ""),
-                "indexed_at": _now_iso(),
-            }
-            if prev:
-                updated.append(source_ref)
-                previous_digest = prev.get("sha256")
-                if previous_digest and previous_digest != digest:
-                    stale_previews.append(previous_digest)
-            else:
-                added.append(source_ref)
-
-        old_ready = (
-            manifest.get("embedding_model") == embedding_model
-            and _embeddings_ready(manifest, old_chunks, old_matrix)
-        )
-        changed = bool(added or updated or removed)
-        if not changed and old_ready:
-            return {
-                "added": [], "updated": [], "removed": [], "skipped": skipped,
-                "chunk_count": len(old_chunks), "new_chunks": 0, "embedded_chunks": 0,
-                "preview_pages": 0, "scope": normalized_scope or "(all)",
-            }
-
-        print(f"开始向量化：{len(chunks)} 个 chunk ...")
-        matrix, embedded_count = _build_incremental_embeddings(
-            chunks, old_chunks, old_matrix, reuse_old=old_ready,
-        )
-        manifest.update({
-            "version": 2,
-            "generation": uuid.uuid4().hex,
-            "embedding_model": embedding_model,
-            "files": files_meta,
-            "chunk_count": len(chunks),
-            "chunks_sha256": _chunks_digest(chunks),
-            "embeddings_sha256": _matrix_digest(matrix),
-            "source_root": str(SOURCES_DIR),
-            "embeddings_ready": True,
-            "updated_at": _now_iso(),
-        })
-        _commit_snapshot(chunks, matrix, manifest)
-        for digest in set(stale_previews):
-            remove_file_previews(digest)
-
-    preview_pages = 0
-    for ref in added + updated:
-        preview_pages += int(files_meta.get(ref, {}).get("preview_pages") or 0)
-
-    return {
-        "added": added,
-        "updated": updated,
-        "removed": removed,
-        "skipped": skipped,
-        "chunk_count": len(chunks),
-        "new_chunks": new_chunk_count,
-        "embedded_chunks": embedded_count,
-        "preview_pages": preview_pages,
-        "scope": normalized_scope or "(all)",
-    }
+            parsed = [chunk_draft_to_dict(c) for c in ingest_file(path)]
+            warnings = inspect_quality(path, parsed)
+            if digest != file_sha256(path):
+                raise RuntimeError(f"处理期间文件发生变化，请重新入库: {ref}")
+            diagnostics.append({"source_ref": ref, "status": "needs_review" if warnings else "parsed", "chunk_count": len(parsed), "warnings": warnings})
+            report(stage="parse", message=f"已解析 {ref}", completed=i, total=len(documents), files=diagnostics)
+            preview_meta = {}
+            file_topics = []
+            vision_pages = 0
+            markdown_path = None
+            if not inspect_only:
+                markdown_path = "parsed/" + hashlib.sha256((ref + digest + recipe()).encode()).hexdigest() + ".md"
+                md_file = INDEX_DIR / markdown_path
+                md_file.parent.mkdir(parents=True, exist_ok=True)
+                md_file.write_text(evidence_markdown(parsed), encoding="utf-8")
+                diagnostics[-1].update(chunk_count=len(parsed), vision_pages=0, warnings=warnings,
+                                      status="extracting_topics" if parsed else "skipped_no_text")
+                report(stage="parse_done", message=f"原生文本解析完成 {ref}，已清理图片标记", files=diagnostics)
+                if previews_enabled() and not vision_pages:
+                    report(stage="preview", message=f"生成预览 {ref}", files=diagnostics)
+                    try:
+                        preview_meta = build_file_previews(path, ref, digest)
+                    except Exception as exc:
+                        warnings.append({"loc": "预览", "reason": f"生成失败：{exc}"})
+                file_topics = extract_topics(ref, digest, parsed, report, force) if parsed else []
+                topics = [t for t in topics if t["source_ref"] != ref] + file_topics
+                parsed += topic_chunks(file_topics)
+                if digest != file_sha256(path):
+                    raise RuntimeError(f"处理期间文件发生变化，请重新入库：{ref}")
+            diagnostics[-1].update(chunk_count=len(parsed), topic_count=len(file_topics), vision_pages=vision_pages, warnings=warnings,
+                                   topics=[{"title": t["title"], "topic_id": t["topic_id"]} for t in file_topics],
+                                   status=("processed" if parsed else "skipped_no_text") if not inspect_only else "inspected")
+            report(stage="file_done", message=f"完成 {ref}：{len(file_topics)} 个 topic" if parsed else f"跳过 {ref}：无可提取文本", files=diagnostics)
+            chunks = _remove_file_chunks(chunks, ref) + parsed
+            new_count += len(parsed)
+            files_meta[ref] = {"sha256": digest, "size": path.stat().st_size,
+                "chunk_count": len(parsed), "parser_version": VERSION, "recipe": recipe(), "topic_count": len(file_topics), "vision_pages": vision_pages, "indexed_at": _now_iso(),
+                "provider": document.provider, "external_id": document.external_id,
+                "parse_status": "processed" if parsed else "skipped_no_text", "markdown_path": markdown_path,
+                "quality_report": quality_report_path(ref, digest) if parsed and not inspect_only else None,
+                "warnings": warnings, "preview_pages": len(preview_meta.get("pages", [])),
+                "preview_type": preview_meta.get("file_type", "")}
+            (updated if prev else added).append(ref)
+    if not inspect_only and not embed_only and not tags_only:
+        manifest["meeting_plans"] = build_meeting_plans(topics, report, force, chunks, scope, manifest.get("meeting_plans"))
+    if not inspect_only and not embed_only:
+        chunks = [c for c in chunks if c.get("method") != "topic"] + topic_chunks(topics)
+        from collections import Counter
+        counts = Counter(c["source_ref"] for c in chunks)
+        files_meta = {ref:dict(meta, chunk_count=counts.get(ref,0)) for ref,meta in files_meta.items()}
+    metadata_changed = before_tags != json.dumps(topics, sort_keys=True) or before_meetings != json.dumps(manifest.get("meeting_plans", {}), sort_keys=True)
+    result = {"added": added, "updated": updated, "removed": [], "skipped": skipped,
+        "topic_count": len(topics), "chunk_count": len(chunks), "new_chunks": new_count, "scope": scope or "(all)",
+        "meeting_topic_count": len(meeting_topics(topics, {**manifest, "files": files_meta})),
+        "files": diagnostics, "tags_pending": 0, "mode": "inspect" if inspect_only else "embed_only" if embed_only else "update"}
+    if inspect_only:
+        report(stage="inspected", message="本地解析检查完成，未调用模型、未发布索引", files=diagnostics)
+        return result
+    cache = {}
+    if not embed_only and old_matrix is not None and _embeddings_ready(manifest, len(old_chunks), old_matrix) and manifest.get("embedding_model") == model:
+        cache = {c["text"]: old_matrix[i] for i, c in enumerate(old_chunks)}
+    missing = list(dict.fromkeys(c["text"] for c in chunks if c["text"] not in cache))
+    for offset in range(0, len(missing), 16):
+        batch = missing[offset:offset+16]
+        report(stage="embed", message=f"生成向量 {offset}/{len(missing)}", completed=offset, total=len(missing))
+        vectors = _batch_embed(batch)
+        if len(vectors) != len(batch):
+            raise RuntimeError("模型返回向量数量不匹配")
+        cache.update(zip(batch, vectors))
+    matrix = np.asarray([cache[c["text"]] for c in chunks], dtype=np.float32) if chunks else np.empty((0, 0), dtype=np.float32)
+    result["embedded_texts"] = len(missing)
+    missing_set = set(missing)
+    result["reused_chunks"] = sum(c["text"] not in missing_set for c in chunks)
+    if not added and not updated and not missing and not metadata_changed and manifest.get("version") == VERSION:
+        report(stage="unchanged", message="资料和向量均未变化，保留当前版本")
+        return result
+    report(stage="publish", message="发布完整索引版本")
+    manifest.update(version=VERSION, topic_count=len(topics), files=files_meta, chunk_count=len(chunks),
+        embedding_model=model, embeddings_ready=True, updated_at=_now_iso(), source_root=str(SOURCES_DIR))
+    publish(manifest, chunks, matrix, topics if not embed_only or topics_path.exists() else None)
+    return result
 
 
 def get_index_status() -> dict:
     ensure_dirs()
-    with _index_lock:
-        manifest = _load_manifest()
-        chunks = _load_chunks()
-        matrix = _load_embeddings()
-    chunk_count = len(chunks)
+    directory = active_dir()
+    manifest = _load_manifest(directory)
+    chunks = _load_chunks(directory)
+    # Status polling needs only the array header, not a full vector copy in RAM.
+    matrix = _load_embeddings(directory, mmap=True)
+    chunk_count = sum(visible(manifest, c["source_ref"]) for c in chunks)
+    topics_path = directory / "topics.json"
+    topic_count = sum(visible(manifest, t["source_ref"]) for t in json.loads(topics_path.read_text(encoding="utf-8"))) if topics_path.is_file() else 0
     return {
         "sources_dir": str(SOURCES_DIR),
         "index_dir": str(MANIFEST_FILE.parent),
         "chunk_count": chunk_count,
-        "file_count": len(manifest.get("files", {})),
+        "file_count": sum(visible(manifest, ref) for ref in manifest.get("files", {})),
+        "withdrawn_count": sum(not visible(manifest, ref) for ref in manifest.get("files", {})),
+        "topic_count": topic_count,
         "embedding_model": manifest.get("embedding_model", ""),
         "updated_at": manifest.get("updated_at", ""),
-        "manifest_exists": MANIFEST_FILE.is_file(),
-        "embeddings_ready": _embeddings_ready(manifest, chunks, matrix),
+        "manifest_exists": (directory / "manifest.json").is_file(),
+        "files": manifest.get("files", {}),
+        "embeddings_ready": _embeddings_ready(manifest, len(chunks), matrix),
     }
 
 
 def search_chunks(
     query: str,
     *,
-    top_n: int = 5,
-    recall_top_k: int = 30,
+    top_n: int = 8,
+    recall_top_k: int = 40,
     folder: str = "",
+    _directory: Path | None = None,
+    tag_filters: dict | None = None,
+    recall_queries: list[str] | None = None,
+    original_query: str = "",
 ) -> list[ChunkHit]:
     load_env()
-    with _index_lock:
-        all_chunks = _load_chunks()
-        matrix = _load_embeddings()
-        manifest = _load_manifest()
+    directory = _directory or active_dir()
+    all_chunks = _load_chunks(directory)
+    matrix = _load_embeddings(directory)
+    manifest = _load_manifest(directory)
     if not all_chunks:
         return []
-    if not _embeddings_ready(manifest, all_chunks, matrix):
-        raise RuntimeError(
-            "向量索引未完成（embeddings 缺失或与 chunk 数量不一致）。"
-            "请运行: python -m src.pec.knowledge.chunk_index update --embed-only"
-        )
-
-    if folder.strip():
-        folder_name = folder.strip()
-        id_to_idx = {c["chunk_id"]: i for i, c in enumerate(all_chunks)}
-        chunks = [c for c in all_chunks if c.get("folder") == folder_name]
-        if not chunks:
-            return []
-        indices = [id_to_idx[c["chunk_id"]] for c in chunks]
-        matrix = matrix[indices]
-    else:
-        chunks = all_chunks
-
-    token = get_access_token()
-    query_vec = np.array(embed_texts([query], access_token=token)[0], dtype=np.float32)
-    scores = _cosine(query_vec, matrix)
-    order = np.argsort(scores)[::-1][:recall_top_k]
-
-    candidates: list[tuple[dict, float]] = []
-    for idx in order:
-        candidates.append((chunks[int(idx)], float(scores[int(idx)])))
-
-    docs = [c[0]["text"] for c in candidates]
-    reranked = rerank_documents(query, docs, top_n=len(docs), access_token=token)
-    min_score = _rerank_min_score()
+    from src.pec.knowledge.tagging import normalize_filters, matches
+    tag_filters = normalize_filters(tag_filters)
+    topic_path = directory / "topics.json"
+    filtered_topics = json.loads(topic_path.read_text(encoding="utf-8")) if topic_path.is_file() else []
+    allowed = {identifier for t in filtered_topics if matches(t,tag_filters) for identifier in [t["topic_id"], *t.get("evidence_ids",[])]}
+    scope = normalize_scope(folder)
+    indices = [i for i, c in enumerate(all_chunks) if visible(manifest, c["source_ref"]) and (not scope or c["source_ref"].startswith(scope + "/")) and (not tag_filters or c.get("topic_id", c["chunk_id"]) in allowed)]
+    chunks = [all_chunks[i] for i in indices]
+    if not chunks or not query.strip():
+        return []
+    top_n = max(1, min(top_n, 20))
+    recall_top_k = max(top_n, min(recall_top_k, 100))
+    warnings = []
+    ranking_query = original_query.strip() or query
+    queries = build_recall_queries(query, recall_queries)
+    lexical_orders = [sorted((i for i, score in enumerate(lexical) if score > 0), key=lambda i: (-lexical[i], i))[:recall_top_k]
+                      for lexical in lexical_scores_many(queries, chunks)]
+    vector_order = []
+    scores = np.zeros(len(chunks))
+    try:
+        if not _embeddings_ready(manifest, len(all_chunks), matrix):
+            raise RuntimeError("向量索引未就绪")
+        if manifest.get("embedding_model") != os.getenv("APOLLO_EMBEDDING_MODEL", "openai-text-embedding-3-large"):
+            raise RuntimeError("当前 embedding 模型与入库模型不一致，请在知识库重算向量")
+        query_vec = np.array(embed_texts([query])[0], dtype=np.float32)
+        if matrix.shape[1] != len(query_vec) or not np.isfinite(query_vec).all():
+            raise RuntimeError("查询向量维度或数值异常")
+        scores = _cosine(query_vec, matrix[indices])
+        vector_order = np.argsort(scores)[::-1][:recall_top_k].tolist()
+    except Exception as exc:
+        warnings.append(f"向量召回不可用，已降级为关键词召回：{exc}")
+    order = fuse(vector_order, lexical_orders[0], chunks, min(60, recall_top_k * 2), lexical_orders[1:])
+    if not order:
+        if warnings:
+            raise RuntimeError("；".join(warnings) + "；关键词也未找到候选证据")
+        return []
+    docs = [chunks[i]["source_ref"] + " · " + chunks[i].get("loc", "") + "\n" + chunks[i]["text"] for i in order]
+    try:
+        reranked = rerank_documents(ranking_query, docs, top_n=len(docs))
+        rows = []
+        seen = set()
+        for row in reranked:
+            index = row["index"]
+            score = float(row.get("relevance_score", 0.))
+            if not isinstance(index, int) or not 0 <= index < len(order) or not np.isfinite(score):
+                raise ValueError("重排返回非法结果")
+            if index not in seen and score >= _rerank_min_score():
+                rows.append((order[index], score))
+                seen.add(index)
+        rows.sort(key=lambda row: -row[1])
+    except Exception as exc:
+        warnings.append(f"重排不可用，使用融合排名；相关性尚未确认：{exc}")
+        rows = [(i, None) for i in order]
+    selected = diverse(rows, chunks, top_n)
+    if not selected and warnings:
+        raise RuntimeError("；".join(warnings) + "；未找到达到相关性阈值的证据")
 
     hits: list[ChunkHit] = []
-    for row in reranked:
-        score = float(row.get("relevance_score", 0.0))
-        if score < min_score:
-            continue
-        item, embed_score = candidates[row["index"]]
+    topics_path = directory / "topics.json"
+    topics = json.loads(topics_path.read_text(encoding="utf-8")) if topics_path.is_file() else []
+    context_chunks = chunks if tag_filters else all_chunks
+    topics = [t for t in topics if matches(t,tag_filters)]
+    evidence_by_id = {c["chunk_id"]: c for c in context_chunks if visible(manifest, c["source_ref"])}
+    meetings = meeting_topics(topics, manifest, scope, tag_filters)
+    for index, score in selected:
+        item = chunks[index]
+        embed_score = float(scores[index])
         hits.append(
             ChunkHit(
                 chunk_id=item["chunk_id"],
@@ -504,12 +373,14 @@ def search_chunks(
                 folder=item.get("folder", ""),
                 loc=item.get("loc", ""),
                 method=item.get("method", ""),
-                render_mode=item.get("render_mode", ""),
-                vision_model=item.get("vision_model", ""),
-                vision_prompt_version=item.get("vision_prompt_version", ""),
-                source_digest=item.get("source_digest", ""),
                 embed_score=embed_score,
                 rerank_score=score,
+                warnings=warnings,
+                query=ranking_query,
+                evidence=[{**evidence_by_id[eid], "text": "\n".join(item.get("evidence_quotes", {}).get(eid, [evidence_by_id[eid]["text"]]))}
+                          for eid in item.get("evidence_ids", []) if eid in evidence_by_id]
+                         + meeting_evidence(item, meetings, evidence_by_id)
+                         + neighbors(item, context_chunks) + related_evidence(item, context_chunks, topics, manifest, scope),
             )
         )
         if len(hits) >= top_n:
@@ -519,22 +390,25 @@ def search_chunks(
 
 def format_hits(hits: list[ChunkHit]) -> str:
     if not hits:
-        return (
-            f"未找到 rerank 相关性 ≥ {_rerank_min_score():.0%} 的 chunk。"
-            "请先调用 update_knowledge_index 建立/更新索引。"
-        )
-    lines: list[str] = []
-    for i, hit in enumerate(hits, start=1):
-        lines.append(f"### [{i}] {hit.source_ref} · {hit.loc}")
-        lines.append(f"- folder: {hit.folder}")
-        lines.append(f"- method: {hit.method}")
-        lines.append(f"- rerank_score: {hit.rerank_score:.4f}")
-        preview = hit.text.replace("\n", " ")
-        if len(preview) > 1500:
-            preview = preview[:1500] + "..."
-        lines.append(f"- text: {preview}")
-        lines.append("")
-    return "\n".join(lines).strip()
+        return "在当前检索范围内未找到足够相关的证据。不要据此推断会议从未讨论；也不要编造答案。"
+    budget = max(4000, min(int(os.getenv("RETRIEVAL_CONTEXT_CHARS", "24000")), 60000))
+    lines = []
+    used = 0
+    allowance = budget // len(hits)
+    for hit in hits:
+        header = f"### [{hit.chunk_id}] {hit.source_ref} · {hit.loc} ({hit.method})\n"
+        score = f"rerank: {hit.rerank_score:.4f}" if hit.rerank_score is not None else "融合召回：未完成相关性重排"
+        supporting = "\n".join(f"[{e['chunk_id']}] {e['source_ref']} · {e['loc']} ({e['method']}): {e['text']}" for e in hit.evidence)
+        remaining = max(0, allowance - len(header) - len(score) - 50)
+        body = excerpt(hit.text, remaining // 2 if supporting else remaining, hit.query)
+        if supporting:
+            body += "\n支撑证据：\n" + excerpt(supporting, remaining // 2)
+        block = header + score + "\n" + body
+        if used + len(block) > budget:
+            break
+        lines.append(block)
+        used += len(block) + 2
+    return "\n\n".join(lines)
 
 
 def format_update_result(result: dict) -> str:
@@ -548,7 +422,6 @@ def format_update_result(result: dict) -> str:
         f"索引更新完成（scope={result['scope']}）。\n"
         f"- 总 chunk 数: {result['chunk_count']}\n"
         f"- 本次新增 chunk: {result['new_chunks']}\n"
-        f"- 本次计算向量: {result.get('embedded_chunks', result['new_chunks'])}\n"
         f"- 新增文件: {len(result['added'])}\n"
         f"- 更新文件: {len(result['updated'])}\n"
         f"- 删除文件: {len(result['removed'])}\n"
@@ -561,26 +434,3 @@ def format_update_result(result: dict) -> str:
         + (f"- added: {', '.join(result['added'][:10])}\n" if result["added"] else "")
         + (f"- updated: {', '.join(result['updated'][:10])}\n" if result["updated"] else "")
     )
-
-
-def main() -> None:
-    parser = argparse.ArgumentParser(description="PEC chunk 索引管理")
-    subparsers = parser.add_subparsers(dest="command", required=True)
-    update = subparsers.add_parser("update", help="建立或增量更新索引")
-    update.add_argument("--scope", default="", help="sources 下的目录或文件")
-    update.add_argument("--force", action="store_true", help="强制重新抽取 scope 内文件")
-    update.add_argument("--embed-only", action="store_true", help="仅重算已有 chunks 的向量")
-    subparsers.add_parser("status", help="显示索引状态")
-    args = parser.parse_args()
-    if args.command == "status":
-        print(json.dumps(get_index_status(), ensure_ascii=False, indent=2))
-        return
-    print(format_update_result(update_knowledge_index(
-        scope=args.scope,
-        force=args.force,
-        embed_only=args.embed_only,
-    )))
-
-
-if __name__ == "__main__":
-    main()

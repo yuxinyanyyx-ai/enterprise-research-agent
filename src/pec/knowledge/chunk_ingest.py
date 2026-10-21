@@ -3,20 +3,16 @@
 from __future__ import annotations
 
 import hashlib
-import json
-import os
-import re
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
-from src.llm.apollo import describe_image, get_access_token
-from src.pec.knowledge.paths import (
-    INDEX_DIR,
-    SUPPORTED_SUFFIXES,
-    normalize_source_scope,
-    resolve_source_path,
-    source_relative,
-)
+from docx import Document
+from pptx import Presentation
+from pptx.enum.shapes import MSO_SHAPE_TYPE
+from pypdf import PdfReader
+
+from src.pec.knowledge.markdown import clean_image_markup, image_reference_labels
+from src.pec.knowledge.paths import SOURCES_DIR, SUPPORTED_SUFFIXES, resolve_source_path, source_relative
 
 
 @dataclass
@@ -26,100 +22,11 @@ class ChunkDraft:
     source_ref: str
     folder: str
     loc: str
-    method: str  # text | vision | vision_page | table
-    render_mode: str = ""
-    vision_model: str = ""
-    vision_prompt_version: str = ""
-    source_digest: str = ""
-
-
-def _min_slide_text() -> int:
-    return int(os.getenv("MIN_SLIDE_TEXT_CHARS", "80"))
-
-
-def _vision_mode() -> str:
-    mode = (os.getenv("PEC_PPT_VISION_MODE", "smart") or "smart").strip().lower()
-    return mode if mode in {"smart", "all", "none"} else "smart"
-
-
-def _vision_max_slides() -> int:
-    return max(0, int(os.getenv("PEC_PPT_VISION_MAX_SLIDES", "0")))
-
-
-def _vision_cache_dir() -> Path:
-    return INDEX_DIR / "vision_cache"
-
-
-def _vision_model_name() -> str:
-    return (
-        os.getenv("APOLLO_PEC_VISION_MODEL")
-        or os.getenv("APOLLO_VISION_MODEL")
-        or os.getenv("APOLLO_MODEL")
-        or ""
-    ).strip()
-
-
-def _slide_number(loc: str) -> int:
-    match = re.match(r"Slide\s+(\d+)", loc, re.I)
-    return int(match.group(1)) if match else 0
-
-
-def _vision_prompt_version() -> str:
-    return os.getenv("PEC_PPT_VISION_PROMPT_VERSION", "2").strip()
-
-
-def _vision_cache_file(source_digest: str, slide_no: int, render_mode: str) -> Path:
-    version = _vision_prompt_version()
-    key = hashlib.sha256(
-        f"{source_digest}|{slide_no}|{render_mode}|{_vision_model_name()}|{version}".encode()
-    ).hexdigest()
-    return _vision_cache_dir() / f"{key}.json"
-
-
-def _load_cached_vision(source_digest: str, slide_no: int, render_mode: str) -> str | None:
-    path = _vision_cache_file(source_digest, slide_no, render_mode)
-    if not path.is_file():
-        return None
-    try:
-        payload = json.loads(path.read_text(encoding="utf-8"))
-        text = str(payload.get("text") or "").strip()
-        return text or None
-    except (OSError, ValueError, TypeError):
-        return None
-
-
-def _save_cached_vision(
-    source_digest: str,
-    slide_no: int,
-    render_mode: str,
-    text: str,
-) -> None:
-    path = _vision_cache_file(source_digest, slide_no, render_mode)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        json.dumps(
-            {
-                "source_digest": source_digest,
-                "slide": slide_no,
-                "render_mode": render_mode,
-                "vision_model": _vision_model_name(),
-                "vision_prompt_version": _vision_prompt_version(),
-                "text": text,
-            },
-            ensure_ascii=False,
-        ),
-        encoding="utf-8",
-    )
-
-
-def _missing_dependency(package: str, file_type: str, exc: ImportError) -> RuntimeError:
-    return RuntimeError(
-        f"索引 {file_type} 文件需要安装 {package}，请更新项目依赖后重试。"
-    )
+    method: str  # text | table
 
 
 def _make_chunk_id(source_ref: str, loc: str, text: str) -> str:
-    digest = hashlib.sha1(f"{source_ref}|{loc}|{text[:120]}".encode()).hexdigest()[:12]
+    digest = hashlib.sha1(f"{source_ref}|{loc}|{text}".encode()).hexdigest()[:12]
     return f"chunk-{digest}"
 
 
@@ -129,6 +36,8 @@ def _folder_name(source_ref: str) -> str:
 
 
 def _serialize_table(headers: list[str], row: list[str]) -> str:
+    headers = [clean_image_markup(value) for value in headers]
+    row = [clean_image_markup(value) for value in row]
     pairs = []
     for i, value in enumerate(row):
         if not (value or "").strip():
@@ -138,142 +47,42 @@ def _serialize_table(headers: list[str], row: list[str]) -> str:
     return " | ".join(pairs)
 
 
-def _slide_needs_vision(slide, body: str, mode: str) -> bool:
-    if mode == "all":
-        return True
-    if mode == "none":
-        return False
-    try:
-        from pptx.enum.shapes import MSO_SHAPE_TYPE
-    except ImportError as exc:
-        raise _missing_dependency("python-pptx", "PPTX", exc) from exc
-    shape_types = {shape.shape_type for shape in slide.shapes}
-    normalized_body = re.sub(r"\s+", " ", body).strip().lower()
-    template_terms = (
-        "thank you",
-        "backup",
-        "back-up",
-        "appendix",
-        "目录",
-        "agenda",
-        "contents",
-    )
-    if any(term in normalized_body for term in template_terms):
-        return False
-
-    # Vision should add information that native extraction cannot represent.
-    # A native table or a short title is not, by itself, visual evidence.
-    visual_types = {MSO_SHAPE_TYPE.PICTURE, MSO_SHAPE_TYPE.CHART}
-    has_visual_shape = bool(shape_types & visual_types)
-    group_type = getattr(MSO_SHAPE_TYPE, "GROUP", None)
-    def contains_visual(shape) -> bool:
-        if getattr(shape, "shape_type", None) in visual_types:
-            return True
-        if getattr(shape, "shape_type", None) != group_type:
-            return False
-        return any(contains_visual(child) for child in getattr(shape, "shapes", ()))
-
-    if group_type is not None and group_type in shape_types:
-        has_visual_shape = has_visual_shape or any(contains_visual(shape) for shape in slide.shapes)
-
-    layout_shape_types = {
-        MSO_SHAPE_TYPE.AUTO_SHAPE,
-        MSO_SHAPE_TYPE.LINE,
-    }
-    connector_type = getattr(MSO_SHAPE_TYPE, "CONNECTOR", None)
-    if connector_type is not None:
-        layout_shape_types.add(connector_type)
-    layout_shape_count = sum(shape.shape_type in layout_shape_types for shape in slide.shapes)
-    connector_count = (
-        sum(shape.shape_type == connector_type for shape in slide.shapes)
-        if connector_type is not None
-        else 0
-    )
-    auto_shape_count = sum(
-        shape.shape_type == MSO_SHAPE_TYPE.AUTO_SHAPE for shape in slide.shapes
-    )
-    has_layout_semantics = connector_count >= 2 and auto_shape_count >= 3
-
-    # Do not send blank/template slides to Vision unless they contain a real
-    # image, chart, or diagram whose meaning is not present in native text.
-    return has_visual_shape or has_layout_semantics
+def _walk_shapes(shapes):
+    for shape in shapes:
+        if shape.shape_type == MSO_SHAPE_TYPE.GROUP:
+            yield from _walk_shapes(shape.shapes)
+        else:
+            yield shape
 
 
-def _rendered_slide_image(source_ref: str, slide_no: int) -> tuple[Path | None, str]:
-    from src.pec.knowledge.preview_build import get_preview_image
-
-    return get_preview_image(source_ref, f"Slide {slide_no}")
-
-
-def _vision_slide_page(
-    path: Path,
-    source_ref: str,
-    slide_no: int,
-    source_digest: str,
-    access_token: str | None,
-) -> tuple[str, str] | None:
-    image_result = _rendered_slide_image(source_ref, slide_no)
-    if isinstance(image_result, tuple):
-        image_path, render_mode = image_result
-    else:
-        image_path, render_mode = image_result, ""
-    if image_path is None:
-        return None
-    cached = _load_cached_vision(source_digest, slide_no, render_mode)
-    if cached:
-        return cached, render_mode
-    token = access_token or get_access_token()
-    text = describe_image(
-        image_path.read_bytes(),
-        mime_type="image/png",
-        access_token=token,
-    ).strip()
-    if text:
-        _save_cached_vision(source_digest, slide_no, render_mode, text)
-        return text, render_mode
-    return None
-
-# PPT 是怎么切 Chunk
-# 有两种 Chunk：
-#
-# 一页 PPT
-#   │
-#   ├── 普通文本 → Slide Chunk
-#   │
-#   └── 表格 → 每一行单独一个 Table Chunk
-def _extract_pptx_chunks(
-    path: Path,
-    source_ref: str,
-    access_token: str | None = None,
-) -> list[ChunkDraft]:
-    try:
-        from pptx import Presentation
-        from pptx.enum.shapes import MSO_SHAPE_TYPE
-    except ImportError as exc:
-        raise _missing_dependency("python-pptx", "PPTX", exc) from exc
+def _extract_pptx_chunks(path: Path, source_ref: str, access_token: str) -> list[ChunkDraft]:
     prs = Presentation(str(path))
-    min_text = _min_slide_text()
-    vision_mode = _vision_mode()
-    source_digest = file_sha256(path)
-    vision_count = 0
     chunks: list[ChunkDraft] = []
 
     for slide_no, slide in enumerate(prs.slides, start=1):
         loc = f"Slide {slide_no}"
         texts: list[str] = []
-        for shape in slide.shapes:
+        table_no = 0
+        slide_tables = []
+        for shape in _walk_shapes(slide.shapes):
             if hasattr(shape, "text") and shape.text.strip():
                 texts.append(shape.text.strip())
             if shape.shape_type == MSO_SHAPE_TYPE.TABLE:
+                table_no += 1
                 table = shape.table
                 headers = [cell.text.strip() for cell in table.rows[0].cells]
+                header_text = " | ".join(clean_image_markup(value) for value in headers)
+                if header_text.strip(" |"):
+                    header_loc = f"{loc} Table {table_no} row 1"
+                    slide_tables.append(ChunkDraft(_make_chunk_id(source_ref, header_loc, header_text),
+                        header_text, source_ref, _folder_name(source_ref), header_loc, "table"))
                 for row_idx in range(1, len(table.rows)):
                     row = table.rows[row_idx]
                     cells = [cell.text.strip() for cell in row.cells]
                     row_text = _serialize_table(headers, cells)
                     if row_text:
-                        row_loc = f"{loc} Table row {row_idx + 1}"
-                        chunks.append(
+                        row_loc = f"{loc} Table {table_no} row {row_idx + 1}"
+                        slide_tables.append(
                             ChunkDraft(
                                 chunk_id=_make_chunk_id(source_ref, row_loc, row_text),
                                 text=row_text,
@@ -285,7 +94,8 @@ def _extract_pptx_chunks(
                         )
 
         body = "\n".join(texts).strip()
-        if len(body) >= min_text:
+        method = "text"
+        if body:
             chunks.append(
                 ChunkDraft(
                     chunk_id=_make_chunk_id(source_ref, loc, body),
@@ -293,57 +103,47 @@ def _extract_pptx_chunks(
                     source_ref=source_ref,
                     folder=_folder_name(source_ref),
                     loc=loc,
-                    method="text",
-                    source_digest=source_digest,
+                    method=method,
                 )
             )
-        if _slide_needs_vision(slide, body, vision_mode):
-            max_slides = _vision_max_slides()
-            if max_slides == 0 or vision_count < max_slides:
-                vision_result = None
-                try:
-                    vision_result = _vision_slide_page(
-                        path,
-                        source_ref,
-                        slide_no,
-                        source_digest,
-                        access_token,
-                    )
-                except Exception:
-                    pass
-                if vision_result:
-                    vision_text, render_mode = vision_result
-                    chunks.append(
-                        ChunkDraft(
-                            chunk_id=_make_chunk_id(source_ref, f"{loc} Vision", vision_text),
-                            text=vision_text,
-                            source_ref=source_ref,
-                            folder=_folder_name(source_ref),
-                            loc=loc,
-                            method="vision_page",
-                            render_mode=render_mode,
-                            vision_model=_vision_model_name(),
-                            vision_prompt_version=_vision_prompt_version(),
-                            source_digest=source_digest,
-                        )
-                    )
-                    vision_count += 1
+        chunks.extend(slide_tables)
     return chunks
 
 
 def _extract_docx_chunks(path: Path, source_ref: str) -> list[ChunkDraft]:
-    try:
-        from docx import Document
-    except ImportError as exc:
-        raise _missing_dependency("python-docx", "DOCX", exc) from exc
     doc = Document(str(path))
     chunks: list[ChunkDraft] = []
 
-    for para in doc.paragraphs:
-        text = para.text.strip()
-        if len(text) < 40:
+    # Iterate XML children to preserve paragraphs interleaved with tables.
+    from docx.text.paragraph import Paragraph
+    from docx.table import Table
+    para_no = table_idx = 0
+    for element in doc.element.body:
+        if element.tag.endswith('}tbl'):
+            table_idx += 1
+            table = Table(element, doc)
+            if not table.rows:
+                continue
+            headers = [cell.text.strip() for cell in table.rows[0].cells]
+            header_text = " | ".join(clean_image_markup(value) for value in headers)
+            if header_text.strip(" |"):
+                header_loc = f"Table {table_idx} row 1"
+                chunks.append(ChunkDraft(_make_chunk_id(source_ref, header_loc, header_text),
+                    header_text, source_ref, _folder_name(source_ref), header_loc, "table"))
+            for row_idx, row in enumerate(table.rows[1:], start=2):
+                text = _serialize_table(headers, [cell.text.strip() for cell in row.cells])
+                loc = f"Table {table_idx} row {row_idx}"
+                if text:
+                    chunks.append(ChunkDraft(_make_chunk_id(source_ref, loc, text), text,
+                        source_ref, _folder_name(source_ref), loc, "table"))
             continue
-        loc = "Paragraph"
+        if not element.tag.endswith('}p'):
+            continue
+        para_no += 1
+        text = Paragraph(element, doc).text.strip()
+        if not text:
+            continue
+        loc = f"Paragraph {para_no}"
         chunks.append(
             ChunkDraft(
                 chunk_id=_make_chunk_id(source_ref, loc + text[:40], text),
@@ -355,43 +155,17 @@ def _extract_docx_chunks(path: Path, source_ref: str) -> list[ChunkDraft]:
             )
         )
 
-    for table_idx, table in enumerate(doc.tables, start=1):
-        if not table.rows:
-            continue
-        headers = [cell.text.strip() for cell in table.rows[0].cells]
-        for row_idx in range(1, len(table.rows)):
-            row = table.rows[row_idx]
-            cells = [cell.text.strip() for cell in row.cells]
-            row_text = _serialize_table(headers, cells)
-            if not row_text:
-                continue
-            loc = f"Table {table_idx} row {row_idx + 1}"
-            chunks.append(
-                ChunkDraft(
-                    chunk_id=_make_chunk_id(source_ref, loc, row_text),
-                    text=row_text,
-                    source_ref=source_ref,
-                    folder=_folder_name(source_ref),
-                    loc=loc,
-                    method="table",
-                )
-            )
     return chunks
 
 
-def _extract_pdf_chunks(path: Path, source_ref: str) -> list[ChunkDraft]:
-    try:
-        from pypdf import PdfReader
-    except ImportError as exc:
-        raise _missing_dependency("pypdf", "PDF", exc) from exc
+def _extract_pdf_chunks(path: Path, source_ref: str, access_token: str) -> list[ChunkDraft]:
     reader = PdfReader(str(path))
-    min_text = _min_slide_text()
     chunks: list[ChunkDraft] = []
 
     for page_no, page in enumerate(reader.pages, start=1):
         loc = f"Page {page_no}"
         text = (page.extract_text() or "").strip()
-        if len(text) >= min_text:
+        if text:
             chunks.append(
                 ChunkDraft(
                     chunk_id=_make_chunk_id(source_ref, loc, text),
@@ -406,35 +180,23 @@ def _extract_pdf_chunks(path: Path, source_ref: str) -> list[ChunkDraft]:
 
 
 def _extract_xlsx_chunks(path: Path, source_ref: str) -> list[ChunkDraft]:
-    try:
-        from openpyxl import load_workbook
-    except ImportError:
-        return [
-            ChunkDraft(
-                chunk_id=_make_chunk_id(source_ref, "xlsx", "missing openpyxl"),
-                text="[xlsx 未安装 openpyxl，跳过]",
-                source_ref=source_ref,
-                folder=_folder_name(source_ref),
-                loc="Sheet",
-                method="text",
-            )
-        ]
+    from openpyxl import load_workbook
 
     wb = load_workbook(path, read_only=True, data_only=True)
     chunks: list[ChunkDraft] = []
     try:
         for sheet in wb.worksheets:
-            rows: list[str] = []
-            for row in sheet.iter_rows(values_only=True):
-                cells = [str(c).strip() for c in row if c is not None and str(c).strip()]
-                if cells:
-                    rows.append(" | ".join(cells))
-            if not rows:
-                continue
-            header = rows[0]
-            for i, row in enumerate(rows[1:], start=2):
-                loc = f"Sheet {sheet.title} row {i}"
-                text = f"Headers: {header}\nRecord: {row}"
+            headers = None
+            for row_no, row in enumerate(sheet.iter_rows(values_only=True), start=1):
+                cells = [str(c).strip() if c is not None else "" for c in row]
+                if not any(cells):
+                    continue
+                if headers is None:
+                    headers = cells
+                    text = "Headers: " + " | ".join(cells)
+                else:
+                    text = _serialize_table(headers, cells)
+                loc = f"Sheet {sheet.title} row {row_no}"
                 chunks.append(
                     ChunkDraft(
                         chunk_id=_make_chunk_id(source_ref, loc, text),
@@ -450,37 +212,48 @@ def _extract_xlsx_chunks(path: Path, source_ref: str) -> list[ChunkDraft]:
     return chunks
 
 
-def ingest_file(path: Path, *, access_token: str | None = None) -> list[ChunkDraft]:
+def _ingest_file(path: Path, *, access_token: str | None = None) -> list[ChunkDraft]:
     source_ref = source_relative(path)
     resolved = resolve_source_path(source_ref)
+    token = None  # Compatibility argument only: parsing never invokes a model.
     suffix = resolved.suffix.lower()
 
     if suffix == ".pptx":
-        return _extract_pptx_chunks(resolved, source_ref, access_token)
+        return _extract_pptx_chunks(resolved, source_ref, token)
     if suffix == ".docx":
         return _extract_docx_chunks(resolved, source_ref)
     if suffix == ".pdf":
-        return _extract_pdf_chunks(resolved, source_ref)
+        return _extract_pdf_chunks(resolved, source_ref, token)
     if suffix == ".xlsx":
         return _extract_xlsx_chunks(resolved, source_ref)
     return []
 
 
+def ingest_file(path: Path, *, access_token: str | None = None) -> list[ChunkDraft]:
+    result = []
+    drafts = _ingest_file(path, access_token=access_token)
+    image_refs = image_reference_labels("\n".join(c.text for c in drafts))
+    for chunk in drafts:
+        cleaned = clean_image_markup(chunk.text, image_refs=image_refs)
+        if not cleaned:
+            continue
+        if cleaned != chunk.text:
+            chunk.text = cleaned
+            chunk.chunk_id = _make_chunk_id(chunk.source_ref, chunk.loc, cleaned)
+        if len(chunk.text) <= 6000:
+            result.append(chunk)
+            continue
+        for offset in range(0, len(chunk.text), 5600):
+            text = chunk.text[offset:offset + 6000]
+            loc = f"{chunk.loc} Part {offset // 5600 + 1}"
+            result.append(ChunkDraft(_make_chunk_id(chunk.source_ref, loc, text), text,
+                                     chunk.source_ref, chunk.folder, loc, chunk.method))
+    return result
+
+
 def scan_source_files(scope: str = "") -> list[Path]:
-    _, root = normalize_source_scope(scope)
-    if not root.exists():
-        return []
-    if root.is_file():
-        return [root] if not root.name.startswith("~$") and root.suffix.lower() in SUPPORTED_SUFFIXES else []
-    files: list[Path] = []
-    for path in sorted(root.rglob("*")):
-        if (
-            path.is_file()
-            and not path.name.startswith("~$")
-            and path.suffix.lower() in SUPPORTED_SUFFIXES
-        ):
-            files.append(path)
-    return files
+    from src.pec.knowledge.sources import LocalSourceProvider
+    return [document.path for document in LocalSourceProvider().discover(scope)]
 
 
 def file_sha256(path: Path) -> str:

@@ -1,0 +1,1 @@
+{"topics": [], "reports": [], "excluded": [{"fact_id": "F0001", "reason": "noise", "detail": "该议题仅为会议议程中的一个时间槽条目（'Follow-up actions from last MAP'，9:10，15 min），无具体跟进事项内容、无风险、无请求、无决议、无行动负责人，属于纯议程标题噪音。"}], "coverage": "原始证据仅包含会议议程表格条目，无任何实质内容（无具体跟进事项、无讨论、无决议、无行动），整题作为噪音排除。", "unresolved": []}

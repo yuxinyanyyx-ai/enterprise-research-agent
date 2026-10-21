@@ -3,6 +3,8 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+import httpx
+from openai import APIConnectionError
 
 from src.llm import apollo
 
@@ -62,11 +64,66 @@ def test_create_llm_uses_same_ssl_setting_for_http_clients(monkeypatch) -> None:
         lambda **kwargs: model_settings.update(kwargs) or object(),
     )
 
-    apollo.create_apollo_llm(access_token="token")
+    apollo.create_apollo_llm(
+        access_token="token",
+        max_tokens=2048,
+        streaming=False,
+        timeout=120,
+        max_retries=1,
+    )
 
     assert client_settings == [{"verify": False}, {"verify": False}]
     assert model_settings["http_client"] is not None
     assert model_settings["http_async_client"] is not None
+    assert model_settings["max_tokens"] == 2048
+    assert model_settings["streaming"] is False
+    assert model_settings["timeout"] == 120
+    assert model_settings["max_retries"] == 1
+
+
+def test_ingest_llm_timeout_is_configurable_and_validated(monkeypatch) -> None:
+    monkeypatch.delenv("APOLLO_INGEST_TIMEOUT_SECONDS", raising=False)
+    assert apollo.ingest_llm_timeout() == 300
+
+    monkeypatch.setenv("APOLLO_INGEST_TIMEOUT_SECONDS", "45.5")
+    assert apollo.ingest_llm_timeout() == 45.5
+
+    monkeypatch.setenv("APOLLO_INGEST_TIMEOUT_SECONDS", "0")
+    with pytest.raises(apollo.ApolloConfigurationError, match="必须是正数"):
+        apollo.ingest_llm_timeout()
+
+
+def test_invoke_with_gateway_retries_only_transient_failures(monkeypatch) -> None:
+    error = APIConnectionError(
+        message="gateway timeout",
+        request=httpx.Request("POST", "https://apollo.example/chat"),
+    )
+
+    class FakeClient:
+        calls = 0
+
+        def invoke(self, messages):
+            self.calls += 1
+            if self.calls < 3:
+                raise error
+            return "response"
+
+    client = FakeClient()
+    delays = []
+    callbacks = []
+    monkeypatch.setattr(apollo.time, "sleep", delays.append)
+
+    result = apollo.invoke_with_gateway_retries(
+        client,
+        [],
+        retries=2,
+        on_retry=lambda attempt, total, exc: callbacks.append((attempt, total, exc)),
+    )
+
+    assert result == "response"
+    assert client.calls == 3
+    assert delays == [1, 2]
+    assert [(attempt, total) for attempt, total, _ in callbacks] == [(1, 2), (2, 2)]
 
 
 def test_ssl_verification_accepts_ca_bundle_path(
@@ -189,9 +246,9 @@ def test_describe_image_uses_vision_model_and_data_url(monkeypatch) -> None:
     assert image_url.startswith("data:image/png;base64,")
 
 
-def test_describe_image_prefers_pec_vision_model(monkeypatch) -> None:
-    monkeypatch.setenv("APOLLO_PEC_VISION_MODEL", "pec-vision-model")
-    monkeypatch.setenv("APOLLO_VISION_MODEL", "vision-model")
+def test_describe_image_falls_back_to_default_model(monkeypatch) -> None:
+    monkeypatch.delenv("APOLLO_VISION_MODEL", raising=False)
+    monkeypatch.setenv("APOLLO_MODEL", "default-model")
     seen = {}
 
     class FakeLlm:
@@ -206,4 +263,4 @@ def test_describe_image_prefers_pec_vision_model(monkeypatch) -> None:
 
     apollo.describe_image(b"image", mime_type="image/png", access_token="token")
 
-    assert seen["model"] == "pec-vision-model"
+    assert seen["model"] == "default-model"

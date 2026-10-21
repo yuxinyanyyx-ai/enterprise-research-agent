@@ -1,0 +1,1 @@
+{"topics": [], "reports": [], "excluded": [{"fact_id": "F0001", "reason": "noise", "detail": "仅为会议议程表中的一行条目，记录演讲者和时间安排，无讨论内容、风险、请求、决议或行动，属于纯标题/日程噪音。"}], "coverage": "原始证据仅为 MAP 会议议程表中的一行（TA Oncology Update，Sally Chen/Jiaqi Lu，10:15，20 min），无任何实质内容、背书请求、委员会决议或跟进行动，整题筛除。", "unresolved": []}

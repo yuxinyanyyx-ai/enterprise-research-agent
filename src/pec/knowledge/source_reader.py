@@ -2,8 +2,14 @@
 
 from __future__ import annotations
 
+from src.pec.knowledge.chunk_ingest import _walk_shapes
+
 import re
 from pathlib import Path
+
+from docx import Document
+from pptx import Presentation
+from pypdf import PdfReader
 
 from src.pec.knowledge.paths import SUPPORTED_SUFFIXES, resolve_source_path
 
@@ -23,6 +29,8 @@ def normalize_excerpt_loc(loc: str) -> str:
 def read_source_excerpt(source_ref: str, loc: str) -> dict:
     """返回该位置的完整页/幻灯片/段落级原文（供 UI 展示）。"""
     path = resolve_source_path(source_ref)
+    if not path.is_file():
+        raise FileNotFoundError("原资料文件不存在")
     suffix = path.suffix.lower()
     loc = normalize_excerpt_loc(loc)
 
@@ -38,10 +46,6 @@ def read_source_excerpt(source_ref: str, loc: str) -> dict:
 
 
 def _read_pptx_loc(path: Path, source_ref: str, loc: str) -> dict:
-    try:
-        from pptx import Presentation
-    except ImportError as exc:
-        raise RuntimeError("读取 PPTX 原文需要安装 python-pptx。") from exc
     m = re.match(r"Slide\s+(\d+)", loc, re.I)
     if not m:
         return {"source_ref": source_ref, "loc": loc, "text": _read_pptx_all(path)}
@@ -51,7 +55,7 @@ def _read_pptx_loc(path: Path, source_ref: str, loc: str) -> dict:
         raise ValueError(f"幻灯片不存在: {loc}")
     slide = prs.slides[slide_no - 1]
     parts: list[str] = []
-    for shape in slide.shapes:
+    for shape in _walk_shapes(slide.shapes):
         if hasattr(shape, "text") and shape.text.strip():
             parts.append(shape.text.strip())
     text = "\n\n".join(parts).strip() or "（该页无提取到文字，可能为纯图片页）"
@@ -59,15 +63,11 @@ def _read_pptx_loc(path: Path, source_ref: str, loc: str) -> dict:
 
 
 def _read_pptx_all(path: Path) -> str:
-    try:
-        from pptx import Presentation
-    except ImportError as exc:
-        raise RuntimeError("读取 PPTX 原文需要安装 python-pptx。") from exc
     prs = Presentation(str(path))
     blocks = []
     for i, slide in enumerate(prs.slides, start=1):
         lines = []
-        for shape in slide.shapes:
+        for shape in _walk_shapes(slide.shapes):
             if hasattr(shape, "text") and shape.text.strip():
                 lines.append(shape.text.strip())
         if lines:
@@ -76,10 +76,6 @@ def _read_pptx_all(path: Path) -> str:
 
 
 def _read_docx_loc(path: Path, source_ref: str, loc: str) -> dict:
-    try:
-        from docx import Document
-    except ImportError as exc:
-        raise RuntimeError("读取 DOCX 原文需要安装 python-docx。") from exc
     if loc.startswith("Table"):
         doc = Document(str(path))
         m = re.match(r"Table\s+(\d+)", loc, re.I)
@@ -94,15 +90,17 @@ def _read_docx_loc(path: Path, source_ref: str, loc: str) -> dict:
             rows.append(" | ".join(c.text.strip() for c in row.cells))
         return {"source_ref": source_ref, "loc": loc, "text": "\n".join(rows)}
     doc = Document(str(path))
+    match = re.match(r"Paragraph\s+(\d+)", loc, re.I)
+    if match:
+        index = int(match.group(1)) - 1
+        if not 0 <= index < len(doc.paragraphs):
+            raise ValueError(f"段落不存在: {loc}")
+        return {"source_ref": source_ref, "loc": loc, "text": doc.paragraphs[index].text.strip()}
     paras = [p.text.strip() for p in doc.paragraphs if p.text.strip()]
     return {"source_ref": source_ref, "loc": loc or "全文", "text": "\n\n".join(paras)}
 
 
 def _read_pdf_loc(path: Path, source_ref: str, loc: str) -> dict:
-    try:
-        from pypdf import PdfReader
-    except ImportError as exc:
-        raise RuntimeError("读取 PDF 原文需要安装 pypdf。") from exc
     m = re.match(r"Page\s+(\d+)", loc, re.I)
     reader = PdfReader(str(path))
     if m:

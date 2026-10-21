@@ -6,6 +6,8 @@ import base64
 import math
 import os
 import ssl
+import time
+from collections.abc import Callable, Sequence
 from pathlib import Path
 from typing import Any
 
@@ -13,8 +15,9 @@ import httpx
 import requests
 import urllib3
 from dotenv import load_dotenv
-from langchain_core.messages import HumanMessage
+from langchain_core.messages import BaseMessage, HumanMessage
 from langchain_openai import ChatOpenAI
+from openai import APIConnectionError, APIStatusError
 
 
 # src/llm/apollo.py
@@ -124,6 +127,10 @@ def create_apollo_llm(
     access_token: str | None = None,
     *,
     model: str | None = None,
+    max_tokens: int | None = None,
+    streaming: bool = False,
+    timeout: float | tuple[float, float] | None = None,
+    max_retries: int | None = None,
 ) -> ChatOpenAI:
     """创建可供 LangChain / LangGraph 使用的 Apollo LLM。"""
 
@@ -132,14 +139,61 @@ def create_apollo_llm(
     base_url = _required_env("APOLLO_BASE_URL")
     verify = _httpx_verify(_ssl_verify_setting())
 
+    options: dict[str, Any] = {
+        "base_url": base_url,
+        "api_key": token,
+        "model": model or model_name(),
+        "temperature": 0.1,
+        "streaming": streaming,
+        "http_client": httpx.Client(verify=verify),
+        "http_async_client": httpx.AsyncClient(verify=verify),
+    }
+    if max_tokens is not None:
+        options["max_tokens"] = max_tokens
+    if timeout is not None:
+        options["timeout"] = timeout
+    if max_retries is not None:
+        options["max_retries"] = max_retries
     return ChatOpenAI(
-        base_url=base_url,
-        api_key=token,
-        model=model or model_name(),
-        temperature=0.1,
-        http_client=httpx.Client(verify=verify),
-        http_async_client=httpx.AsyncClient(verify=verify),
+        **options,
     )
+
+
+def ingest_llm_timeout() -> float:
+    """Return the bounded timeout for long-running knowledge-ingestion calls."""
+    raw_timeout = os.getenv("APOLLO_INGEST_TIMEOUT_SECONDS", "300")
+    try:
+        timeout = float(raw_timeout)
+    except ValueError as exc:
+        raise ApolloConfigurationError("APOLLO_INGEST_TIMEOUT_SECONDS 必须是正数") from exc
+    if not math.isfinite(timeout) or timeout <= 0:
+        raise ApolloConfigurationError("APOLLO_INGEST_TIMEOUT_SECONDS 必须是正数")
+    return timeout
+
+
+def invoke_with_gateway_retries(
+    client: ChatOpenAI,
+    messages: Sequence[BaseMessage],
+    *,
+    retries: int = 2,
+    on_retry: Callable[[int, int, Exception], None] | None = None,
+) -> BaseMessage:
+    """Retry only transient gateway, connection, and timeout failures."""
+    if isinstance(retries, bool) or retries < 0:
+        raise ValueError("retries 必须是非负整数")
+    for attempt in range(retries + 1):
+        try:
+            return client.invoke(messages)
+        except (APIConnectionError, APIStatusError) as exc:
+            retryable = isinstance(exc, APIConnectionError) or (
+                exc.status_code in {408, 409, 429} or exc.status_code >= 500
+            )
+            if not retryable or attempt == retries:
+                raise
+            if on_retry is not None:
+                on_retry(attempt + 1, retries, exc)
+            time.sleep(min(2**attempt, 8))
+    raise RuntimeError("Apollo 调用重试状态异常")
 
 
 def _bearer_headers(access_token: str) -> dict[str, str]:
@@ -275,7 +329,7 @@ def describe_image(
     mime_type: str,
     access_token: str | None = None,
 ) -> str:
-    """Extract searchable meeting content from one image."""
+    """Extract searchable content from one uploaded image."""
     if not image:
         raise ValueError("image 不能为空")
     if not mime_type.startswith("image/"):
@@ -284,8 +338,7 @@ def describe_image(
     llm = create_apollo_llm(
         access_token,
         model=(
-            os.getenv("APOLLO_PEC_VISION_MODEL")
-            or os.getenv("APOLLO_VISION_MODEL")
+            os.getenv("APOLLO_VISION_MODEL")
             or model_name()
         ).strip(),
     )
@@ -294,7 +347,7 @@ def describe_image(
             {
                 "type": "text",
                 "text": (
-                   "你的任务是为PPT页面建立可检索内容，不要概括或遗漏可读信息。\n"
+                   "你的任务是为用户上传的单张图片建立可检索内容，不要概括或遗漏可读信息。\n"
                    "输出图片内文字和视觉关系；两类信息分别列出。\n"
 
                    "图片内文字：\n"

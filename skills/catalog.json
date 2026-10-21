@@ -1,0 +1,22 @@
+{
+  "skills": [
+    {
+      "id": "knowledge",
+      "name": "Knowledge Skill",
+      "description": "PEC knowledge retrieval and source-backed answers using the existing search_pec_knowledge tool.",
+      "path": "knowledge/SKILL.md"
+    },
+    {
+      "id": "ppt-structure",
+      "name": "PPT 结构化",
+      "description": "Structure uploaded PPTX or images into Status / Next Steps and Risk / Mitigation tables.",
+      "path": "ppt-structure/SKILL.md"
+    },
+    {
+      "id": "ppt-project-slide",
+      "name": "Project Slide",
+      "description": "Generate or modify Project Slide page 1 from an uploaded PPTX and return a download link.",
+      "path": "ppt-project-slide/SKILL.md"
+    }
+  ]
+}

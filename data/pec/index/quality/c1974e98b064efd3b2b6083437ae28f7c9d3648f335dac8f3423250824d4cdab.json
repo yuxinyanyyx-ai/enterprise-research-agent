@@ -1,0 +1,318 @@
+{
+  "source_ref": "MAP 2025 May/202505 MAP Meeting minutes-draft.docx",
+  "source_digest": "eb5bcf83e011ba02556f831385732e54cca5522e2a3c86a168b92fb3a526d7a6",
+  "reports": [
+    {
+      "topics": [
+        {
+          "title": "Taiwan/Hong Kong Teams: Local TA CEC Endorsement Requirement for ONIS/PMS",
+          "background": [
+            {
+              "text": "At the MAP Meeting on 1 May 2024, during the Opening segment, a clarification action was identified: Taiwan and Hong Kong teams need to seek endorsement from the local TA CEC on ONIS/PMS.",
+              "evidence_id": "chunk-cd7b8a0322e2",
+              "quote": "Reclarify that the Taiwan and Hong Kong teams need to seek endorsement from the local TA CEC on ONIS/PMS."
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": [
+            {
+              "text": "Grace Wang to reclarify to Taiwan and Hong Kong teams that they need to seek endorsement from the local TA CEC on ONIS/PMS. Owner: Grace Wang. Timeline: May 2025. Status/completed: 原文未说明。",
+              "evidence_id": "chunk-cd7b8a0322e2",
+              "quote": "Reclarify that the Taiwan and Hong Kong teams need to seek endorsement from the local TA CEC on ONIS/PMS. | Responsible person: Grace Wang | Timeline: May 2025"
+            }
+          ]
+        },
+        {
+          "title": "TA MHEH Update — MH-HA Interaction on Precision Psychiatry with CDE",
+          "background": [
+            {
+              "text": "At the MAP Meeting, TA MHEH Update was presented by Meiruo Liu. An HA interaction on Precision Psychiatry with CDE was discussed; the action is to share this news via Viva Engage Medicine on behalf of the local team.",
+              "evidence_id": "chunk-90ffd7bbce18",
+              "quote": "MH-HA interaction\nShare the news regarding HA interaction on Precision Psychiatry with CDE at Viva Engage Medicine on behalf of local team."
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": [
+            {
+              "text": "Sarah Liang to share the news regarding HA interaction on Precision Psychiatry with CDE at Viva Engage Medicine on behalf of the local team. Due: May 2025. Status: 原文未说明是否已完成。",
+              "evidence_id": "chunk-90ffd7bbce18",
+              "quote": "Share the news regarding HA interaction on Precision Psychiatry with CDE at Viva Engage Medicine on behalf of local team. | Responsible person: Sarah Liang | Timeline: May 2025"
+            }
+          ]
+        },
+        {
+          "title": "TA CRM Update — Survodutide MASH China NDA Strategy and Timeline",
+          "background": [
+            {
+              "text": "TA CRM Update was presented by Emma Xie/Hongzi Liang. The China NDA strategy and timeline for Survodutide MASH were discussed, including the submission pathway Gantt chart and business rationales.",
+              "quote": "Survodutide MASH\nInclude the preconditions for the current China NDA strategy and timeline next to the submission pathway Gantt chart in the slide\nDocument appropriately the business rationales from the local asset team that influences the China NDA strategy and timeline updates",
+              "evidence_id": "chunk-7494d22bf4b1"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": [
+            {
+              "text": "Emma Xie to include the preconditions for the current China NDA strategy and timeline next to the submission pathway Gantt chart in the slide, due May 2025.",
+              "quote": "Include the preconditions for the current China NDA strategy and timeline next to the submission pathway Gantt chart in the slide",
+              "evidence_id": "chunk-7494d22bf4b1"
+            },
+            {
+              "text": "Emma Xie to document appropriately the business rationales from the local asset team that influences the China NDA strategy and timeline updates, due May 2025.",
+              "quote": "Document appropriately the business rationales from the local asset team that influences the China NDA strategy and timeline updates",
+              "evidence_id": "chunk-7494d22bf4b1"
+            }
+          ]
+        },
+        {
+          "title": "TA CRM Update — TRPC6i Meeting with Dr. Zhang and Prof. Xueqing Yu",
+          "background": [
+            {
+              "text": "During TA CRM Update, a follow-up action was identified to schedule a meeting between Dr. Zhang and leading PI Prof. Xueqing Yu for TRPC6i.",
+              "quote": "TRPC6i\nSchedule a meeting for Dr. Zhang and leading PI Prof. Xueqing Yu",
+              "evidence_id": "chunk-7494d22bf4b1"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": []
+        },
+        {
+          "title": "Metalyse TENACITY Trial — China Consideration for Late Window Indication Time Window",
+          "background": [
+            {
+              "text": "Leo Bao presented on the Metalyse TENACITY trial regarding China consideration for the time window for the late window indication. Multiple scenarios were discussed.",
+              "quote": "Metalyse TENACITY trial (for late window indication)— China consideration for time window",
+              "evidence_id": "chunk-53a95f292e45"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [
+            {
+              "text": "MAP suggests initially proposing Scenario 2 to the global team (Submit global CTP with a time window limit of 24h for China as a specific IC/EC criterion, and with key secondary objective within 24h), with Scenario 3 as back-up (Submit global CTP with a time window limit of 24h for China as a specific IC/EC criterion and with a pre-specified subgroup for 24h), to limit impact on global and mitigate local risk. MAP also suggests exploring the possibility of expanding the sample size in China, and highlighting the DMC setup in the trial for safety monitoring in the reply to CDE to address their ",
+              "quote": "To limit the impact on global and mitigate local  risk, MAP suggests initially proposing scenario 2 to the global team (Submit global CTP with a time window limit of 24h for China as a specific IC/EC criterion, and with key secondary objective within 24h). Scenario 3 will be used as the back-up option (Submit global CTP with a time window limit of 24h for China as a specific IC/EC criterion and with a pre-specified subgroup for 24h). To explore the possibility of expanding the sample size in China.",
+              "evidence_id": "chunk-53a95f292e45"
+            }
+          ],
+          "todo": [
+            {
+              "text": "Metalyse Evidence team to propose Scenario 2 to global team, use Scenario 3 as back-up, explore expanding China sample size, and highlight DMC setup in reply to CDE, due June 2025.",
+              "quote": "Highlight the DMC setup in the trial for safety monitoring in the reply to CDE to address their concerns. | Responsible person: Metalyse Evidence team | Timeline: June 2025",
+              "evidence_id": "chunk-53a95f292e45"
+            }
+          ]
+        },
+        {
+          "title": "\"China KEE\" Project — Global Steering Committee Opportunities",
+          "background": [
+            {
+              "text": "Under General topics, the \"China KEE\" Project was discussed regarding potential opportunities for China KEE to join global steering committees.",
+              "evidence_id": "chunk-8d6321fca26e",
+              "quote": "“China KEE” Project\nIdentify the potential opportunities of China KEE joining global steering committee and prepare the candidate list with profiles for the following discussions."
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": [
+            {
+              "text": "TAHs to identify potential opportunities of China KEE joining global steering committee and prepare the candidate list with profiles for further discussions, due June 13, 2025. Status: not marked as completed.",
+              "evidence_id": "chunk-8d6321fca26e",
+              "quote": "Identify the potential opportunities of China KEE joining global steering committee and prepare the candidate list with profiles for the following discussions. | Responsible person: TAHs | Timeline: Jun 13th 2025"
+            }
+          ]
+        }
+      ],
+      "reports": [
+        {
+          "topic_index": 0,
+          "passed": [
+            1,
+            2,
+            3,
+            6,
+            7,
+            8,
+            9,
+            11,
+            12,
+            13,
+            14,
+            16,
+            17
+          ],
+          "corrected": [
+            {
+              "check": 15,
+              "detail": "原稿 todo 未注明完成状态；已补注「原文未说明」，不臆造已完成或未完成。"
+            }
+          ],
+          "not_applicable": [
+            {
+              "check": 4,
+              "detail": "议题有实质行动（Grace Wang 需向 TW/HK 团队澄清 TA CEC 背书要求），非噪音。"
+            },
+            {
+              "check": 5,
+              "detail": "议题含具体委员会流程要求及行动，非低信息量条目。"
+            },
+            {
+              "check": 10,
+              "detail": "无 pending/TBD 字段，不适用。"
+            },
+            {
+              "check": 18,
+              "detail": "单一 chunk 支撑全部事实，覆盖完整，无跨页遗漏风险。"
+            }
+          ]
+        },
+        {
+          "topic_index": 1,
+          "passed": [
+            1,
+            2,
+            4,
+            6,
+            7,
+            8,
+            9,
+            11,
+            12,
+            13,
+            16,
+            17
+          ],
+          "corrected": [
+            {
+              "check": 3,
+              "detail": "Background原文仅有行动条目，无HA interaction的实质内容描述；已在background中注明该议题的实质为分享HA互动消息，并保留原文未说明具体互动内容的事实。"
+            },
+            {
+              "check": 14,
+              "detail": "todo补充了status字段说明：原文未说明是否已完成（completed状态未知）。"
+            },
+            {
+              "check": 15,
+              "detail": "原文未提供completed(Y/N)信息，已在todo中注明「原文未说明是否已完成」。"
+            }
+          ],
+          "not_applicable": [
+            {
+              "check": 5,
+              "detail": "该议题含有具体行动负责人、期限及HA互动事项，不属于低信息量条目，不适用过滤。"
+            },
+            {
+              "check": 10,
+              "detail": "无pending/TBD字段，不适用。"
+            },
+            {
+              "check": 18,
+              "detail": "原文证据仅chunk-90ffd7bbce18一条，覆盖了background和todo全部内容，无遗漏。"
+            }
+          ]
+        },
+        {
+          "topic_index": 2,
+          "passed": [],
+          "corrected": [],
+          "not_applicable": []
+        },
+        {
+          "topic_index": 3,
+          "passed": [],
+          "corrected": [],
+          "not_applicable": []
+        },
+        {
+          "topic_index": 4,
+          "passed": [],
+          "corrected": [],
+          "not_applicable": []
+        },
+        {
+          "topic_index": 5,
+          "passed": [
+            1,
+            2,
+            3,
+            4,
+            14,
+            17
+          ],
+          "corrected": [
+            {
+              "check": 5,
+              "detail": "Topic retained: although lightweight, it contains a concrete action item with owner (TAHs), due date (Jun 13, 2025), and a follow-up task assigned by MAP, which meets the threshold for a real action item."
+            },
+            {
+              "check": 15,
+              "detail": "Todo text updated to explicitly note status is not marked as completed in the source, per schema requirement."
+            }
+          ],
+          "not_applicable": [
+            {
+              "check": 6,
+              "detail": "No protocol/EC/OASIS approval events present in this topic."
+            },
+            {
+              "check": 7,
+              "detail": "No endorsement request submitted to committee; for_endorsement is empty and correct."
+            },
+            {
+              "check": 8,
+              "detail": "No committee-level decision recorded; decision field is empty and correct."
+            },
+            {
+              "check": 9,
+              "detail": "No decision status to verify."
+            },
+            {
+              "check": 10,
+              "detail": "No pending/TBD items present."
+            },
+            {
+              "check": 11,
+              "detail": "No study number or indication involved; single general topic, no split needed."
+            },
+            {
+              "check": 12,
+              "detail": "Only one topic; no merging question arises."
+            },
+            {
+              "check": 13,
+              "detail": "Single source chunk; no multi-format duplication."
+            },
+            {
+              "check": 16,
+              "detail": "No endorsement request or decision present; nothing to cross-check for reverse inference."
+            },
+            {
+              "check": 18,
+              "detail": "All substantive content from chunk-8d6321fca26e is captured; remaining chunks in evidence_markdown are agenda/header/attendee noise unrelated to this topic."
+            }
+          ]
+        }
+      ],
+      "excluded": [],
+      "coverage": "议题仅有一条原文 chunk（chunk-cd7b8a0322e2），所有背景与行动均已覆盖；其余 chunks 为会议标题、参会人员、其他议程行项，与本议题无关，未引入。；议题仅有一条原文证据（chunk-90ffd7bbce18），覆盖background和todo全部内容；HA interaction的具体内容原文未披露，已在background中如实注明；todo的completed状态原文未说明，已标注。；本议题质检结果未被采纳，保留抽取初稿；本议题质检改动未被采纳，保留抽取初稿；本议题质检改动未被采纳，保留抽取初稿；All substantive content from the single relevant chunk (chunk-8d6321fca26e) is captured in background and todo. Remaining evidence chunks are agenda headers, attendee lists, and other TA topics unrelated to this topic and are correctly excluded.",
+      "unresolved": [
+        "Grace Wang 的澄清行动（May 2025）是否已完成，原文未说明。",
+        "HA interaction on Precision Psychiatry with CDE的具体互动内容原文未披露，无法补充。",
+        "Sarah Liang的todo是否已完成（completed Y/N）原文未说明。",
+        "本议题质检结果未被采纳，保留抽取初稿",
+        "本议题质检改动未被采纳，保留抽取初稿",
+        "本议题质检改动未被采纳，保留抽取初稿"
+      ]
+    }
+  ],
+  "final_topic_ids": [
+    "topic-6f198d2848f0c2805ccc",
+    "topic-d34ce2b0c95764619632",
+    "topic-f60a9e17af8137670c29",
+    "topic-093ff31e13fe8db9af6a",
+    "topic-bd38a08c2929637e3dac",
+    "topic-75965b34a029c6cff7f4"
+  ],
+  "document_grouping": "all_candidates_accounted_for"
+}

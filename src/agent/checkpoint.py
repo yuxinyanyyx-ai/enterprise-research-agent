@@ -31,6 +31,12 @@ class AgentCheckpoint(AbstractContextManager[Any]):
             connection_string = "postgresql://" + connection_string.removeprefix(
                 "postgresql+psycopg://"
             )
+        from psycopg.conninfo import conninfo_to_dict, make_conninfo
+
+        if not conninfo_to_dict(connection_string).get("connect_timeout"):
+            connection_string = make_conninfo(
+                connection_string, connect_timeout=self.settings.connect_timeout_seconds
+            )
         self._context = PostgresSaver.from_conn_string(connection_string)
         self._checkpointer = self._context.__enter__()
         self._checkpointer.setup()

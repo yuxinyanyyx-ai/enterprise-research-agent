@@ -1,0 +1,1 @@
+{"topics": [], "reports": [], "excluded": [{"fact_id": "F0001", "reason": "progress_only", "detail": "该议题标注为 Information sharing (I)，仅为信息分享性议程条目，无讨论、风险、阻塞、背书请求、委员会决策或跟进行动，属于纯进度/信息通报，应过滤。"}], "coverage": "原文仅提供议程表中一行条目，标注为 Information sharing，无任何决议、请求、风险或行动内容，整题过滤为 progress_only。", "unresolved": []}

@@ -1,0 +1,1 @@
+{"topics": [], "reports": [], "excluded": [{"fact_id": "F0001", "reason": "progress_only", "detail": "该议题仅记录研究1305-0123的入组进展（178/325例，FPI完成，EC修正案批准，下一里程碑LPI Dec 2026），无讨论、风险、阻塞、背书请求、委员会决策或跟进行动，属于纯进度条目，应过滤。"}], "coverage": "原始议题仅含一条进度事实（入组178/325，FPI完成，EC修正案批准），无for_endorsement、decision、todo字段内容，亦无风险或讨论记录，整题为progress_only，予以排除。", "unresolved": []}

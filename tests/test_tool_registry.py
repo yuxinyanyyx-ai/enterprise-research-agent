@@ -26,6 +26,9 @@ def test_builtin_tools_are_filtered_by_context() -> None:
         "search_dmf", "read_tool_artifact", "export_dmf_excel",
         "run_document_dmf_workflow", "run_watchlist_workflow",
         "search_pec_knowledge",
+        "get_meeting_index_status", "update_meeting_index",
+        "generate_project_slide", "modify_project_slide",
+        "parse_pptx_structure", "load_skill",
     }
     assert post_process_names == {"export_dmf_excel"}
     assert registry.get("export_dmf_excel").risk is ToolRisk.LOCAL_WRITE

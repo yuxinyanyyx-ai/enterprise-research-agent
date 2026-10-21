@@ -272,6 +272,57 @@ def test_pdf_is_parsed_by_mineru_and_returns_trusted_artifact(tmp_path: Path) ->
 	assert artifact.markdown_path == str(markdown.resolve())
 
 
+@pytest.mark.parametrize(
+	("suffix", "mime_type"),
+	[(".png", "image/png"), (".jpg", "image/jpeg"), (".jpeg", "image/jpeg")],
+)
+def test_uploaded_images_use_apollo_vision_without_mineru(
+	tmp_path: Path,
+	monkeypatch,
+	suffix: str,
+	mime_type: str,
+) -> None:
+	settings = _settings(tmp_path)
+	source = tmp_path / f"meeting{suffix}"
+	source.write_bytes(b"uploaded image")
+	seen: list[tuple[bytes, str]] = []
+
+	class UnexpectedMinerU:
+		def __init__(self, configured_settings) -> None:
+			raise AssertionError("Uploaded images must use Apollo Vision, not MinerU")
+
+	def describe_image(image: bytes, *, mime_type: str) -> str:
+		seen.append((image, mime_type))
+		return "识别出的文字与视觉关系"
+
+	monkeypatch.setattr(
+		"src.llm.apollo.describe_image",
+		describe_image,
+	)
+	service = DocumentDMFService(settings, mineru_factory=UnexpectedMinerU)
+	artifact = service.parse_document(source)
+
+	assert seen == [(b"uploaded image", mime_type)]
+	assert artifact.file_name == source.name
+	assert Path(artifact.source_path) == source.resolve()
+	assert Path(artifact.markdown_path).read_text(encoding="utf-8") == (
+		"识别出的文字与视觉关系"
+	)
+
+
+def test_uploaded_image_vision_failure_is_reported(tmp_path: Path, monkeypatch) -> None:
+	source = tmp_path / "scan.png"
+	source.write_bytes(b"image")
+	monkeypatch.setattr(
+		"src.llm.apollo.describe_image",
+		lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("gateway down")),
+	)
+	service = DocumentDMFService(_settings(tmp_path))
+
+	with pytest.raises(DocumentDMFError, match="图片视觉识别失败.*gateway down"):
+		service.parse_document(source)
+
+
 def test_mineru_failure_stops_document_pipeline(tmp_path: Path) -> None:
 	settings = _settings(tmp_path)
 	source = tmp_path / "sample.pdf"

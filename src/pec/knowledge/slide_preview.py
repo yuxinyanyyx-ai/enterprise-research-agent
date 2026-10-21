@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import re
 from pathlib import Path
+from urllib.parse import urlencode
 
 from src.pec.knowledge.chunk_ingest import file_sha256
 from src.pec.knowledge.paths import resolve_source_path
@@ -60,15 +61,16 @@ def preview_available(source_ref: str, loc: str) -> dict:
     page = parse_page_number(loc)
     digest = _digest_for_source(source_ref)
     has_meta = (preview_dir(digest) / "meta.json").is_file()
+    file_url = "/api/source/file?" + urlencode({"source_ref": source_ref})
 
     if suffix == ".pptx" and slide:
         mode = _render_mode_for_page(digest, slide)
         return {
             "type": "pptx_slide",
             "slide": slide,
-            "image_url": f"/api/source/slide-image?source_ref={source_ref}&slide={slide}",
+            "image_url": "/api/source/slide-image?" + urlencode({"source_ref": source_ref, "slide": slide}),
             "render_mode": mode or ("indexed" if has_meta else "pending"),
-            "file_url": f"/api/source/file?source_ref={source_ref}",
+            "file_url": file_url,
         }
 
     if suffix == ".pdf":
@@ -77,9 +79,9 @@ def preview_available(source_ref: str, loc: str) -> dict:
         return {
             "type": "pdf_page",
             "page": page_no,
-            "image_url": f"/api/source/slide-image?source_ref={source_ref}&slide={page_no}",
+            "image_url": "/api/source/slide-image?" + urlencode({"source_ref": source_ref, "slide": page_no}),
             "render_mode": mode or ("indexed" if has_meta else "pending"),
-            "file_url": f"/api/source/file?source_ref={source_ref}",
+            "file_url": file_url,
         }
 
     if suffix == ".docx":
@@ -88,12 +90,12 @@ def preview_available(source_ref: str, loc: str) -> dict:
         return {
             "type": "docx_page",
             "page": page_no,
-            "image_url": f"/api/source/slide-image?source_ref={source_ref}&slide={page_no}",
+            "image_url": "/api/source/slide-image?" + urlencode({"source_ref": source_ref, "slide": page_no}),
             "render_mode": mode or ("indexed" if has_meta else "pending"),
-            "file_url": f"/api/source/file?source_ref={source_ref}",
+            "file_url": file_url,
         }
 
     return {
         "type": "download_only",
-        "file_url": f"/api/source/file?source_ref={source_ref}",
+        "file_url": file_url,
     }

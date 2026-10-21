@@ -1,0 +1,1 @@
+{"topics": [], "reports": [], "excluded": [{"fact_id": "F0001", "reason": "progress_only", "detail": "该议题仅为议程中标注为 Information sharing (I) 的信息分享条目，无讨论、风险、阻塞、背书请求、委员会决策或跟进行动，属于纯进度/信息分享条目，不构成实质议题。"}], "coverage": "原文仅提供议程表格中一行信息分享条目（nerandomilast IPF患者纵向定性研究），无任何决议、请求、风险或行动记录，整题过滤为 progress_only。", "unresolved": []}

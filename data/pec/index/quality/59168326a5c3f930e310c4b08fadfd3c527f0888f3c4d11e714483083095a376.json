@@ -1,0 +1,825 @@
+{
+  "source_ref": "MAP 2025 May/02 MAP actions log 202505.xlsx",
+  "source_digest": "12f1c9dbbac5866032bc83a063bdc4759eaa89638607691ad2e99a6017180835",
+  "reports": [
+    {
+      "topics": [
+        {
+          "title": "Metalyse NRDL Listing Preparation and NMPA/NHSA Engagement",
+          "background": [
+            {
+              "text": "Metalyse NRDL listing targeted for Jul 2025 after NDA approval; medicine team preparation and engagement activities with CDE, ChP, and top KEEs were required.",
+              "quote": "Metalyse NRDL-Medicine team preparation.\nAction: RA and TA to provide a summary of the engagement activities (with CDE&Chp for RA, and with top KEE for TA) that have been completed, and planned future engagement initiatives, to ensure Metalyse NRDL listing in Jul 2025 after NDA approval",
+              "evidence_id": "chunk-17632203360e"
+            },
+            {
+              "text": "Follow-up action to ensure thorough understanding of NMPA internal review process and provide feedback to NHSA, with concrete engagement plan.",
+              "quote": "Ensure a thorough understanding of the NMPA internal review process to provide feedback to NHSA, and make concrete plan for engagement activities",
+              "evidence_id": "chunk-f680806317b8"
+            },
+            {
+              "text": "Boehringer presented at ChPC panel meeting on Nov 22, 2024; ChPC oral feedback: (1) Metalyse generic name should remain Tenecteplase; (2) Recomlyse generic name should be Tenecteplase if NHSA consults with appropriate narrative.",
+              "quote": "Boehringer successfully presented in ChPC panel meeting on Nov 22rd and the panel well understood the situation and Boehringer’s position.\nChPC’s oral feedback:\n       1. Metalyse generic name should be unchanged as Tenecteplase\n       2. Recomlyse generic name should be Tenecteplase if NHSA consult them with appropriate narrative and questions.",
+              "evidence_id": "chunk-f680806317b8"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": []
+        },
+        {
+          "title": "Metalyse ORIENTAL Study – Investigator Meeting",
+          "background": [
+            {
+              "text": "MAP action (2025-03-19) to invite Dr. Zhang to the investigator meeting for the ORIENTAL study; completed 2025-05-07.",
+              "quote": "Metalyse ORIENTAL study\nTo invite Dr. Zhang to the investigator meeting for the\nORIENTAL study",
+              "evidence_id": "chunk-1f130da79642"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": []
+        },
+        {
+          "title": "Nerandomilast (IPF) NDA – DS Stability Risk and NDA Submission Timeline",
+          "background": [
+            {
+              "text": "Risk identified: intended commercial Neran DS process in submitted dossier (B3) differs from QC Testing sample (B2); potential deficiency letter (high probability) or 2nd round QC Testing (low probability), worst scenario ~3m NDA approval delay.",
+              "quote": "Potential risk: Deficiency letter (DL) (probability: high) and/or 2nd round QC Testing (probability: low)à Worst scenario may delay ~3m NDA approval",
+              "evidence_id": "chunk-388fa2aaab4c"
+            },
+            {
+              "text": "Aligned mitigations: (1) proactively prepare DL responses, include in global PARL; (2) proactive shipment of US B3 DS & B3/C2 DP samples to China; possible acceleration of 2nd QC testing.",
+              "quote": "Aligned mitigations:\n1.       Proactively Preparing for DL responses to maximize B3 approval chance: inclusion in global PARL; global preparation of documents for response to CDE request to demonstrate equivalence between B2/B3 (to be ready within 1~2 weeks upon receipt of verbally request or deficiency letter)\n2.     Preparation for potential 2nd round QC Testing: proactive shipment of US B3 DS & B3/C2 DP samples to China; possible acceleration of 2nd QC testing",
+              "evidence_id": "chunk-388fa2aaab4c"
+            },
+            {
+              "text": "CN NDA submission date confirmed as Apr 30; US NDA submission date May 5.",
+              "quote": "US NDA submission date： May 5th and CN NDA submission date： Apr 30th",
+              "evidence_id": "chunk-ea4dbc02d80e"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": []
+        },
+        {
+          "title": "Nerandomilast – Asian Subgroup Publication Authorship",
+          "background": [
+            {
+              "text": "Action to regularly check with global MA colleagues on Asian subgroup publication authorship; confirmed with global team and leading PI (completed Apr 2025).",
+              "quote": "Nerandomilast Publication\nRegularly check with global MA colleagues and provide updates regarding Asian subgroup publication authorship.",
+              "evidence_id": "chunk-ea5f1d4d6ad6"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": []
+        },
+        {
+          "title": "ILD Consensus and Guidelines (including Lung Cancer Combined ILD)",
+          "background": [
+            {
+              "text": "Medical team to follow up on consensus development for lung cancer combined ILD led by Prof. Jinghong Dai (Nanjing Gulou) and Prof. Dai (China-Japan Friendship Hospital); holistic plan for ILD consensus and guidelines to be kicked off Sep 2024; status ongoing.",
+              "quote": "Medical team to follow up with the consensus development for Lung cancer combined ILD (led by Prof. Jinghong Dai from Nanjing Gulou and by Prof. Dai from China-Japan Friendship Hospital respectively)",
+              "evidence_id": "chunk-e938c2054549"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": []
+        },
+        {
+          "title": "PRO for PF (Pulmonary Fibrosis) in China – PI Communication and Expert Management",
+          "background": [
+            {
+              "text": "Follow-up on PI communication and expert management for PRO for PF in China; PI confirmed Sep 2024; study proposal/timeline to be revisited at Oct CEC.",
+              "quote": "PRO for PF in China\nAction: Follow up on current status of PI communication and expert management",
+              "evidence_id": "chunk-ccc640ffe884"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": []
+        },
+        {
+          "title": "Catci (CatCi) in nCFB Ph3 – IND Acceleration and PI Engagement",
+          "background": [
+            {
+              "text": "Actions: gather sub-I team info for leading PI candidate; close RA and CO collaboration essential for IND acceleration pilot. Leading PI and sub-I fully engaged; project on-track as of Nov 2024.",
+              "quote": "Catci in nCFB ph3\n1. Gather the information on sub-I team of the leading PI candidate\n2. Close collaboration between RA and CO is essential for this IND acceleration pilot",
+              "evidence_id": "chunk-a8f55a2ca888"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": []
+        },
+        {
+          "title": "Spesolimab NS – Pivotal Study Results Communication Plan",
+          "background": [
+            {
+              "text": "Action to confirm Spesolimab NS pivotal study results communication plan and share data with local team; TLR results communicated to local AT on 14 May 2025.",
+              "quote": "Spesolimab NS\nTo confirm the Spesolimab NS pivotal study results\ncommunication plan and share the data with local team\naccordingly",
+              "evidence_id": "chunk-98b3bca53288"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": []
+        },
+        {
+          "title": "PROFINA Study – Contract Negotiation with PI Prof. Xu",
+          "background": [
+            {
+              "text": "Action to communicate with study PI Prof. Xu on current status of contract negotiation and seek his support; face-to-face interaction done Mar 28, 2025.",
+              "quote": "PROFINA\nTo communicate with study PI Prof. Xu regarding the current\nstatus of contract negotiation and seek his support.",
+              "evidence_id": "chunk-2f9c89705815"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": []
+        },
+        {
+          "title": "IPF Local Competitor Intelligence Update",
+          "background": [
+            {
+              "text": "Intelligence update on local IPF competitors focusing on two competitors with recent positive Ph2 data; intelligence report shared at ILD Data Generation WS, completed Nov 2024.",
+              "quote": "Update the intelligence on local competitors, focusing on two competitors in IPF who recently received positive ph2 data",
+              "evidence_id": "chunk-3f6aafa25367"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": []
+        },
+        {
+          "title": "Iclepertin (NR2B) – Submission Strategy and MCCB Validation (Ph3, TA CREA)",
+          "background": [
+            {
+              "text": "Actions: confirm whether MCCB version used in TW for Ph3 was officially validated; confirm previous pooling strategy with CDE; assess flexibility to submit China mainland or pooled data with Taiwan.",
+              "quote": "Iclepertin submission strategy\n1. Confirm whether the version of MCCB used in TW for Ph3 has been officially validated.\n2. Confirm the previous pooling strategy communicated with CDE, and assess if we have the flexibility to submit either data from China mainland or pooled data with Taiwan",
+              "evidence_id": "chunk-0b2e1d67f017"
+            },
+            {
+              "text": "MCCB officially translated and certified in 2014 but not validated; pre-IND referred to 'China/Chinese patients' without specifying mainland or TCM; 'Greater China' as back-up strategy if mainland data inconsistent; TW Ph3 data to be used for MCCB/VRFCAT validation if CDE requires.",
+              "quote": "Officially translated and certified by MAI (copyright owner) and comms multilingual Ltd in 2014, but not validated after confirmation with TW RA and MAI (usually the validation study is conducted by external experts)\n\nWe referred to“中国/中国患者” w/o specify as China mainland or TCM in pre-IND. The allocation form with mentioning “China mainland” number was submitted in CTA as CDE request. \"Great China\" will be back-up strategy if mainland not showing consistency and TW ph3 data will be used for MCCB/VRFCAT validation in case CDE required during review",
+              "evidence_id": "chunk-0b2e1d67f017"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": []
+        },
+        {
+          "title": "NR2B NAM (MDD Adjunct/Mono) – Global Recruitment Acceleration and Site Management",
+          "background": [
+            {
+              "text": "Global recruitment acceleration required; CRO evaluated recruitment number in China under expedited timeline; target 10 pts by end of Dec 2024 as LPI.",
+              "quote": "NR2B global acceleration\n- Local team to request CRO to evaluate recruitment number in China under the expedited timeline",
+              "evidence_id": "chunk-622722f3629d"
+            },
+            {
+              "text": "Beijing Huilongguan Hospital could not initiate site due to global recruitment acceleration decision; team communicated with site PI & GCP officer same day as global decision; site understood and expected future collaboration for upcoming Ph3 NR2B NAM studies.",
+              "quote": "NR2B Nam MDD adjunct/mono\nCD&O to work with CRO to communicate with Beijing Huilongguan Hospital regarding  not able to initiate the site due to global recruitment acceleration",
+              "evidence_id": "chunk-364f4e31fa10"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": []
+        },
+        {
+          "title": "NR2B NAM – Local Asset Team Setup, Steering Committee, and Type III HA Meeting (Precision Psychiatry)",
+          "background": [
+            {
+              "text": "MAP suggested including Value and Access activities in overall early asset team goal; slides uploaded to MAP folder.",
+              "quote": "MAP suggested including the activities from Value and Access into the overall early asset team goal.",
+              "evidence_id": "chunk-2094c71cd01d"
+            },
+            {
+              "text": "Prof. Gang Wang confirmed as NR2B NAM asset-level steering committee member (confirmed Mar 21, 2025).",
+              "quote": "Prof. Wang is NR2B NAM asset level steering committee member.",
+              "evidence_id": "chunk-c6e644dc1357"
+            },
+            {
+              "text": "Type III HA meeting with CDE on precision psychiatry approach: Prof. Zhen Wang from Shanghai Mental Health Center proposed as external expert for HAI.",
+              "quote": "Prof. Zhen Wang from Shanghai Mental Health Center was proposed to be invited as the external expert in HAI considering his expertises on the three questions of precision psychiatry concept, drug development in impulsivity, and objective task-based measures.",
+              "evidence_id": "chunk-41a8dcd7efc8"
+            },
+            {
+              "text": "NR2B NAM local asset team to be set up following RMMT and local HPLT guidance; aligned at Mar TALT.",
+              "quote": "Aligned in Mar TALT that NR2B NAM local AT will be set up following RMMT  and local HPLT guidance.",
+              "evidence_id": "chunk-0cddec16496b"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": []
+        },
+        {
+          "title": "Vicadrostat + Empagliflozin EASi-KIDNEY China – Late SSU Delay",
+          "background": [
+            {
+              "text": "Delay issue escalated to global asset lead and global evidence lead; late SSU in China is Oxford's operational strategy (sequential country initiation); Oxford committed to China target of 1,100 patients with recruitment window kept open; additional candidate sites to be evaluated if recruitment lower than expected.",
+              "quote": "EASi-KIDNEY late SSU in China update:\nReason of late SSU in China is an operation strategy by Oxford. Oxford initiates start-up  in sequential way considering the country enrollment capacity, availability ,etc . ​\nOxford promised the target of 1,100 for China, and recruitment window will still be kept open until China gets the targeted number. ​\nIn case of lower recruitment than expected, China will evaluate some additional candidate sites to Oxford.",
+              "evidence_id": "chunk-0a8e6751d43e"
+            },
+            {
+              "text": "Slide deck from global team archived at MAP SharePoint and CEC/MAP folder confirming global commitment to China patient sample size despite late site initiations.",
+              "quote": "Archive the slide deck provided by global team  at MAP sharepoint on global commitment to ensuring China patients sample size despite with late site initiations",
+              "evidence_id": "chunk-2445a43f59c8"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": []
+        },
+        {
+          "title": "Vicadrostat + Empagliflozin CVRR Trial (1378-0041) – Leading PI Selection and SUU Timeline",
+          "background": [
+            {
+              "text": "MAP suggested reaching out to Prof. Tang to confirm willingness as leading PI and operational feasibility for tight recruitment timeline; also to revisit trial SUU timeline and explore acceleration opportunities.",
+              "quote": "MAP suggested that team should initially reach out to Prof. Tang, to confirm his willingness to be the leading PI of this study,  and operational feasibility for tight recruitment timeline.\n2. Revisit trial SUU timeline and explore the opportunities for acceleration",
+              "evidence_id": "chunk-df476c82fdb3"
+            },
+            {
+              "text": "Prof. Yida Tang visited Mar 11; willing to be leading PI and aware of tight timeline; GCP office of Peking University Third Hospital willing to support accelerated timeline; hospital added to HOPE project; publication topic raised; CO-PI process feasibility under evaluation; submission strategy (no HA interaction) endorsed by CEC; planned first SIV date accelerated from 15 Dec 2025 to 30 Oct 2025.",
+              "quote": "Prof. Tang is willing to be the Leading PI of this study and is fully aware of the tight timeline. The GCP office is willing to give the green light and support the accelerated timeline.\n3. Peking University Third Hospital will be added to HOPE project in order to accelerate the contract negotiation.\n4, Prof. Tang brought up the topic of publication. Evidence lead will contact global team on this topic\n5. Trial team is evaluating th efeasilibity of CO-PI process based on feedback from Prof. Tang's assistant which was obtained by CRA during SQV.\n5. The submission strategy is no HA interaction w",
+              "evidence_id": "chunk-df476c82fdb3"
+            },
+            {
+              "text": "Prof. Tang nominated site PI Shaomin Chen (陈少敏), who is also PI for EASi HF at Peking University Third Hospital.",
+              "quote": "Prof. Tang has nominated site PI  Shaomin Chen (陈少敏), who is also the PI for EASi HF of this site.",
+              "evidence_id": "chunk-8bf41910e415"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": []
+        },
+        {
+          "title": "EASi-HF Reduced Trial – Leading PI Selection (China and Taiwan)",
+          "background": [
+            {
+              "text": "Actions: arrange meeting for Dr. Zhang with leading PI and site GCP office director; involve Carol and TW team to follow up with global on TW leading PI selection. Exchange meeting with Zhongshan Hospital scheduled Jan 10; TW team and CPL reached alignment on leading PI selection.",
+              "quote": "1.\t Arrange a meeting for Dr. Zhang with leading PI and director of site GCP office\n2. Involve Carol and TW team to follow up with global team on TW leading PI selection",
+              "evidence_id": "chunk-8de3fa20a085"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": []
+        },
+        {
+          "title": "Jardiance (Empagliflozin) PAC Studies – HFrEF & HFpEF License Renewal and HA Interaction with CDE",
+          "background": [
+            {
+              "text": "ONI feasibility report delayed; TA to collaborate with RA to assess available ONIS study data for Jardiance license renewal in 2026 and develop HA communication strategy for CEC review. Action completed 2024-12-19.",
+              "evidence_id": "chunk-b86f9d41bdb5",
+              "quote": "TA to collaborate with RA to assess the available data from the ONIS study for Jardiance license renew in 2026, and develop a HA communication strategy for CEC review"
+            },
+            {
+              "text": "Risk assessment on license renewal reported to MAP and MBR; HA communication strategy and mitigation plan aligned by CRM CEC.",
+              "evidence_id": "chunk-b86f9d41bdb5",
+              "quote": "Risk assessment on license renewal has been reported to MAP and MBR.\nHA communication strategy and mitigation plan has been aligned by CRM CEC."
+            },
+            {
+              "text": "MAP action (2024-12-12, due 2024-12-20, owner: Jardiance evidence team): (1) collect LTF 2025-2029 for Empa HFrEF & HFpEF; (2) prepare official communication letter to CDE on PAC study challenges for Dr. Zhang review; (3) kick off formal HA interaction preparation concurrently with PI feasibility report expected March 2025. All completed by 2024-12-31.",
+              "evidence_id": "chunk-f1d05c2e8497",
+              "quote": "1. Collect the information of LTF(2025-2029) for Empa HFrEF & HFpEF for team scenario evaluation.\n2. Prepare a draft of  official communication letter to CDE, introducing the current situation and challenges for Jardiance PAC study and seeking CDE’s opinion. Forward the draft to Dr. Zhang for review.\n3. Kick off the preparation of formal health authority interaction with CDE, concurrently expecting feasibility report from PI in March 2025."
+            },
+            {
+              "text": "LTF collected; HA communication letter finalized after internal and PI review; HA interaction slides deck and meeting request to be submitted before Chinese New Year Holiday; communication objective (extending final report to next license renewal round, with interim period report mitigation plan) aligned in CEC.",
+              "evidence_id": "chunk-f1d05c2e8497",
+              "quote": "HA interaction slides deck and meeting request to be submitted before Chinese New Year Holiday. The communication objective for the requirement on extending final report to the next round of license renewal, along with the mitigation plan for submitting the interim period report within the upcoming license review timeframe has been aligned in CEC."
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": [
+            {
+              "text": "Submit HA interaction slides deck and meeting request to CDE before Chinese New Year Holiday. Owner: Jardiance evidence team (原文未说明具体负责人). Status: pending (as of 2024-12-31 completion date of parent action). Completed: 原文未说明。",
+              "evidence_id": "chunk-f1d05c2e8497",
+              "quote": "HA interaction slides deck and meeting request to be submitted before Chinese New Year Holiday."
+            }
+          ]
+        },
+        {
+          "title": "SYNCHRONIZE Trials – GI AE in Chinese Patients and Additional Compensation for Placebo Arm",
+          "background": [
+            {
+              "text": "Escalation of China investigators' comments on increased GI AE to global team; GMA provided reference slides; current SYNCHRONIZE GI AE data cannot be shared with investigators due to ongoing trial; local communication strategy and key messages developed; local team to monitor data to assess whether GI AE represents higher occurrence in Chinese subgroup.",
+              "quote": "SYNCHRONIZE trials GI AE:\nEscalate the comments from China investigators regarding increased GI AE to global team through multiple channels, to obtain guidance from global team on how to respond to investigators",
+              "evidence_id": "chunk-f4b93afad905"
+            },
+            {
+              "text": "MAP agreed with team to submit proposal for site EC review after revisions: emphasize compensation will not impact blinding; modify rationale of compensation amount; revise ICF content (benefits of participation, awareness of new AOM launch in China, subjects' option to stay in trial); prepare allowance disposition plan.",
+              "quote": "MAP agrees with team to submit the proposal for site EC review after the following revisions:\n1.1 Emphasize that the compensation allowance will not impact the blinding setting\n1.2 Modify the rationale of compensation amount\n1.3 Revise the proposed ICF content, with the focus on:\n1.3.1 Benefits of subjects participating SYNCHRONIZE trials\n1.3.2 Awareness of the new AOM launch in China market\n1.3.3 Subjects have the options to decide whether to stay in our trials\n2. Prepare the allowance disposition plan, including the actions for any money not successfully delivered to subjects",
+              "evidence_id": "chunk-393af97d095a"
+            },
+            {
+              "text": "ICF wording of compensation internally reviewed and finalized; submitted to site EC; tracking log to be prepared for allowance disposition status.",
+              "quote": "ICF wording of compensation has been internally reviewed and finalized. ICF has been submitted to site EC for review.\n2. The tracking log will be prepared to document the allowance disposition status.",
+              "evidence_id": "chunk-393af97d095a"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [
+            {
+              "text": "MAP agreed with team to submit the additional compensation proposal for site EC review, subject to specified revisions to ICF and compensation rationale.",
+              "quote": "MAP agrees with team to submit the proposal for site EC review after the following revisions:",
+              "evidence_id": "chunk-393af97d095a"
+            }
+          ],
+          "todo": []
+        },
+        {
+          "title": "Zongertinib NDA Timeline – Dataset Translation Waiver and Rolling Submission",
+          "background": [
+            {
+              "text": "MAP suggested raising the topic of waiving dataset translation to RDPAC from BDS or RA working group; topic raised at RDPAC RA core meeting but not considered an issue by other MNCs.",
+              "quote": "MAP suggests raising the topics of waiving dataset translation to RDPAC from BDS working group or RA working group",
+              "evidence_id": "chunk-834c89475203"
+            },
+            {
+              "text": "CDE agreed with proposed NDA rolling submission plan (confirmed Dec 20, 2024).",
+              "quote": "CDE agreed with the proposed NDA rolling submission plan",
+              "evidence_id": "chunk-a2c639dc4ab0"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": []
+        },
+        {
+          "title": "Obrixtamig Daron-Lung 1&2 – Follow-up on Global Decision Not to Adopt Prof. Ying Cheng & Prof. Shun Lu's Study Design Advice",
+          "background": [
+            {
+              "text": "A MAP action (ID 202508, meeting date 2025-03-19) was assigned to Sally Chen to follow up with Dr. Zhang on why global decided not to adopt Prof. Ying Cheng & Prof. Shun Lu's advice to modify the study design for Obrixtamig Daron-Lung 1&2. The action was completed on 2025-03-20.",
+              "evidence_id": "chunk-8b0e27997a1e",
+              "quote": "To follow up with Dr. Zhang on why global decided not to\nadopt Prof. Ying Cheng & Prof. Shun Lu’s advice and modify study design for Obrixtamig Daron-Lung 1&2"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": [
+            {
+              "text": "Owner: Sally Chen. Action: Follow up with Dr. Zhang on why global decided not to adopt Prof. Ying Cheng & Prof. Shun Lu's advice to modify study design for Obrixtamig Daron-Lung 1&2. Due: 2025-03-01. Status: Completed. Action Completion date: 2025-03-20.",
+              "evidence_id": "chunk-8b0e27997a1e",
+              "quote": "Owner: Sally Chen | Due: 2025-03-01 00:00:00 | Status: Completed | Comment: PMN: Competed on Mar 20th | Action Completion date: 2025-03-20 00:00:00"
+            }
+          ]
+        },
+        {
+          "title": "FoCUS System – 1-Month NDA Submission Gap (China vs. Global 1st Submission)",
+          "background": [
+            {
+              "text": "MAP advised refining proposal wording to 'within 1m (30 days)' as default timeline between global 1st NDA submission and China NDA submission in FoCUS system for all projects without detailed NDA planning.",
+              "quote": "MAP advised refining the proposal wording to “within 1m (30 days)” as the default timeline between global 1st NDA submission and China NDA submission in FoCUS system, for all projects without (yet) detailed NDA planning.",
+              "evidence_id": "chunk-cbe24223967d"
+            },
+            {
+              "text": "Slides revised and shared with LRA for communication with EMRA; EMRA coordinating with other global functions (e.g. sPM) with decision expected Mar 2025.",
+              "quote": "Slides have been revised based on MAP advice, and shared with LRA for further communication with EMRA.\n2. EMRA is coordinating with other global functions (e.g. sPM) with a decision expected in Mar 2025",
+              "evidence_id": "chunk-cbe24223967d"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [
+            {
+              "text": "MAP advised refining the FoCUS default China NDA submission gap to 'within 1m (30 days)' from global 1st submission.",
+              "quote": "MAP advised refining the proposal wording to “within 1m (30 days)” as the default timeline between global 1st NDA submission and China NDA submission in FoCUS system",
+              "evidence_id": "chunk-cbe24223967d"
+            }
+          ],
+          "todo": []
+        },
+        {
+          "title": "TREASURE Study – Tenecteplase before Interhospital Transfer for Thrombectomy (4.5–24h LVO)",
+          "background": [
+            {
+              "text": "MAP agreed with the TREASURE study proposal with suggestions: include distribution of transferring time in results analysis; assess study power reduction and interim analysis scenarios; re-evaluate drop-out rate using ORIGINAL study results; confirm budget feasibility with PI; confirm regulation on using IIS results for registration.",
+              "quote": "MAP agrees with the study proposal, with the following suggestions.\nStudy design\n1. Include distribution of transferring time in the results analysis.\n2. Work with statisticians to assess the study power reduction and the scenarios of interim analysis\n3. Re-evaluate the drop-out rate, leveraging ORIGINAL study results\n\n4.Confirm the feasibility of current total budget proposal with PI\n5. Confirm with RA regarding the current regulation on leveraging IIS study results for registration.",
+              "evidence_id": "chunk-1f11931b5bf7"
+            },
+            {
+              "text": "Outcomes: transferring time distribution included in TREASURE; study power updated from 0.9 to 0.85; interim analysis not recommended by PI or BDS; drop-out rate updated from 10% to 5%; sample size reduced from 706 to 572 with at least 1:1 hospital fund matching confirmed; IIS cannot directly support registration (confirmed with RA).",
+              "quote": "Study power has been updated from 0.9 to 0.85. Interim analysis is not recommended from neither PI or BDS.\n3.Drop out rate has been updated from 10% to 5%. (early discontinuation rate of 4.4% in the ORIGINAL).\n4.Sample size has been reduced from 706 to 572. The study team has confirmed at least a 1:1 matching of funds from the hospital, and the current budget is feasible.\n5.Confirmed with RA, these IIS cannot directly support the registration.",
+              "evidence_id": "chunk-1f11931b5bf7"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [
+            {
+              "text": "MAP agreed with the TREASURE study proposal, subject to the listed study design suggestions.",
+              "quote": "MAP agrees with the study proposal, with the following suggestions.",
+              "evidence_id": "chunk-1f11931b5bf7"
+            }
+          ],
+          "todo": []
+        },
+        {
+          "title": "ANGEL-MeVO-TNK Study – Intra-arterial Tenecteplase for Acute Primary Medium Vessel Occlusion Stroke",
+          "background": [
+            {
+              "text": "MAP agreed with the ANGEL-MeVO-TNK study proposal with suggestions: re-evaluate drop-out rate using ORIGINAL results; assess timing of interim analysis; check Tiantan Hospital registry database for MeVO patients treated with IAT for more accurate treatment effect proposal.",
+              "quote": "MAP agrees with the study proposal, with the following suggestions in study design.\n1. \tRe-evaluate the drop-out rate, leveraging ORIGINAL study results\n2. \tAssess the timing of interim analysis, ensuring a balance between the data amount for IA and the remaining study duration\n3.\tCheck the registry study database from Tiantan Hospital regarding the condition of patients with MevO treated with IAT, for a more accurate treatment effect proposal",
+              "evidence_id": "chunk-ad2a59b33bcc"
+            },
+            {
+              "text": "Outcomes: drop-out rate maintained at 5%; interim analysis not recommended by PI or BDS; treatment effect kept at 13% based on PI's clinical assumption (no available Tiantan Hospital database for IA efficacy in MeVO).",
+              "quote": "Drop-out rate maintain 5% (early discontinuation rate of 4.4% in ORIGINAL study).\n2.Interim analysis is not recommended from neither PI or BDS.\n3.Treatment effect keep as 13% based on PI’s clinical assumption (No available database from Tiantan Hospital to evaluate the efficacy of IA in Mevo.",
+              "evidence_id": "chunk-ad2a59b33bcc"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [
+            {
+              "text": "MAP agreed with the ANGEL-MeVO-TNK study proposal, subject to the listed study design suggestions.",
+              "quote": "MAP agrees with the study proposal, with the following suggestions in study design.",
+              "evidence_id": "chunk-ad2a59b33bcc"
+            }
+          ],
+          "todo": []
+        },
+        {
+          "title": "Tenecteplase vs. Medical Management in 4.5–24h LVO-AIS without EVT Access",
+          "background": [
+            {
+              "text": "MAP agreed with the study proposal and recommended working with statisticians to re-evaluate study power and assess scenarios and timing of interim analysis.",
+              "quote": "MAP agrees with the study proposal, and recommended team to work with statisticians to\n1.\tRe-evaluate the power of the study\n2.\tAssess the scenarios and timing of interim analysis",
+              "evidence_id": "chunk-21ded0193ee2"
+            },
+            {
+              "text": "Outcomes: 80% power confirmed as reasonable and common; interim analysis not recommended by PI or BDS.",
+              "quote": "Confirmed 80% is reasonable and common;\n2..Interim analysis is not recommended from neither PI or BDS.",
+              "evidence_id": "chunk-21ded0193ee2"
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [
+            {
+              "text": "MAP agreed with the study proposal, subject to statistician review of power and interim analysis scenarios.",
+              "quote": "MAP agrees with the study proposal, and recommended team to work with statisticians to",
+              "evidence_id": "chunk-21ded0193ee2"
+            }
+          ],
+          "todo": []
+        },
+        {
+          "title": "ECR vs. IIS – 'BI Study Invention' Wording in ECR Contract",
+          "background": [
+            {
+              "text": "MAP (meeting 2025-04-23) suggested the team consult with Legal on the wording of 'BI study invention' in the ECR contract. Owner: Liqun Tian. Due: 2025-05-01. Status: completed (Action Completion date: 2025-05-13).",
+              "evidence_id": "chunk-a7de86f979cb",
+              "quote": "MAP suggested the team to consult with Legal on the wording of “BI study invention” in the ECR contract."
+            }
+          ],
+          "for_endorsement": [],
+          "decision": [],
+          "todo": [
+            {
+              "text": "Legal department to discuss modification of Chinese translation of 'BI study invention' in ECR contract internally with intellectual property attorney. Owner: Liqun Tian. Due: 2025-05-01. Status: completed. Action Completion date: 2025-05-13.",
+              "evidence_id": "chunk-a7de86f979cb",
+              "quote": "Already provided feedback to the legal department, and they will discuss the modification of the Chinese translation internally with the intellectual property attorney."
+            }
+          ]
+        }
+      ],
+      "reports": [
+        {
+          "topic_index": 0,
+          "passed": [],
+          "corrected": [],
+          "not_applicable": []
+        },
+        {
+          "topic_index": 1,
+          "passed": [],
+          "corrected": [],
+          "not_applicable": []
+        },
+        {
+          "topic_index": 2,
+          "passed": [],
+          "corrected": [],
+          "not_applicable": []
+        },
+        {
+          "topic_index": 3,
+          "passed": [],
+          "corrected": [],
+          "not_applicable": []
+        },
+        {
+          "topic_index": 4,
+          "passed": [],
+          "corrected": [],
+          "not_applicable": []
+        },
+        {
+          "topic_index": 5,
+          "passed": [],
+          "corrected": [],
+          "not_applicable": []
+        },
+        {
+          "topic_index": 6,
+          "passed": [],
+          "corrected": [],
+          "not_applicable": []
+        },
+        {
+          "topic_index": 7,
+          "passed": [],
+          "corrected": [],
+          "not_applicable": []
+        },
+        {
+          "topic_index": 8,
+          "passed": [],
+          "corrected": [],
+          "not_applicable": []
+        },
+        {
+          "topic_index": 9,
+          "passed": [],
+          "corrected": [],
+          "not_applicable": []
+        },
+        {
+          "topic_index": 10,
+          "passed": [],
+          "corrected": [],
+          "not_applicable": []
+        },
+        {
+          "topic_index": 11,
+          "passed": [],
+          "corrected": [],
+          "not_applicable": []
+        },
+        {
+          "topic_index": 12,
+          "passed": [],
+          "corrected": [],
+          "not_applicable": []
+        },
+        {
+          "topic_index": 13,
+          "passed": [],
+          "corrected": [],
+          "not_applicable": []
+        },
+        {
+          "topic_index": 14,
+          "passed": [],
+          "corrected": [],
+          "not_applicable": []
+        },
+        {
+          "topic_index": 15,
+          "passed": [],
+          "corrected": [],
+          "not_applicable": []
+        },
+        {
+          "topic_index": 16,
+          "passed": [
+            1,
+            2,
+            3,
+            4,
+            6,
+            8,
+            9,
+            11,
+            12,
+            13,
+            17,
+            18
+          ],
+          "corrected": [
+            {
+              "check": 7,
+              "detail": "原稿将 'aligned in CEC' 的通信目标放在 background，实为 CEC 已对通信目标达成一致的决议性陈述，但原文未说明具体 CEC 层级（仅写 'CEC'），保留在 background 并注明；同时 HA interaction slides 提交属于尚未完成的行动，已移至 todo。"
+            },
+            {
+              "check": 14,
+              "detail": "原稿 todo 为空，但 'HA interaction slides deck and meeting request to be submitted before Chinese New Year Holiday' 是明确的待完成行动，已补入 todo；owner 原文未说明，已注明。"
+            },
+            {
+              "check": 15,
+              "detail": "MAP action ID 202415（chunk-b86f9d41bdb5）和 202418（chunk-f1d05c2e8497）均标注 Status: Completed，完成日期分别为 2024-12-19 和 2024-12-31，已在 background 中标注完成状态，不写成未完成。"
+            },
+            {
+              "check": 16,
+              "detail": "原稿 for_endorsement 和 decision 均为空。原文中 'aligned in CEC' 表示 CEC 已对通信目标达成一致，但未说明具体 CEC 层级及正式决议形式，无法归入 decision，保留在 background 并注明原文表述。"
+            }
+          ],
+          "not_applicable": [
+            {
+              "check": 5,
+              "detail": "议题含监管风险（license renewal 2026）、HA 互动计划、CEC 对齐，不属于低信息量条目。"
+            },
+            {
+              "check": 10,
+              "detail": "无 pending/TBD 状态字段，不适用。"
+            }
+          ]
+        },
+        {
+          "topic_index": 17,
+          "passed": [],
+          "corrected": [],
+          "not_applicable": []
+        },
+        {
+          "topic_index": 18,
+          "passed": [],
+          "corrected": [],
+          "not_applicable": []
+        },
+        {
+          "topic_index": 19,
+          "passed": [
+            1,
+            2,
+            4,
+            8,
+            11,
+            12,
+            13,
+            17
+          ],
+          "corrected": [
+            {
+              "check": 3,
+              "detail": "Background text incorrectly described the completed action as background context only; the action details (owner, due, status, completion date) belong in todo per schema. Moved to todo with full fields. The rationale for global's decision is not recorded in the source; noted as 原文未说明."
+            },
+            {
+              "check": 14,
+              "detail": "Original draft omitted owner (Sally Chen), due date (2025-03-01), status (Completed), and completion date (2025-03-20) from the todo field. All fields now populated from evidence."
+            },
+            {
+              "check": 15,
+              "detail": "Original draft placed the completed action only in background without marking it as completed in todo. Corrected: todo now records Status: Completed and Action Completion date: 2025-03-20."
+            },
+            {
+              "check": 16,
+              "detail": "No for_endorsement or decision entries present; original draft correctly left these empty. No fabrication needed. Confirmed no committee decision or endorsement request is recorded in source."
+            }
+          ],
+          "not_applicable": [
+            {
+              "check": 5,
+              "detail": "Topic has a completed follow-up action with owner and date; not low-information."
+            },
+            {
+              "check": 6,
+              "detail": "No committee decision or process-status boundary issue; source records only a MAP action item."
+            },
+            {
+              "check": 7,
+              "detail": "No endorsement request present; not applicable."
+            },
+            {
+              "check": 9,
+              "detail": "No decision status to evaluate."
+            },
+            {
+              "check": 10,
+              "detail": "No pending/TBD items; action is completed."
+            },
+            {
+              "check": 18,
+              "detail": "Single evidence chunk covers the entire topic; no cross-page context missing."
+            }
+          ]
+        },
+        {
+          "topic_index": 20,
+          "passed": [],
+          "corrected": [],
+          "not_applicable": []
+        },
+        {
+          "topic_index": 21,
+          "passed": [],
+          "corrected": [],
+          "not_applicable": []
+        },
+        {
+          "topic_index": 22,
+          "passed": [],
+          "corrected": [],
+          "not_applicable": []
+        },
+        {
+          "topic_index": 23,
+          "passed": [],
+          "corrected": [],
+          "not_applicable": []
+        },
+        {
+          "topic_index": 24,
+          "passed": [
+            1,
+            2,
+            3,
+            4,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            16,
+            17,
+            18
+          ],
+          "corrected": [
+            {
+              "check": 14,
+              "detail": "原稿 todo 缺少 owner (Liqun Tian)、due (2025-05-01)、status (completed)、Action Completion date (2025-05-13)，已从原文补全。"
+            },
+            {
+              "check": 15,
+              "detail": "原稿 todo 未标注该行动已完成（Status: completed，Action Completion date: 2025-05-13），已在 todo 文本中补充完整状态。"
+            }
+          ],
+          "not_applicable": [
+            {
+              "check": 5,
+              "detail": "议题含 MAP 决议（建议咨询 Legal）及具体跟进行动，不属于低信息量条目。"
+            }
+          ]
+        }
+      ],
+      "excluded": [
+        {
+          "fact_id": "F0001",
+          "reason": "progress_only",
+          "detail": "该议题仅记录一条已完成的行动项（Action Completion date: 2024-07-30，Status: Completed），内容为确认CTONG合作对CIO会议格式的影响，结论为'generally well managed with no significant deviations'。无讨论、风险、阻塞、背书请求、委员会决策或跟进行动，属于纯进度/已完成执行明细，应过滤。"
+        }
+      ],
+      "coverage": "本议题质检结果未被采纳，保留抽取初稿；本议题质检改动未被采纳，保留抽取初稿；本议题质检引用未通过，保留抽取初稿；本议题质检结果未被采纳，保留抽取初稿；本议题质检结果未被采纳，保留抽取初稿；本议题质检结果未被采纳，保留抽取初稿；本议题质检引用未通过，保留抽取初稿；本议题质检引用未通过，保留抽取初稿；本议题质检结果未被采纳，保留抽取初稿；本议题质检结果未被采纳，保留抽取初稿；本议题质检引用未通过，保留抽取初稿；本议题质检结果未被采纳，保留抽取初稿；本议题质检结果未被采纳，保留抽取初稿；本议题质检结果未被采纳，保留抽取初稿；本议题质检引用未通过，保留抽取初稿；本议题质检引用未通过，保留抽取初稿；两条原始证据（chunk-b86f9d41bdb5、chunk-f1d05c2e8497）均已覆盖；其余 evidence chunks 属于其他议题（Metalyse、IPF、Iclepertin、NR2B、Vicadrostat+EMPA），与本议题无关，未纳入。所有实质背景、已完成行动及待提交行动均已保留。；本议题质检引用未通过，保留抽取初稿；本议题质检结果未被采纳，保留抽取初稿；The single evidence chunk (chunk-8b0e27997a1e, MAP ID 202508) fully covers the topic. The outcome of the follow-up (i.e., the actual reason global did not adopt the KOL advice) is not recorded in the source document.；原始候选议题仅含一条已完成的行动跟进条目（ID 202405），无实质讨论、风险、委员会请求或决议，整题按 progress_only 过滤。证据文档中其余行（202401–202413）均属其他议题，不在本候选范围内，未引入。；本议题质检引用未通过，保留抽取初稿；本议题质检结果未被采纳，保留抽取初稿；本议题质检结果未被采纳，保留抽取初稿；本议题质检结果未被采纳，保留抽取初稿；仅 chunk-a7de86f979cb（Sheet1 row 38）与本议题相关，其余 chunk 均属其他议题行，已忽略。原文所有实质字段（owner、due、status、completion date、comment）均已纳入。",
+      "unresolved": [
+        "本议题质检结果未被采纳，保留抽取初稿",
+        "本议题质检改动未被采纳，保留抽取初稿",
+        "本议题质检引用未通过，保留抽取初稿",
+        "本议题质检结果未被采纳，保留抽取初稿",
+        "本议题质检结果未被采纳，保留抽取初稿",
+        "本议题质检结果未被采纳，保留抽取初稿",
+        "本议题质检引用未通过，保留抽取初稿",
+        "本议题质检引用未通过，保留抽取初稿",
+        "本议题质检结果未被采纳，保留抽取初稿",
+        "本议题质检结果未被采纳，保留抽取初稿",
+        "本议题质检引用未通过，保留抽取初稿",
+        "本议题质检结果未被采纳，保留抽取初稿",
+        "本议题质检结果未被采纳，保留抽取初稿",
+        "本议题质检结果未被采纳，保留抽取初稿",
+        "本议题质检引用未通过，保留抽取初稿",
+        "本议题质检引用未通过，保留抽取初稿",
+        "CEC 对通信目标的 'aligned' 未说明具体 CEC 层级（PEC/CRM CEC/Ad-hoc CEC），原文仅写 'CEC'。",
+        "HA interaction slides 提交截止日期（Chinese New Year Holiday）为相对日期，原文未给出具体日历日期。",
+        "PI feasibility report 预期 March 2025，原文未说明后续是否已收到。",
+        "本议题质检引用未通过，保留抽取初稿",
+        "本议题质检结果未被采纳，保留抽取初稿",
+        "The substantive reason why global decided not to adopt Prof. Ying Cheng & Prof. Shun Lu's study design advice for Obrixtamig Daron-Lung 1&2 is not captured in the source; 原文未说明.",
+        "本议题质检引用未通过，保留抽取初稿",
+        "本议题质检结果未被采纳，保留抽取初稿",
+        "本议题质检结果未被采纳，保留抽取初稿",
+        "本议题质检结果未被采纳，保留抽取初稿"
+      ]
+    }
+  ],
+  "final_topic_ids": [
+    "topic-98653f96862f111e867a",
+    "topic-599a40880aa9f34e0bda",
+    "topic-fa9a8611218e12b3b496",
+    "topic-831d7daa73edddbbf275",
+    "topic-16f8403e8e7acc9d443f",
+    "topic-1283c24c782b9dfd8de3",
+    "topic-084019ad461cb2da1cf5",
+    "topic-2005783ad1730d2c0036",
+    "topic-33de3df8cffb15923aa3",
+    "topic-d51a81d552d660d8c912",
+    "topic-cd0107fa45d2130fec28",
+    "topic-5106626c01a4f36d61ae",
+    "topic-93a4c23fe6f31b70b9a6",
+    "topic-fb1c3e4800e47e29bc4f",
+    "topic-edbdce81f3f0bb148a90",
+    "topic-987a49f0ca78bb65cb8c",
+    "topic-158e47d5c4f7c875fe09",
+    "topic-68219bde6d38f1eddb0d",
+    "topic-0523922df61e41208135",
+    "topic-37d35ed06de077911405",
+    "topic-78bf8981c1dff5ad4633"
+  ],
+  "document_grouping": "all_candidates_accounted_for"
+}

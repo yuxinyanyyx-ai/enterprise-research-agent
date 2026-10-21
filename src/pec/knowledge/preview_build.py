@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import importlib
 import logging
 import os
 import platform
@@ -79,9 +78,9 @@ def get_preview_image(source_ref: str, loc: str, *, digest: str | None = None) -
     return None, ""
 
 
-def build_file_previews(path: Path, source_ref: str, digest: str) -> dict:
+def build_file_previews(path: Path, source_ref: str, digest: str, *, required: bool = False) -> dict:
     """为单个文件预生成全部页面预览，写入 index/previews/{sha256}/。"""
-    if not previews_enabled():
+    if not required and not previews_enabled():
         return {"enabled": False, "pages": []}
 
     suffix = path.suffix.lower()
@@ -134,10 +133,7 @@ def _pptx_preview_engine() -> str:
 
 
 def _build_pptx_previews(path: Path, root: Path) -> list[dict]:
-    try:
-        Presentation = importlib.import_module("pptx").Presentation
-    except ImportError as exc:
-        raise RuntimeError("PPTX 预览需要安装 python-pptx。") from exc
+    from pptx import Presentation
 
     engine = _pptx_preview_engine()
     if engine in {"none", "off"}:
@@ -435,8 +431,8 @@ def _export_pptx_slide(path: Path, slide_no: int, out: Path) -> bool:
 def _export_pillow_slide(path: Path, slide_no: int, out: Path) -> bool:
     try:
         from PIL import Image, ImageDraw
-        Presentation = importlib.import_module("pptx").Presentation
-        MSO_SHAPE_TYPE = importlib.import_module("pptx.enum.shapes").MSO_SHAPE_TYPE
+        from pptx import Presentation
+        from pptx.enum.shapes import MSO_SHAPE_TYPE
     except ImportError:
         return False
     try:
