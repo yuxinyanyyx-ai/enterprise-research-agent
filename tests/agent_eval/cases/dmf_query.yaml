@@ -65,6 +65,7 @@ cases:
         contains: [context_source, search_dmf, '12345']
       route: execute_function_tools
       interrupt: false
+      tool_decisions: [[search_dmf], []]
       state:
         dmf_results.results: *id001
       answer:

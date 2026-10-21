@@ -34,6 +34,7 @@ cases:
       state:
         dmf_results.total_records: 12
         result_id: active-result
+      tool_decisions: [[]]
       llm_inputs:
       - max_estimated_tokens: 11904
         message_types: [system, human, system]
@@ -69,6 +70,7 @@ cases:
     scripted_llm: [search, done]
     dmf_result: result
     expected:
+      tool_decisions: [[search_dmf], []]
       llm_inputs:
       - call_index: 1
         current_query_verbatim: true
@@ -82,6 +84,7 @@ cases:
         tool_artifacts: []
         react_tool_rounds: 0
         dmf_results.total_records: 1
+      tool_decisions: [[]]
       llm_inputs:
       - max_estimated_tokens: 11904
         current_query_verbatim: true

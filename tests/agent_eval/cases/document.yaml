@@ -60,6 +60,7 @@ cases:
     expected:
       route: document_workflow
       interrupt: true
+      tool_decisions: [[run_document_dmf_workflow]]
       state: {}
       answer:
         empty: true
@@ -78,6 +79,7 @@ cases:
     expected:
       route: document_workflow
       interrupt: false
+      tool_decisions: [[]]
       state:
         workflow_status: completed
       answer:

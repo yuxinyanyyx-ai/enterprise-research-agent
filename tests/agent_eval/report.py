@@ -8,6 +8,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from tests.agent_eval.metrics import summarize_results
 from tests.agent_eval.runner import CaseResult
 
 
@@ -30,6 +31,8 @@ def _payload(result: CaseResult, model: str) -> dict[str, Any]:
         "case_id": result.case_id,
         "mode": result.mode,
         "model": model,
+        "task_success": result.task_success,
+        "failure_reason": result.failure_reason,
         "manual_review": None,
         "turns": [
             {
@@ -38,6 +41,10 @@ def _payload(result: CaseResult, model: str) -> dict[str, Any]:
                 "pending_nodes": turn.pending_nodes,
                 "interrupted": turn.interrupted,
                 "call_deltas": turn.call_deltas,
+                "duration_ms": turn.duration_ms,
+                "expected_tool_decisions": turn.expected_tool_decisions,
+                "selected_tool_decisions": turn.selected_tool_decisions,
+                "llm_metrics": turn.llm_metrics,
                 "answer": redact_text(turn.answer),
             }
             for turn in result.turns
@@ -82,3 +89,59 @@ def write_report(
         )
     (output_dir / "report.md").write_text("\n".join(lines), encoding="utf-8")
     return output_dir
+
+
+def write_summary_report(
+    results: list[CaseResult],
+    *,
+    model: str,
+    output_root: str | Path = "outputs/agent_eval",
+) -> Path:
+    """Write aggregate metrics without persisting prompts or tool arguments."""
+
+    timestamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%S%fZ")
+    output_dir = Path(output_root) / f"{timestamp}-summary"
+    output_dir.mkdir(parents=True, exist_ok=False)
+    metrics = summarize_results(results)
+    payload = {
+        "mode": "live",
+        "model": model,
+        "metrics": metrics,
+        "cases": [
+            {
+                "case_id": result.case_id,
+                "task_success": result.task_success,
+                "failure_reason": result.failure_reason,
+            }
+            for result in results
+        ],
+    }
+    (output_dir / "metrics.json").write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+    lines = [
+        "# Agent Eval Summary",
+        "",
+        f"- Model: {model}",
+        f"- Cases: {metrics['case_count']}",
+        f"- Task success: {metrics['successful_case_count']}/{metrics['evaluated_case_count']}",
+        f"- Task success rate: {_percentage(metrics['task_success_rate'])}",
+        f"- Tool selection accuracy: {_percentage(metrics['tool_selection']['accuracy'])} "
+        f"({metrics['tool_selection']['correct_decisions']}/{metrics['tool_selection']['total_decisions']})",
+        f"- Request latency P50/P95: {metrics['latency_ms']['request_p50']}/"
+        f"{metrics['latency_ms']['request_p95']} ms",
+        f"- LLM latency P50/P95: {metrics['latency_ms']['llm_p50']}/"
+        f"{metrics['latency_ms']['llm_p95']} ms",
+        f"- Tokens (input/output/total): {metrics['token_consumption']['input']}/"
+        f"{metrics['token_consumption']['output']}/{metrics['token_consumption']['total']}",
+        f"- Token usage sources: {metrics['token_consumption']['sources']}",
+        f"- Tool calls: {metrics['tool_call_counts']}",
+        f"- Failure reasons: {metrics['failure_reasons']}",
+    ]
+    (output_dir / "metrics.md").write_text("\n".join(lines), encoding="utf-8")
+    return output_dir
+
+
+def _percentage(value: float | None) -> str:
+    return "not measured" if value is None else f"{value:.1%}"

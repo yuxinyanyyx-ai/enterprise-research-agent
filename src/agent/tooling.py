@@ -97,7 +97,11 @@ def _execute_one(
     args = dict(call.get("args") or {})
     for argument_name, state_name in definition.state_arguments:
         if state_name not in state:
-            error = {"success": False, "message": f"缺少工具上下文：{state_name}"}
+            error = {
+                "success": False,
+                "message": f"缺少工具上下文：{state_name}",
+                "error_code": "missing_tool_context",
+            }
             artifact_ref = None if call["name"] == READ_TOOL_NAME else store_artifact(
                 error,
                 request_id=str(state.get("request_id", "")),
@@ -122,6 +126,7 @@ def _execute_one(
             "success": False,
             "message": f"工具执行失败：{exc}",
             "error_type": type(exc).__name__,
+            "error_code": "tool_execution_error",
         }
         artifact_ref = None if call["name"] == READ_TOOL_NAME else store_artifact(
             error,
@@ -173,7 +178,10 @@ def execute_tools(state: ResearchState, *, registry: ToolRegistry | None = None)
     rounds_key = _state_key(state, "tool_rounds")
     if fingerprints == state.get(batch_key, []):
         for call in calls:
-            write_event("tool.rejected", state, call=call, reason="repeated_batch")
+            write_event(
+                "tool.rejected", state, call=call, reason="repeated_batch",
+                failure_code="repeated_tool_call",
+            )
         reason = "检测到模型连续重复相同工具调用，已停止执行。"
         return {
             message_key: [
@@ -185,6 +193,7 @@ def execute_tools(state: ResearchState, *, registry: ToolRegistry | None = None)
                 for call in calls
             ],
             stop_key: reason,
+            "failure_code": "repeated_tool_call",
         }
 
     registry = registry if registry is not None else load_builtin_tools()
@@ -245,8 +254,11 @@ def execute_tools(state: ResearchState, *, registry: ToolRegistry | None = None)
                 outcome["status"] = "error"
                 if isinstance(result, dict) and result.get("error_type"):
                     outcome["error_type"] = result["error_type"]
+                if isinstance(result, dict) and result.get("error_code"):
+                    outcome["failure_code"] = result["error_code"]
             elif isinstance(result, dict) and result.get("success") is False:
                 outcome["status"] = "business_failure"
+                outcome["failure_code"] = result.get("error_code") or "tool_business_failure"
             return str(call["id"]), (message, artifact)
 
     executed: dict[str, tuple[ToolMessage, dict[str, Any]]] = {}
@@ -297,7 +309,8 @@ def mark_tool_limit(state: ResearchState) -> dict[str, Any]:
     maximum = state.get(maximum_key, DEFAULT_MAX_TOOL_ROUNDS)
     write_event("loop.stopped", state, reason="round_limit", round=maximum)
     return {
-        stop_key: f"工具调用达到 {maximum} 轮上限，已停止执行。"
+        stop_key: f"工具调用达到 {maximum} 轮上限，已停止执行。",
+        "failure_code": "tool_round_limit",
     }
 
 

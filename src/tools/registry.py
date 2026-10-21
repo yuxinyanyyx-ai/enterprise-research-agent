@@ -41,7 +41,10 @@ def always_available(state: ToolState) -> bool:
 
 def default_result_adapter(state: ToolState, result: Any) -> dict[str, Any]:
     if isinstance(result, dict) and result.get("success") is False:
-        return {"react_tool_stop_reason": result.get("message") or "工具执行失败。"}
+        return {
+            "react_tool_stop_reason": result.get("message") or "工具执行失败。",
+            "failure_code": result.get("error_code") or "tool_business_failure",
+        }
     return {}
 
 

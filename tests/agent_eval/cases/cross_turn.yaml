@@ -53,6 +53,7 @@ cases:
     dmf_result: result
     expected:
       route: execute_function_tools
+      tool_decisions: [[search_dmf], []]
       answer:
         contains:
         - '12345'
@@ -67,6 +68,7 @@ cases:
     - react_1_0
     expected:
       route: react_agent
+      tool_decisions: [[]]
       state: {}
       answer:
         contains:

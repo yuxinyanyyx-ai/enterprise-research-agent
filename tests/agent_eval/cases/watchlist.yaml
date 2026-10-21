@@ -180,6 +180,7 @@ cases:
     watchlist_result: add_result
     expected:
       route: watchlist_workflow
+      tool_decisions: [[run_watchlist_workflow], []]
       state:
         watchlist_result.action: add
         watchlist_result.dmf_no: DMF-001
@@ -202,6 +203,7 @@ cases:
     watchlist_result: list_result
     expected:
       route: watchlist_workflow
+      tool_decisions: [[run_watchlist_workflow], []]
       answer:
         contains:
         - DMF-001
@@ -223,6 +225,7 @@ cases:
     watchlist_result: run_result
     expected:
       route: watchlist_workflow
+      tool_decisions: [[run_watchlist_workflow], []]
       answer:
         contains:
         - DMF-001
@@ -242,6 +245,7 @@ cases:
     watchlist_result: events_result
     expected:
       route: watchlist_workflow
+      tool_decisions: [[run_watchlist_workflow], []]
       answer:
         contains:
         - event-1
@@ -266,6 +270,7 @@ cases:
     watchlist_result: ack_result
     expected:
       route: watchlist_workflow
+      tool_decisions: [[run_watchlist_workflow], []]
       answer:
         contains:
         - event-1
@@ -285,6 +290,7 @@ cases:
     watchlist_result: remove_result
     expected:
       route: watchlist_workflow
+      tool_decisions: [[run_watchlist_workflow], []]
       answer:
         contains:
         - DMF-001
@@ -349,6 +355,7 @@ cases:
     watchlist_result: result
     expected:
       route: watchlist_workflow
+      tool_decisions: [[run_watchlist_workflow], []]
       state:
         watchlist_result.dmf_no: DMF-002
       answer:
@@ -394,6 +401,7 @@ cases:
     - react_0_1
     expected:
       route: watchlist_workflow
+      tool_decisions: [[run_watchlist_workflow]]
       answer:
         contains:
         - DMF 编号
@@ -432,6 +440,7 @@ cases:
     - react_0_1
     expected:
       route: watchlist_workflow
+      tool_decisions: [[run_watchlist_workflow]]
       answer:
         contains:
         - 批量
@@ -475,6 +484,7 @@ cases:
     watchlist_result: failure
     expected:
       route: watchlist_workflow
+      tool_decisions: [[run_watchlist_workflow]]
       answer:
         contains:
         - 暂时失败

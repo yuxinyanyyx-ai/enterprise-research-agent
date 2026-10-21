@@ -5,12 +5,15 @@ from __future__ import annotations
 from collections import deque
 from dataclasses import dataclass, field
 from pathlib import Path
+from time import perf_counter
 from types import SimpleNamespace
 from typing import Any
 
 from langchain_core.messages import AIMessage, ToolMessage
 from langchain_core.utils.function_calling import convert_to_openai_tool
 import json
+
+from src.agent.context_budget import estimate_input_tokens, estimate_tokens
 
 
 class UnexpectedBoundaryCall(AssertionError):
@@ -57,22 +60,49 @@ class ScriptedLLMProvider:
         return self
 
     def invoke(self, messages: Any) -> AIMessage:
-        output = self._next("text", messages)
-        if isinstance(output, dict) and "tool_calls" in output:
-            return AIMessage(content="", tool_calls=output["tool_calls"])
-        if isinstance(output, dict) and output.get("answer_from") == "tool":
-            from src.agent.nodes import _format_dmf_result_text
-            message = next(message for message in reversed(messages) if isinstance(message, ToolMessage))
-            data = json.loads(message.content)
-            if message.name == "search_dmf":
-                return AIMessage(content=_format_dmf_result_text(data))
-            if message.name == "export_dmf_excel":
-                search_message = next((item for item in reversed(messages) if isinstance(item, ToolMessage) and item.name == "search_dmf"), None)
-                text = _format_dmf_result_text(json.loads(search_message.content)) if search_message else ""
-                return AIMessage(content=text + "\n" + data.get("file_name", data.get("message", "")))
-            result = data.get("data", {}).get("dmf_results")
-            return AIMessage(content=_format_dmf_result_text(result) if result else data.get("message", ""))
-        return output if isinstance(output, AIMessage) else AIMessage(content=str(output))
+        started = perf_counter()
+        try:
+            output = self._next("text", messages)
+            if isinstance(output, dict) and "tool_calls" in output:
+                response = AIMessage(content="", tool_calls=output["tool_calls"])
+            elif isinstance(output, dict) and output.get("answer_from") == "tool":
+                from src.agent.nodes import _format_dmf_result_text
+                message = next(message for message in reversed(messages) if isinstance(message, ToolMessage))
+                data = json.loads(message.content)
+                if message.name == "search_dmf":
+                    response = AIMessage(content=_format_dmf_result_text(data))
+                elif message.name == "export_dmf_excel":
+                    search_message = next((item for item in reversed(messages) if isinstance(item, ToolMessage) and item.name == "search_dmf"), None)
+                    text = _format_dmf_result_text(json.loads(search_message.content)) if search_message else ""
+                    response = AIMessage(content=text + "\n" + data.get("file_name", data.get("message", "")))
+                else:
+                    result = data.get("data", {}).get("dmf_results")
+                    response = AIMessage(content=_format_dmf_result_text(result) if result else data.get("message", ""))
+            else:
+                response = output if isinstance(output, AIMessage) else AIMessage(content=str(output))
+        except Exception as exc:
+            self.call_log.record(
+                "llm_invocation",
+                call_type="text",
+                duration_ms=round((perf_counter() - started) * 1000, 3),
+                input_tokens=estimate_input_tokens(messages, self.tool_schemas),
+                output_tokens=0,
+                token_source="estimated",
+                selected_tools=[],
+                failure_code="llm_provider_error",
+                error_type=type(exc).__name__,
+            )
+            raise
+        self.call_log.record(
+            "llm_invocation",
+            call_type="text",
+            duration_ms=round((perf_counter() - started) * 1000, 3),
+            input_tokens=estimate_input_tokens(messages, self.tool_schemas),
+            output_tokens=estimate_tokens(json.dumps(response.model_dump(), ensure_ascii=False, default=str)),
+            token_source="estimated",
+            selected_tools=[str(call.get("name", "")) for call in response.tool_calls],
+        )
+        return response
 
     def assert_exhausted(self) -> None:
         if self._outputs:
@@ -85,8 +115,37 @@ class StructuredScriptedLLM:
         self.schema = schema
 
     def invoke(self, messages: Any) -> Any:
-        output = self.provider._next("structured", messages)
-        return output if isinstance(output, self.schema) else self.schema.model_validate(output)
+        started = perf_counter()
+        try:
+            output = self.provider._next("structured", messages)
+            response = output if isinstance(output, self.schema) else self.schema.model_validate(output)
+        except Exception as exc:
+            self.provider.call_log.record(
+                "llm_invocation",
+                call_type="structured",
+                duration_ms=round((perf_counter() - started) * 1000, 3),
+                input_tokens=estimate_input_tokens(messages, self.provider.tool_schemas),
+                output_tokens=0,
+                token_source="estimated",
+                selected_tools=[],
+                failure_code="llm_provider_error",
+                error_type=type(exc).__name__,
+            )
+            raise
+        self.provider.call_log.record(
+            "llm_invocation",
+            call_type="structured",
+            duration_ms=round((perf_counter() - started) * 1000, 3),
+            input_tokens=estimate_input_tokens(messages, self.provider.tool_schemas),
+            output_tokens=estimate_tokens(json.dumps(
+                response.model_dump() if hasattr(response, "model_dump") else response,
+                ensure_ascii=False,
+                default=str,
+            )),
+            token_source="estimated",
+            selected_tools=[],
+        )
+        return response
 
 
 class RecordingLLMFactory:
@@ -101,9 +160,15 @@ class RecordingLLMFactory:
 
 
 class RecordingLLM:
-    def __init__(self, delegate: Any, call_log: CallLog) -> None:
+    def __init__(
+        self,
+        delegate: Any,
+        call_log: CallLog,
+        tool_schemas: list[dict[str, Any]] | None = None,
+    ) -> None:
         self.delegate = delegate
         self.call_log = call_log
+        self.tool_schemas = tool_schemas or []
 
     def with_structured_output(self, schema: type) -> "RecordingStructuredLLM":
         return RecordingStructuredLLM(
@@ -112,11 +177,43 @@ class RecordingLLM:
         )
 
     def bind_tools(self, tools):
-        return RecordingLLM(self.delegate.bind_tools(tools), self.call_log)
+        return RecordingLLM(
+            self.delegate.bind_tools(tools),
+            self.call_log,
+            [convert_to_openai_tool(tool) for tool in tools],
+        )
 
     def invoke(self, messages: Any) -> Any:
         self.call_log.record("llm", call_type="text")
-        return self.delegate.invoke(messages)
+        started = perf_counter()
+        try:
+            response = self.delegate.invoke(messages)
+        except Exception as exc:
+            self.call_log.record(
+                "llm_invocation",
+                call_type="text",
+                duration_ms=round((perf_counter() - started) * 1000, 3),
+                input_tokens=estimate_input_tokens(messages, self.tool_schemas),
+                output_tokens=0,
+                token_source="estimated",
+                selected_tools=[],
+                failure_code="llm_provider_error",
+                error_type=type(exc).__name__,
+            )
+            raise
+        input_tokens, output_tokens, token_source = _token_counts(
+            response, messages, self.tool_schemas
+        )
+        self.call_log.record(
+            "llm_invocation",
+            call_type="text",
+            duration_ms=round((perf_counter() - started) * 1000, 3),
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
+            token_source=token_source,
+            selected_tools=[str(call.get("name", "")) for call in getattr(response, "tool_calls", [])],
+        )
+        return response
 
 
 class RecordingStructuredLLM:
@@ -126,7 +223,56 @@ class RecordingStructuredLLM:
 
     def invoke(self, messages: Any) -> Any:
         self.call_log.record("llm", call_type="structured")
-        return self.delegate.invoke(messages)
+        started = perf_counter()
+        try:
+            response = self.delegate.invoke(messages)
+        except Exception as exc:
+            self.call_log.record(
+                "llm_invocation",
+                call_type="structured",
+                duration_ms=round((perf_counter() - started) * 1000, 3),
+                input_tokens=estimate_input_tokens(messages),
+                output_tokens=0,
+                token_source="estimated",
+                selected_tools=[],
+                failure_code="llm_provider_error",
+                error_type=type(exc).__name__,
+            )
+            raise
+        input_tokens, output_tokens, token_source = _token_counts(response, messages, [])
+        self.call_log.record(
+            "llm_invocation",
+            call_type="structured",
+            duration_ms=round((perf_counter() - started) * 1000, 3),
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
+            token_source=token_source,
+            selected_tools=[],
+        )
+        return response
+
+
+def _token_counts(
+    response: Any,
+    messages: Any,
+    tool_schemas: list[dict[str, Any]],
+) -> tuple[int, int, str]:
+    usage = getattr(response, "usage_metadata", None)
+    metadata = getattr(response, "response_metadata", None)
+    if not isinstance(usage, dict) and isinstance(metadata, dict):
+        usage = metadata.get("token_usage") or metadata.get("usage")
+    if isinstance(usage, dict):
+        input_tokens = usage.get("input_tokens", usage.get("prompt_tokens"))
+        output_tokens = usage.get("output_tokens", usage.get("completion_tokens"))
+        if isinstance(input_tokens, int) and isinstance(output_tokens, int):
+            return input_tokens, output_tokens, "actual"
+    input_tokens = estimate_input_tokens(messages, tool_schemas)
+    output_tokens = estimate_tokens(json.dumps(
+        response.model_dump() if hasattr(response, "model_dump") else response,
+        ensure_ascii=False,
+        default=str,
+    ))
+    return input_tokens, output_tokens, "estimated"
 
 
 class QueuedBoundary:

@@ -59,6 +59,7 @@ cases:
     export_result: workbook
     expected:
       route: execute_function_tools
+      tool_decisions: [[search_dmf], [export_dmf_excel], []]
       answer:
         contains:
         - '12345'
@@ -132,6 +133,7 @@ cases:
     export_result: disk_error
     expected:
       route: execute_function_tools
+      tool_decisions: [[search_dmf], [export_dmf_excel]]
       answer:
         contains:
         - disk full
@@ -159,6 +161,7 @@ cases:
     - react_0_0
     expected:
       route: react_agent
+      tool_decisions: [[]]
       answer:
         contains:
         - DMF

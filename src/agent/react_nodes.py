@@ -63,6 +63,7 @@ def prepare_react_request(state: ReactState) -> dict[str, Any]:
         ),
         "react_last_tool_batch": [],
         "react_tool_stop_reason": "",
+        "failure_code": "",
         "workflow_tool_call_id": "",
         "tool_artifacts": [],
         "artifact_reads": [],
@@ -181,22 +182,37 @@ def build_react_agent_node(
                 tools=tools, budget=budget,
             )
         except ToolMessagePairingError:
-            write_event("context.rejected", state, reason="invalid_tool_pairing")
+            write_event(
+                "context.rejected", state, reason="invalid_tool_pairing",
+                failure_code="invalid_tool_message_pair",
+            )
             return {"react_messages": [AIMessage(content="工具调用与返回结果不匹配，本次操作已停止。请重新发起请求。")],
-                    "react_tool_stop_reason": "invalid_tool_pairing"}
+                    "react_tool_stop_reason": "invalid_tool_pairing",
+                    "failure_code": "invalid_tool_message_pair"}
         except ContextBudgetExceeded:
-            write_event("context.rejected", state, reason="input_budget_exceeded")
+            write_event(
+                "context.rejected", state, reason="input_budget_exceeded",
+                failure_code="context_budget_exceeded",
+            )
             return {"react_messages": [AIMessage(content="当前请求或必要工具上下文过长，请缩短问题或分批提交。")],
-                    "react_tool_stop_reason": "input_budget_exceeded"}
+                    "react_tool_stop_reason": "input_budget_exceeded",
+                    "failure_code": "context_budget_exceeded"}
         write_event("context.prepared", state,
                 estimated_input_tokens=estimate_input_tokens(messages, [convert_to_openai_tool(tool) for tool in tools]),
                 input_budget_tokens=budget.input_tokens,
                 source_message_count=len(state.get("react_messages") or []),
                 sent_message_count=len(messages),
                 context_view="full_safe")
-        with trace_operation(state, operation="react.model"):
-            model = llm_factory().bind_tools(tools)
-            response = model.invoke(messages)
+        try:
+            with trace_operation(state, operation="react.model"):
+                model = llm_factory().bind_tools(tools)
+                response = model.invoke(messages)
+        except Exception as exc:
+            write_event(
+                "request.failed", state, failure_code="llm_provider_error",
+                error_type=type(exc).__name__,
+            )
+            raise
         for call in getattr(response, "tool_calls", []):
             write_event("tool.selected", state, call=call,
                         round=state.get("react_tool_rounds", 0),
@@ -211,6 +227,10 @@ def execute_function_tools(state: ReactState, *, registry: ToolRegistry | None =
     call = state["react_messages"][-1].tool_calls[0]
     problem = function_problem(state, call, registry)
     if problem:
+        write_event(
+            "tool.rejected", state, call=call, reason="not_allowed",
+            failure_code="tool_policy_rejected",
+        )
         if call["name"] == READ_TOOL_NAME:
             return {
                 **_reject_calls(state, "artifact 引用不可用。请依据已有证据回答。", error_code="invalid_reference"),
@@ -330,7 +350,8 @@ def _reject_calls(state: ReactState, reason: str, *, error_code: str = "") -> di
 
 def finalize_react_answer(state: ReactState) -> dict[str, Any]:
     write_event("request.finished", state,
-                status="stopped" if state.get("react_tool_stop_reason") else "completed")
+                status="stopped" if state.get("react_tool_stop_reason") else "completed",
+                failure_code=state.get("failure_code", ""))
     result = finalize_general_answer(state)
     for artifact in state.get("tool_artifacts") or []:
         data = artifact.get("result") or {}
@@ -341,7 +362,16 @@ def finalize_react_answer(state: ReactState) -> dict[str, Any]:
 
 
 def finish_workflow_request(state: ReactState) -> dict[str, Any]:
-    write_event("request.finished", state, status=state.get("workflow_status"))
+    status = state.get("workflow_status")
+    failure_code = {
+        "failed": "workflow_failed",
+        "rejected": "workflow_rejected",
+        "cancelled": "workflow_cancelled",
+        "needs_clarification": "workflow_needs_clarification",
+    }.get(status, "")
+    write_event(
+        "request.finished", state, status=status, failure_code=failure_code
+    )
     return {"react_messages": [AIMessage(content=state.get("final_answer") or "操作未完成。")],
             "final_answer": state.get("final_answer") or "操作未完成。"}
 

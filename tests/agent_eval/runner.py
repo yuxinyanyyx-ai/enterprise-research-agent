@@ -6,6 +6,7 @@ from contextlib import ExitStack
 from dataclasses import dataclass, field, replace
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from time import perf_counter
 from typing import Any, Callable, Literal
 from unittest.mock import patch
 from uuid import uuid4
@@ -39,6 +40,10 @@ class TurnResult:
     answer: str
     call_deltas: dict[str, int]
     call_log: list[dict[str, Any]]
+    duration_ms: float = 0
+    expected_tool_decisions: list[list[str]] | None = None
+    selected_tool_decisions: list[list[str]] = field(default_factory=list)
+    llm_metrics: list[dict[str, Any]] = field(default_factory=list)
 
 
 @dataclass
@@ -46,6 +51,8 @@ class CaseResult:
     case_id: str
     mode: Literal["deterministic", "live"]
     turns: list[TurnResult] = field(default_factory=list)
+    task_success: bool | None = None
+    failure_reason: str | None = None
 
 
 class AgentEvalRunner:
@@ -177,6 +184,7 @@ class AgentEvalRunner:
                         "watchlist",
                     )
                 }
+                event_start = len(self.call_log.events)
                 if turn.resume is not None:
                     graph_input: Any = Command(resume=turn.resume)
                 else:
@@ -190,7 +198,9 @@ class AgentEvalRunner:
                         if case.documents:
                             graph_input["document_artifacts"] = self._document_state(case)
 
+                started = perf_counter()
                 updates = list(graph.stream(graph_input, config=config, stream_mode="updates"))
+                duration_ms = round((perf_counter() - started) * 1000, 3)
                 executed_nodes = [
                     node
                     for update in updates
@@ -204,6 +214,15 @@ class AgentEvalRunner:
                     boundary: self.call_log.count(boundary)
                     for boundary in before
                 }
+                turn_events = self.call_log.events[event_start:]
+                llm_metrics = [
+                    {key: event[key] for key in (
+                        "call_type", "duration_ms", "input_tokens", "output_tokens",
+                        "token_source", "failure_code", "error_type",
+                    ) if key in event}
+                    for event in turn_events
+                    if event["boundary"] == "llm_invocation"
+                ]
                 result.turns.append(
                     TurnResult(
                         index=index,
@@ -214,6 +233,15 @@ class AgentEvalRunner:
                         answer=str(state.get("final_answer") or ""),
                         call_deltas={name: after[name] - before[name] for name in before},
                         call_log=list(self.call_log.events),
+                        duration_ms=duration_ms,
+                        expected_tool_decisions=turn.expected.tool_decisions,
+                        selected_tool_decisions=[
+                            event.get("selected_tools", [])
+                            for event in turn_events
+                            if event["boundary"] == "llm_invocation"
+                            and event.get("call_type") == "text"
+                        ],
+                        llm_metrics=llm_metrics,
                     )
                 )
 

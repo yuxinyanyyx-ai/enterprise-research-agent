@@ -67,6 +67,7 @@ class TurnExpectation(StrictModel):
     artifact_types: list[str] = Field(default_factory=list)
     call_deltas: CallExpectation = Field(default_factory=CallExpectation)
     llm_inputs: list[LLMInputExpectation] = Field(default_factory=list)
+    tool_decisions: list[list[str]] | None = None
 
 
 class AgentTurn(StrictModel):

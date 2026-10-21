@@ -6,10 +6,32 @@ from tests.agent_eval.assertions import assert_case_result
 from tests.agent_eval.fakes import CallLog, ScriptedLLMProvider, UnexpectedBoundaryCall
 from tests.agent_eval.loader import load_cases
 from tests.agent_eval.runner import AgentEvalRunner
+from tests.agent_eval.reliability_cases import reliability_cases
 
 
 CASE_DIR = Path(__file__).parent / "agent_eval" / "cases"
-CASES = [case for case in load_cases(CASE_DIR) if "deterministic" in case.modes]
+CASES = [
+    case
+    for case in [*load_cases(CASE_DIR), *reliability_cases()]
+    if "deterministic" in case.modes
+]
+
+
+@pytest.mark.agent_eval
+def test_fixed_agent_eval_set_has_at_least_fifty_unique_cases() -> None:
+    all_cases = [*load_cases(CASE_DIR), *reliability_cases()]
+    standard_live_cases = [
+        case for case in all_cases
+        if case.profile == "standard" and "live" in case.modes
+    ]
+
+    assert len(standard_live_cases) >= 50
+    assert len({case.id for case in all_cases}) == len(all_cases)
+    assert all(
+        turn.expected.tool_decisions is not None
+        for case in standard_live_cases
+        for turn in case.turns
+    )
 
 
 @pytest.mark.agent_eval

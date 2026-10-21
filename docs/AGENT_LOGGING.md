@@ -38,6 +38,8 @@ Get-Content .\logs\agent\*.jsonl* | ForEach-Object { $_ | ConvertFrom-Json } |
 ## Events
 
 - `request.started` / `request.finished`: outer ReAct request boundaries.
+- `request.failed`: an unhandled model-provider failure. `failure_code` uses a
+  stable category and `error_type` records only the exception class.
 - `tool.selected`: model-selected tool name, call ID, round, and argument count.
 - `execution.started` / `execution.finished`: function execution or instrumented
   model/business operation. `execution_id` pairs the events; `duration_ms` is
@@ -72,6 +74,14 @@ status, exception class names, and timing. Raw argument values, prompts, emails,
 credentials, document content, result records, and exception messages are not
 written by this logger. Tool parameters are intentionally omitted, not partially
 redacted. Existing application loggers and terminal output are independent.
+
+The `failure_code` field is a stable, payload-free attribution for known failures,
+including `llm_provider_error`, `context_budget_exceeded`,
+`invalid_tool_message_pair`, `tool_execution_error`, `tool_business_failure`,
+`dmf_query_failed`, `repeated_tool_call`, `tool_round_limit`, and workflow
+failure/clarification outcomes. `error_type` is diagnostic metadata, not a
+failure category. A missing request-finished event after an unhandled exception
+is paired with the corresponding `request.failed` or `execution.finished` event.
 
 `completed` means the operation returned; `business_failure` means a query/tool
 explicitly returned `success=False`; `error` means an exception or execution

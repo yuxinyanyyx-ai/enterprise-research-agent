@@ -39,7 +39,7 @@ def _assert_calls(actual: dict[str, int], expected: CallExpectation, context: st
             )
 
 
-def assert_case_result(case: AgentCase, result: CaseResult) -> None:
+def _assert_case_result(case: AgentCase, result: CaseResult) -> None:
     assert result.case_id == case.id
     assert len(result.turns) == len(case.turns)
 
@@ -54,6 +54,11 @@ def assert_case_result(case: AgentCase, result: CaseResult) -> None:
         if expected.interrupt is not None:
             assert turn.interrupted is expected.interrupt, (
                 f"{context}: expected interrupt={expected.interrupt}"
+            )
+        if expected.tool_decisions is not None:
+            assert turn.selected_tool_decisions == expected.tool_decisions, (
+                f"{context}: expected tool decisions={expected.tool_decisions}, "
+                f"got {turn.selected_tool_decisions}"
             )
         for path, expected_value in expected.state.items():
             actual = _state_value(turn.state, path)
@@ -132,3 +137,14 @@ def assert_case_result(case: AgentCase, result: CaseResult) -> None:
         for name in ("llm", "dmf", "document_extract", "export", "watchlist")
     }
     _assert_calls(totals, case.expected_calls, f"case={case.id} totals")
+
+
+def assert_case_result(case: AgentCase, result: CaseResult) -> None:
+    try:
+        _assert_case_result(case, result)
+    except AssertionError:
+        result.task_success = False
+        result.failure_reason = "assertion_failure"
+        raise
+    result.task_success = True
+    result.failure_reason = None

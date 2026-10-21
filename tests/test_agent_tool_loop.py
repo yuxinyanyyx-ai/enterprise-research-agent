@@ -187,6 +187,75 @@ def test_repeated_batch_stops_loop(monkeypatch) -> None:
     assert result["messages"][0].status == "error"
 
 
+def test_replayed_export_reuses_completed_write(tmp_path, monkeypatch) -> None:
+    from src.agent.react_nodes import execute_function_tools
+    from src.tools.export_tools import register_export_tools
+
+    calls = []
+    target = tmp_path / "agent-export.xlsx"
+
+    def export_result(result, **kwargs):
+        calls.append((result, kwargs))
+        return target
+
+    monkeypatch.setattr(
+        "src.tools.export_tools.export_multi_query_result", export_result
+    )
+    monkeypatch.setattr(
+        tooling,
+        "store_artifact",
+        lambda result, *, request_id, tool_name, tool_call_id: {
+            "artifact_id": f"artifact-{tool_call_id}",
+            "request_id": request_id,
+        },
+    )
+    registry = ToolRegistry()
+    register_export_tools(registry)
+    dmf_results = {
+        "success": True,
+        "message": "查询完成",
+        "query": {"ingredients": ["Ibuprofen"]},
+        "query_count": 1,
+        "success_count": 1,
+        "failed_count": 0,
+        "total_records": 1,
+        "results": [{
+            "success": True,
+            "message": "查询成功",
+            "query": {"ingredient": "Ibuprofen"},
+            "total": 1,
+            "total_pages": 1,
+            "records": [{"dmf_no": "123", "ingredient": "Ibuprofen"}],
+        }],
+    }
+    first_call = _call("export_dmf_excel", {}, "export-1")
+    state = {
+        "user_query": "查询并导出 Excel",
+        "request_id": "request-1",
+        "react_messages": [AIMessage(content="", tool_calls=[first_call])],
+        "react_tool_context": ToolContext.GENERAL.value,
+        "dmf_results": dmf_results,
+        "result_id": "result-1",
+        "tool_artifacts": [],
+        "function_ledger": {},
+    }
+
+    first = execute_function_tools(state, registry=registry)
+    replay_state = {
+        **state,
+        **first,
+        "react_messages": [
+            AIMessage(content="", tool_calls=[_call("export_dmf_excel", {}, "export-2")])
+        ],
+    }
+    replay = execute_function_tools(replay_state, registry=registry)
+
+    assert len(calls) == 1
+    assert len(first["tool_artifacts"]) == 1
+    assert replay["react_messages"][0].tool_call_id == "export-2"
+    assert target.name in replay["react_messages"][0].content
+
+
 def test_tool_round_limit_has_explainable_reason() -> None:
     state = _state(_call("missing", {}, "1"))
     state["tool_rounds"] = 8

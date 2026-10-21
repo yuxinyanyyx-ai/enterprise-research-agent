@@ -52,6 +52,7 @@ def apply_dmf_result(state: ToolState, result: Any) -> dict[str, Any]:
         "result_id": uuid4().hex if valid and not failed else "",
         "result_source": "query",
         "domain_pending": {},
+        **({"failure_code": "dmf_query_failed"} if failed else {}),
     }
     if failed:
         updates["react_tool_stop_reason"] = result.get("message") or "查询失败。"

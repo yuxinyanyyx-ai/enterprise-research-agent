@@ -77,6 +77,39 @@ def test_exception_is_preserved_without_logging_its_message(audit_directory):
     assert "private@example.com" not in json.dumps(finished)
 
 
+def test_model_failure_has_stable_failure_code(audit_directory):
+    with pytest.raises(RuntimeError, match="provider failed"):
+        with audit_log.trace_operation({}, operation="react.model"):
+            raise RuntimeError("provider failed")
+
+    finished = _events(audit_directory)[-1]
+    assert finished["failure_code"] == "llm_provider_error"
+    assert finished["error_type"] == "RuntimeError"
+    assert "provider failed" not in json.dumps(finished)
+
+
+def test_request_finish_records_normalized_failure_reason(monkeypatch):
+    from src.agent import react_nodes
+
+    events = []
+    monkeypatch.setattr(
+        react_nodes,
+        "write_event",
+        lambda event, state, **details: events.append((event, details)),
+    )
+    react_nodes.finalize_react_answer({
+        "request_id": "failed-request",
+        "react_messages": [],
+        "react_tool_stop_reason": "DMF 服务暂时不可用",
+        "failure_code": "dmf_query_failed",
+    })
+
+    assert events == [(
+        "request.finished",
+        {"status": "stopped", "failure_code": "dmf_query_failed"},
+    )]
+
+
 def test_parallel_events_are_complete_json_lines(audit_directory):
     with ThreadPoolExecutor(max_workers=4) as executor:
         list(executor.map(lambda index: audit_log.write_event(
@@ -120,6 +153,8 @@ def test_executor_writes_actual_outcome(audit_directory, monkeypatch, failure):
     })
     events = _events(audit_directory)
     assert events[-1]["status"] == ("error" if failure else "completed")
+    if failure:
+        assert events[-1]["failure_code"] == "tool_execution_error"
     assert "private-token" not in json.dumps(events)
 
 

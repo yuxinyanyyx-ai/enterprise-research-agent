@@ -202,6 +202,37 @@ def test_manual_run_uses_stable_request_idempotency_key(monkeypatch) -> None:
     assert "no_change" in result["final_answer"]
 
 
+def test_replayed_watchlist_write_reuses_operation_ledger(monkeypatch) -> None:
+    from src.agent import domain_workflows
+
+    calls = []
+    expected = {
+        "watchlist_result": {"id": "watch-1", "status": "active"},
+        "final_answer": "DMF-001 已加入关注清单。",
+    }
+
+    def manage(state):
+        calls.append(state["request_id"])
+        return expected
+
+    monkeypatch.setattr(nodes, "manage_watchlist", manage)
+    state = {
+        "request_id": "request-write-1",
+        "watchlist_action": "add",
+        "dmf_no": "DMF-001",
+        "operation_ledger": {},
+    }
+
+    first = domain_workflows._execute_watchlist(state)
+    replay = domain_workflows._execute_watchlist({**state, **first})
+
+    assert calls == ["request-write-1"]
+    assert first["operation_ledger"]
+    assert next(iter(first["operation_ledger"].values())) == expected
+    assert replay == expected
+    assert replay["watchlist_result"] == expected["watchlist_result"]
+
+
 def test_watchlist_unavailable_returns_public_message(monkeypatch) -> None:
     monkeypatch.setattr(
         nodes,

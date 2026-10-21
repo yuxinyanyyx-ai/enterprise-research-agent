@@ -250,5 +250,9 @@ def test_document_resume_after_long_history_keeps_current_request_and_tool_pair(
         text = (report / filename).read_text(encoding="utf-8")
         assert "PRIVATE-OLD" not in text
         assert "tool_schemas" not in text
-    messages = result.turns[-1].call_log[-1]["messages"]
+    messages = next(
+        event["messages"]
+        for event in reversed(result.turns[-1].call_log)
+        if event["boundary"] == "llm"
+    )
     assert any(isinstance(message, HumanMessage) and message.content == original_query for message in messages)

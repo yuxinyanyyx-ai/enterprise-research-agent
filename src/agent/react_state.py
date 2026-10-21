@@ -14,6 +14,7 @@ class ReactState(TypedDict, total=False):
     long_term_memory: list[dict[str, Any]]
     user_query: str
     request_id: str
+    failure_code: str
     agent_session_id: str
     latest_project_slide_job_id: str
     active_skill_ids: list[str]

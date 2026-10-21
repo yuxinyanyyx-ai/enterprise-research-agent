@@ -37,6 +37,7 @@ def write_event(event: str, state, *, call=None, **details) -> None:
         }
         allowed = {
             "execution_id", "duration_ms", "status", "error_type", "reason",
+            "failure_code",
             "round", "argument_count", "operation", "decision",
             "estimated_input_tokens", "input_budget_tokens", "source_message_count", "sent_message_count",
             "context_view", "emergency_fallback",
@@ -77,8 +78,16 @@ def trace_operation(state, *, call=None, operation="tool"):
     try:
         yield outcome
     except Exception as exc:
-        outcome = {"status": "error", "error_type": type(exc).__name__}
+        outcome = {
+            "status": "error",
+            "error_type": type(exc).__name__,
+            "failure_code": (
+                "llm_provider_error" if operation == "react.model" else "operation_error"
+            ),
+        }
         raise
     finally:
+        if outcome["status"] == "business_failure":
+            outcome.setdefault("failure_code", "business_operation_failed")
         write_event("execution.finished", state, call=call, **metadata, **outcome,
                     duration_ms=round((time.perf_counter() - started) * 1000, 3))
