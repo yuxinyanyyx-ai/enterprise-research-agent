@@ -23,10 +23,19 @@ class RecordingLlm(FakeLlm):
     def __init__(self, responses):
         super().__init__(responses)
         self.bound_names = []
+        self.bound_choices = []
 
-    def bind_tools(self, tools):
+    def bind_tools(self, tools, *, tool_choice=None):
         self.bound_names.append({item.name for item in tools})
-        return super().bind_tools(tools)
+        self.bound_choices.append(tool_choice)
+        return super().bind_tools(tools, tool_choice=tool_choice)
+
+    @property
+    def selectable_names(self):
+        return [
+            set() if choice == "none" else names
+            for names, choice in zip(self.bound_names, self.bound_choices, strict=True)
+        ]
 
 
 def example_provider(invocations, **policy):
@@ -101,7 +110,8 @@ def test_policy_blocks_forged_calls_in_graph_and_executor(policy):
     result = build_react_graph(registry=registry, llm_factory=lambda: model).invoke({"user_query": "lookup"})
     assert result["react_messages"][-2].status == "error"
     if "availability" in policy:
-        assert all("lookup_example" not in names for names in model.bound_names)
+        assert all("lookup_example" not in names for names in model.selectable_names)
+        assert model.bound_choices == ["none"]
     direct = tooling.execute_tools({"messages": [call("lookup_example", "direct", value=42)]}, registry=registry)
     assert direct["messages"][0].status == "error"
     assert invocations == []

@@ -110,9 +110,45 @@ def test_summary_reports_success_selection_latency_tokens_and_failures(tmp_path:
         "llm_p50": 20,
         "llm_p95": 40,
     }
-    assert payload["metrics"]["token_consumption"]["total"] == 53
+    assert payload["metrics"]["token_consumption"]["actual"]["total"] == 38
+    assert payload["metrics"]["token_consumption"]["estimated"]["total"] == 15
+    assert payload["metrics"]["token_consumption"]["missing_usage_calls"] == 0
     assert payload["metrics"]["tool_call_counts"]["dmf"] == 1
     assert payload["metrics"]["failure_reasons"] == {
         "evaluation_assertion_failure": 1
     }
     assert "private prompt" not in json_text + markdown_text
+
+
+@pytest.mark.agent_eval
+def test_summary_keeps_missing_usage_distinct_from_zero_tokens() -> None:
+    result = CaseResult(
+        case_id="METRIC-USAGE",
+        mode="live",
+        turns=[TurnResult(
+            index=0,
+            state={},
+            executed_nodes=[],
+            pending_nodes=[],
+            interrupted=False,
+            answer="",
+            call_deltas={},
+            call_log=[],
+            llm_metrics=[
+                {"token_source": "actual", "input_tokens": 7, "output_tokens": None},
+                {"token_source": "estimated", "input_tokens": 3, "output_tokens": 2},
+                {"token_source": "missing", "input_tokens": None, "output_tokens": None},
+            ],
+        )],
+    )
+
+    from tests.agent_eval.metrics import summarize_results
+
+    usage = summarize_results([result])["token_consumption"]
+    assert usage["actual"]["input"] == 7
+    assert usage["actual"]["output"] is None
+    assert usage["actual"]["total"] is None
+    assert usage["estimated"]["total"] == 5
+    assert usage["missing"]["input"] is None
+    assert usage["missing"]["output"] is None
+    assert usage["missing_usage_calls"] == 1

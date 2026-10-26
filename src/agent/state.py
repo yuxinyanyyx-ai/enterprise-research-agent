@@ -26,6 +26,8 @@ class ResearchState(TypedDict, total=False):
     watchlist_notification_mode: str | None
     watchlist_result: dict[str, Any]
     request_id: str
+    trace_id: str
+    root_span_id: str
 
     needs_clarification: bool
     clarification_question: str

@@ -26,6 +26,7 @@ from src.pec.knowledge.enrichment import extract_topics, topic_chunks, recipe, V
 from src.pec.knowledge.meetings import build_meeting_plans, meeting_topics, meeting_evidence
 from src.pec.knowledge.markdown import evidence_markdown
 from src.pec.knowledge.preview_build import build_file_previews, previews_enabled
+from src.observability.tracing import trace_span
 from src.pec.knowledge.paths import (
     MANIFEST_FILE,
     INDEX_DIR,
@@ -280,7 +281,7 @@ def get_index_status() -> dict:
     }
 
 
-def search_chunks(
+def _search_chunks_impl(
     query: str,
     *,
     top_n: int = 8,
@@ -386,6 +387,36 @@ def search_chunks(
         if len(hits) >= top_n:
             break
     return hits
+
+
+def search_chunks(
+    query: str,
+    *,
+    top_n: int = 8,
+    recall_top_k: int = 40,
+    folder: str = "",
+    _directory: Path | None = None,
+    tag_filters: dict | None = None,
+    recall_queries: list[str] | None = None,
+    original_query: str = "",
+) -> list[ChunkHit]:
+    with trace_span(
+        "retrieval.search_chunks",
+        "pec.knowledge.retrieval",
+        metadata={"top_n": top_n, "recall_top_k": recall_top_k},
+    ) as span:
+        hits = _search_chunks_impl(
+            query,
+            top_n=top_n,
+            recall_top_k=recall_top_k,
+            folder=folder,
+            _directory=_directory,
+            tag_filters=tag_filters,
+            recall_queries=recall_queries,
+            original_query=original_query,
+        )
+        span.metadata["result_count"] = len(hits)
+        return hits
 
 
 def format_hits(hits: list[ChunkHit]) -> str:

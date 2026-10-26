@@ -63,6 +63,29 @@ def test_scripted_llm_rejects_undeclared_calls() -> None:
         provider.invoke([])
 
 
+def test_scripted_tool_binding_does_not_leak_to_unbound_model() -> None:
+    from langchain_core.messages import HumanMessage
+    from langchain_core.tools import tool
+
+    @tool
+    def lookup() -> str:
+        """Look up evidence."""
+        return "evidence"
+
+    log = CallLog()
+    provider = ScriptedLLMProvider(log)
+    provider.enqueue("first answer", "second answer")
+    bound = provider.bind_tools([lookup], tool_choice="none")
+    assert bound.invoke([HumanMessage(content="first")]).content == "first answer"
+    assert provider.invoke([HumanMessage(content="second")]).content == "second answer"
+    events = [event for event in log.events if event["boundary"] == "llm"]
+    assert len(events[0]["tool_schemas"]) == 1
+    assert events[0]["tool_choice"] == "none"
+    assert events[1]["tool_schemas"] == []
+    assert events[1]["tool_choice"] is None
+    provider.assert_exhausted()
+
+
 @pytest.mark.agent_eval
 def test_repeated_case_runs_do_not_share_checkpoint_state() -> None:
     case = next(case for case in CASES if case.id == "DMF-001")

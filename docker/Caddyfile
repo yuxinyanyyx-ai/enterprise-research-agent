@@ -1,0 +1,19 @@
+{$SITE_ADDRESS} {
+    basic_auth {
+        {$APP_USERNAME} {$APP_PASSWORD_HASH}
+    }
+
+    request_body {
+        max_size 500MB
+    }
+
+    reverse_proxy app:8000 {
+        header_up -Authorization
+        header_up -X-Authenticated-User
+        header_up -X-Authenticated-Tenant
+        transport http {
+            read_timeout 600s
+            write_timeout 600s
+        }
+    }
+}

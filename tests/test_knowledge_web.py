@@ -88,7 +88,7 @@ def test_upload_api_saves_valid_source_through_staging_batch(tmp_path, monkeypat
     monkeypatch.setattr(
         knowledge,
         "get_settings",
-        lambda: SimpleNamespace(max_file_size_bytes=1024),
+        lambda *, require_token=True: SimpleNamespace(max_file_size_bytes=1024),
     )
 
     response = make_client().post(
@@ -108,7 +108,7 @@ def test_upload_api_extracts_zip_under_target_folder(tmp_path, monkeypatch) -> N
     monkeypatch.setattr(
         knowledge,
         "get_settings",
-        lambda: SimpleNamespace(max_file_size_bytes=1024),
+        lambda *, require_token=True: SimpleNamespace(max_file_size_bytes=1024),
     )
     archive = BytesIO()
     with ZipFile(archive, "w", ZIP_DEFLATED) as output:
@@ -137,7 +137,7 @@ def test_upload_api_rejects_zip_traversal_without_writing_any_files(tmp_path, mo
     monkeypatch.setattr(
         knowledge,
         "get_settings",
-        lambda: SimpleNamespace(max_file_size_bytes=1024),
+        lambda *, require_token=True: SimpleNamespace(max_file_size_bytes=1024),
     )
     archive = BytesIO()
     with ZipFile(archive, "w", ZIP_DEFLATED) as output:

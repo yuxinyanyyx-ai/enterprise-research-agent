@@ -22,7 +22,7 @@ from src.mineru.services.task_manager import (
 )
 
 # 读取项目配置
-settings = get_settings()
+settings = get_settings(require_token=False)
 
 # 创建任务管理器
 task_manager = TaskManager(settings)
@@ -203,6 +203,12 @@ async def create_parse_task(
     接口不会等待MinerU解析完成，
     而是立即返回网站自己的task_id。
     """
+
+    if not settings.mineru_token:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="文档解析服务未配置 MINERU_TOKEN，暂时无法提交解析任务。",
+        )
 
     saved_paths = await save_uploaded_files(
         files

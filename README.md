@@ -1,66 +1,57 @@
-# Plain Docker image (docker-plain)
+# Enterprise Research Agent
 
-## Purpose
+面向研究任务的 Web Agent，提供对话式工具调用、文档分析、DMF 查询与导出、
+会议知识库检索，以及请求级 Trace 和模型用量记录。
 
-This Quickstarter serves as a minimal starting point for building your own components that don't fit any of the other Quickstarters.
-For demonstration purposes, a nginx webserver provides a simple 'Hello World' message.
+## 部署方式
 
-## Folder structure and important files
+使用 Docker Compose 在单台 Linux 服务器运行：
 
-- docker: All files inside this folder are available for use in building the docker container
-  - [docker/Dockerfile](docker/Dockerfile): Defines the container to be built.
-- chart: The Helm chart used for deploying the component.
-  - [chart/Chart.yaml](chart/Chart.yaml): Metadata for your Helm chart.
-    - [chart/values.yaml](chart/values.yaml): Default values used when templating the Helm chart.
-    - [chart/values.dev.yaml](chart/values.dev.yaml): Values used for deployment in the 'dev' environment. Values specified in this file are overriding default values from [chart/values.yaml](chart/values.yaml).
-    - chart/templates:
-      - [chart/templates/deployment.yaml](chart/templates/deployment.yaml): Template for the [deployment](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/) resource. This is where you add additional configuration like environment variables.
-        - [chart/templates/service.yaml](chart/templates/service.yaml): Template for the [service](https://kubernetes.io/docs/concepts/services-networking/service/) resource.
-        - [chart/templates/ingress.yaml](chart/templates/ingress.yaml): Template for the [ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/) resource.
-
-## Testing locally
-
-If you want to run this component locally for testing, this might get you started.
-It also mimicks what's happening in the [Jenkinsfile](Jenkinsfile).
-
-### Building the container
-
-Using a local container runtime you can build the container and tag it with the current git revision:
-
-```bash
-docker build -t testing/my-component:$(git rev-parse --short=8 HEAD) docker/
+```text
+浏览器 → Caddy（访问密码 / HTTPS）→ FastAPI Web Agent → PostgreSQL
+                                         ↓
+                              外部模型服务与持久化文件
 ```
 
-### Helm chart linting
+**完整步骤见[中文部署说明](docs/DEPLOYMENT.md)。**
 
-This quickstarter comes with a fine-tunned [values.schema.json](chart/values.schema.json) Helm chart linting file.
-Validate your chart template by running, under the `chart` folder, the following command:
+- [compose.yaml](compose.yaml)：应用、数据库、网站入口与持久化卷。
+- [运行配置示例](docker/deployment.env.example)：复制并填入本地配置，不提交真实值。
+- [Web 镜像](docker/Dockerfile.web)：运行现有 Python 应用，不包含本地知识库和凭证。
+- 默认仅监听本机，网站受密码保护。域名配置完成后可启用自动 HTTPS。
+- 未配置模型也可启动页面与健康检查；真正问答、解析和索引功能仍需各自服务配置，
+  不会生成模拟结果。
 
-```bash
-helm lint
+本部署面向少量可信用户共享工作区，不是具有独立租户隔离的公开 SaaS。
+共享访问密码不代表应用内各用户拥有独立资料权限。不要向访客开放企业内部资料。
+
+## 本地 Python 运行
+
+建议使用独立虚拟环境：
+
+```powershell
+python -m pip install -r requirements.txt
+python -m alembic upgrade head
+python -m uvicorn src.main:app --host 127.0.0.1 --port 8010
 ```
 
-### Helm chart template processing test
+打开 `http://127.0.0.1:8010`。本地默认配置与 Compose 不同：未启用 PostgreSQL
+检查点时，对话图状态保存在内存中，进程重启后不保证完整恢复。
+不要将开发服务器直接暴露到公网。已有 `.env` 会被本地 Python 入口读取，
+可能影响数据库和服务设置；Compose 镜像禁用自动读取 `.env`。
 
-One can test the chart template processing; run, under the `chart` folder, the following command:
+## 相关说明
 
-```bash
-helm --debug template . --set image.path=testing --set image.name=my-component --set image.tag=$(git rev-parse --short=8 HEAD)
-```
+- [Web 工作区](docs/WEB_WORKSPACE.md)
+- [PEC 知识库](docs/PEC_KNOWLEDGE.md)
+- [上下文预算与最终回答协议](docs/AGENT_CONTEXT_BUDGET.md)
+- [Trace 与 Usage 更新](docs/OBSERVABILITY_UPDATE.md)
 
-### Deploying the helm chart using a local k8s
+## 公开发布前
 
-Using a local kubernetes cluster (i.e.: [kind](https://kind.sigs.k8s.io/)) you can deploy the component:
+确认代码和资料允许公开，检查 Git 历史及文件中是否存在凭证和企业信息。
+构建上下文不包含本地资料、索引、上传、数据库、日志或生成结果，不等于整个
+仓库及历史已经通过公开发布审查。本次没有上传 GitHub、推送镜像或部署公网服务。
 
-```bash
-kubectl create ns docker-plain
-kind load docker-image testing/my-component:$(git rev-parse --short=8 HEAD)
-helm upgrade --install --wait --atomic --namespace docker-plain --set image.path=testing --set image.name=my-component --set image.tag=$(git rev-parse --short=8 HEAD) docker-plain chart
-```
-
-## How to create a custom jenkins-agent out of this docker-plain component
-- Remove `odsComponentStageRolloutOpenShiftDeployment(context)` from your `Jenkinsfile`. We only want to build a docker image, not run it outside the pipeline.
-- In your `Dockerfile`, replace `FROM alpine:latest` with the ods-jenkins-agent-base image that is available in the OpenDevStack namespace of your cluster, e.g. `FROM docker-registry.default.svc:5000/ods/jenkins-agent-base:latest`.
-- Add everything you need in the jenkins-agent to your `Dockerfile`, for examples see the existing agents at [github](https://github.com/opendevstack/ods-quickstarters/tree/master/common/jenkins-agents).
-- Commit and push your code to git, this will trigger the pipeline and result in a docker image of your custom jenkins-agent in your cd-namespace.
-- Now you can use your custom jenkins-agent by changing the imageStreamTag to `imageStreamTag: '<your_cd_namespace>/<your_custom_jenkins_agent_image_name>:latest'` in the `Jenkinsfile` of the actual application you want to build with your custom new jenkins-agent.
+原有 `docker/Dockerfile`、Helm Chart 和 Jenkins 配置属于旧企业部署模板，
+本套独立 Compose 不使用它们，也没有自动改造原 CI 流程。

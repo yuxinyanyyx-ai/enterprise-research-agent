@@ -702,11 +702,23 @@ async function refreshWatchlists() {
         const rows = await api("/api/watchlists"); const body = document.getElementById("watchlistTableBody"); body.replaceChildren();
         rows.forEach(item => { const row = document.createElement("tr"); const status = document.createElement("td"); status.append(badge(item.status, item.status === "active" ? "监测中" : "已暂停")); const actions = textNode("div", "", "row-actions");
             actions.append(iconButton("play", "立即检查", event => mutateWatchlist(item.id, "/runs", "POST", null, event.currentTarget)), iconButton(item.status === "active" ? "pause" : "circle-play", item.status === "active" ? "暂停监测" : "恢复监测", event => mutateWatchlist(item.id, "", "PATCH", { status: item.status === "active" ? "paused" : "active" }, event.currentTarget)), iconButton("history", "检查与变更记录", () => showWatchlistHistory(item)), iconButton("trash-2", "删除关注", event => { if (confirm(`删除 DMF ${item.dmf_no} 的关注项？`)) mutateWatchlist(item.id, "", "DELETE", null, event.currentTarget); }));
-            const actionCell = document.createElement("td"); actionCell.append(actions); row.append(textNode("td", item.dmf_no), status, textNode("td", `${item.interval_hours} 小时`), textNode("td", formatTime(item.last_run_at)), actionCell); body.append(row);
+            const actionCell = document.createElement("td"); actionCell.append(actions); row.append(textNode("td", item.dmf_no), status, textNode("td", `${item.interval_hours} 小时`), textNode("td", formatTime(item.next_run_at)), textNode("td", formatTime(item.last_run_at)), textNode("td", String(item.failure_count)), actionCell); body.append(row);
         });
         document.getElementById("watchlistEmpty").classList.toggle("hidden", rows.length > 0); showError("watchlistError"); document.querySelectorAll("#watchlistForm input,#watchlistForm button").forEach(control => control.disabled = false); refreshIcons();
+        try { renderWatchlistMonitoringStatus(await api("/api/watchlists/status")); showError("watchlistStatusError"); }
+        catch (error) { showError("watchlistStatusError", error.message); }
     } catch (error) { showError("watchlistError", error.message); if (error.status === 503) document.querySelectorAll("#watchlistForm input,#watchlistForm button").forEach(control => control.disabled = true); }
     finally { refresh.disabled = false; }
+}
+function renderWatchlistMonitoringStatus(summary) {
+    document.getElementById("watchlistActiveValue").textContent = `${summary.active_watchlists} / ${summary.paused_watchlists}`;
+    document.getElementById("watchlistDueValue").textContent = `${summary.due_watchlists} / ${summary.running_runs}`;
+    document.getElementById("watchlistSuccessValue").textContent = summary.success_rate_7d === null ? "—" : `${(summary.success_rate_7d * 100).toFixed(1)}%`;
+    document.getElementById("watchlistNotificationValue").textContent = `${summary.pending_notifications} / ${summary.failed_notifications}`;
+    const p50 = summary.p50_latency_ms_7d === null ? "—" : `${Math.round(summary.p50_latency_ms_7d)} ms`;
+    const p95 = summary.p95_latency_ms_7d === null ? "—" : `${Math.round(summary.p95_latency_ms_7d)} ms`;
+    const latest = summary.latest_run_status ? `${summary.latest_run_status} · ${formatTime(summary.latest_run_started_at)}` : "暂无检查记录";
+    document.getElementById("watchlistStatusDetails").textContent = `最近任务：${latest} · 近 7 天失败任务：${summary.failed_runs_7d} · 执行耗时 P50/P95：${p50}/${p95} · 未确认事件：${summary.unread_events} · 发送中：${summary.sending_notifications}`;
 }
 async function createWatchlist(event) {
     event.preventDefault(); const button = event.target.querySelector("button"); button.disabled = true;
@@ -722,7 +734,7 @@ async function showWatchlistHistory(item) {
     try {
         const [runs, events] = await Promise.all([api(`/api/watchlists/${item.id}/runs`), api(`/api/watchlists/${item.id}/events`)]);
         const dialog = document.createElement("dialog"); dialog.append(textNode("h2", `DMF ${item.dmf_no}`), textNode("h3", "检查记录"));
-        dialog.append(textNode("pre", runs.length ? runs.map(run => `${formatTime(run.started_at)} · ${run.status}${run.error_message ? "\n" + run.error_message : ""}`).join("\n") : "暂无检查记录"));
+        dialog.append(textNode("pre", runs.length ? runs.map(run => { const duration = run.ended_at ? Math.max(0, Date.parse(run.ended_at) - Date.parse(run.started_at)) : null; const elapsed = duration === null ? "未完成" : `${Math.round(duration)} ms`; return `${formatTime(run.started_at)} · ${run.status} · ${elapsed}${run.error_message ? "\n" + run.error_message : ""}`; }).join("\n") : "暂无检查记录"));
         dialog.append(textNode("h3", "变更事件"), textNode("pre", events.length ? events.map(event => `${formatTime(event.created_at)} · ${event.event_type} · ${event.status}\n${JSON.stringify(event.after_payload)}`).join("\n") : "暂无变更事件"));
         dialog.append(iconButton("x", "关闭记录", () => dialog.close())); dialog.addEventListener("close", () => dialog.remove()); document.body.append(dialog); refreshIcons(); dialog.showModal();
     } catch (error) { showError("watchlistError", error.message); }

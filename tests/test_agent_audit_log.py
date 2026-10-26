@@ -4,17 +4,24 @@ from concurrent.futures import ThreadPoolExecutor
 import pytest
 
 from src.agent import audit_log
+from src.observability import tracing
 
 
 @pytest.fixture
 def audit_directory(tmp_path, monkeypatch):
     monkeypatch.setattr(audit_log, "LOG_DIR", tmp_path / "audit")
+    monkeypatch.setattr(tracing, "TRACE_DIR", tmp_path / "traces")
     yield audit_log.LOG_DIR
     with audit_log._lock:
         if audit_log._handler is not None:
             audit_log._handler.close()
         audit_log._handler = None
         audit_log._handler_path = None
+    with tracing._lock:
+        if tracing._handler is not None:
+            tracing._handler.close()
+        tracing._handler = None
+        tracing._handler_path = None
 
 
 def _events(directory):
@@ -32,6 +39,8 @@ def test_trace_pairs_events_without_payloads(audit_directory):
     assert finished["request_id"] == "request-1"
     assert finished["tool_call_id"] == "call-1"
     assert finished["duration_ms"] >= 0
+    assert started["trace_id"] == finished["trace_id"]
+    assert started["span_id"] == finished["span_id"]
     assert "private-token" not in json.dumps([started, finished])
 
 

@@ -69,10 +69,10 @@ through repeated artifact reads.
 
 ## Related Tools
 
-`search_pec_knowledge(query: str)` is already registered and performs parallel
-Topic and Chunk retrieval. Either available source can support an answer;
-both sources need not return hits. There is no skill-loading tool or extra
-retrieval wrapper.
+`search_pec_knowledge(query: str)` 查询已发布的统一索引，其中可以包含 Topic
+和原始 Chunk；不再查询独立 SQLite Topic 库。结果中的 `topics.enabled: false`
+仅表示独立分支已关闭，不代表统一索引缺少 Topic，也不是检索降级。
+只根据实际返回的证据回答，不要求同时命中两种类型。
 
 ## Outputs
 

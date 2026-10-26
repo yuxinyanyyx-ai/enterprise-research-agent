@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections import deque
+from copy import copy
 from dataclasses import dataclass, field
 from pathlib import Path
 from time import perf_counter
@@ -38,6 +39,7 @@ class ScriptedLLMProvider:
         self.call_log = call_log
         self._outputs: deque[Any] = deque()
         self.tool_schemas: list[dict[str, Any]] = []
+        self.tool_choice: str | None = None
 
     def enqueue(self, *outputs: Any) -> None:
         self._outputs.extend(outputs)
@@ -45,19 +47,27 @@ class ScriptedLLMProvider:
     def _next(self, call_type: str, messages: Any) -> Any:
         if not self._outputs:
             raise UnexpectedBoundaryCall(f"undeclared LLM {call_type} call")
-        self.call_log.record("llm", call_type=call_type, messages=messages, tool_schemas=self.tool_schemas)
+        self.call_log.record(
+            "llm", call_type=call_type, messages=messages,
+            tool_schemas=self.tool_schemas, tool_choice=self.tool_choice,
+        )
         output = self._outputs.popleft()
         if isinstance(output, BaseException):
             raise output
         return output
 
-    def with_structured_output(self, schema: type) -> "StructuredScriptedLLM":
-        self.tool_schemas = [convert_to_openai_tool(schema)]
-        return StructuredScriptedLLM(self, schema)
+    def with_structured_output(
+        self, schema: type, *, include_raw: bool = False
+    ) -> "StructuredScriptedLLM":
+        bound = copy(self)
+        bound.tool_schemas = [convert_to_openai_tool(schema)]
+        return StructuredScriptedLLM(bound, schema, include_raw=include_raw)
 
-    def bind_tools(self, tools):
-        self.tool_schemas = [convert_to_openai_tool(tool) for tool in tools]
-        return self
+    def bind_tools(self, tools, *, tool_choice=None):
+        bound = copy(self)
+        bound.tool_schemas = [convert_to_openai_tool(tool) for tool in tools]
+        bound.tool_choice = tool_choice
+        return bound
 
     def invoke(self, messages: Any) -> AIMessage:
         started = perf_counter()
@@ -86,19 +96,23 @@ class ScriptedLLMProvider:
                 call_type="text",
                 duration_ms=round((perf_counter() - started) * 1000, 3),
                 input_tokens=estimate_input_tokens(messages, self.tool_schemas),
-                output_tokens=0,
+                output_tokens=None,
+                total_tokens=None,
                 token_source="estimated",
                 selected_tools=[],
                 failure_code="llm_provider_error",
                 error_type=type(exc).__name__,
             )
             raise
+        input_tokens = estimate_input_tokens(messages, self.tool_schemas)
+        output_tokens = estimate_tokens(json.dumps(response.model_dump(), ensure_ascii=False, default=str))
         self.call_log.record(
             "llm_invocation",
             call_type="text",
             duration_ms=round((perf_counter() - started) * 1000, 3),
-            input_tokens=estimate_input_tokens(messages, self.tool_schemas),
-            output_tokens=estimate_tokens(json.dumps(response.model_dump(), ensure_ascii=False, default=str)),
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
+            total_tokens=input_tokens + output_tokens,
             token_source="estimated",
             selected_tools=[str(call.get("name", "")) for call in response.tool_calls],
         )
@@ -110,9 +124,12 @@ class ScriptedLLMProvider:
 
 
 class StructuredScriptedLLM:
-    def __init__(self, provider: ScriptedLLMProvider, schema: type) -> None:
+    def __init__(
+        self, provider: ScriptedLLMProvider, schema: type, *, include_raw: bool = False
+    ) -> None:
         self.provider = provider
         self.schema = schema
+        self.include_raw = include_raw
 
     def invoke(self, messages: Any) -> Any:
         started = perf_counter()
@@ -125,26 +142,32 @@ class StructuredScriptedLLM:
                 call_type="structured",
                 duration_ms=round((perf_counter() - started) * 1000, 3),
                 input_tokens=estimate_input_tokens(messages, self.provider.tool_schemas),
-                output_tokens=0,
+                output_tokens=None,
+                total_tokens=None,
                 token_source="estimated",
                 selected_tools=[],
                 failure_code="llm_provider_error",
                 error_type=type(exc).__name__,
             )
             raise
+        input_tokens = estimate_input_tokens(messages, self.provider.tool_schemas)
+        output_tokens = estimate_tokens(json.dumps(
+            response.model_dump() if hasattr(response, "model_dump") else response,
+            ensure_ascii=False,
+            default=str,
+        ))
         self.provider.call_log.record(
             "llm_invocation",
             call_type="structured",
             duration_ms=round((perf_counter() - started) * 1000, 3),
-            input_tokens=estimate_input_tokens(messages, self.provider.tool_schemas),
-            output_tokens=estimate_tokens(json.dumps(
-                response.model_dump() if hasattr(response, "model_dump") else response,
-                ensure_ascii=False,
-                default=str,
-            )),
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
+            total_tokens=input_tokens + output_tokens,
             token_source="estimated",
             selected_tools=[],
         )
+        if self.include_raw:
+            return {"raw": None, "parsed": response, "parsing_error": None}
         return response
 
 
@@ -170,15 +193,17 @@ class RecordingLLM:
         self.call_log = call_log
         self.tool_schemas = tool_schemas or []
 
-    def with_structured_output(self, schema: type) -> "RecordingStructuredLLM":
+    def with_structured_output(
+        self, schema: type, *, include_raw: bool = False
+    ) -> "RecordingStructuredLLM":
         return RecordingStructuredLLM(
-            self.delegate.with_structured_output(schema),
+            self.delegate.with_structured_output(schema, include_raw=include_raw),
             self.call_log,
         )
 
-    def bind_tools(self, tools):
+    def bind_tools(self, tools, *, tool_choice=None):
         return RecordingLLM(
-            self.delegate.bind_tools(tools),
+            self.delegate.bind_tools(tools, **({"tool_choice": tool_choice} if tool_choice is not None else {})),
             self.call_log,
             [convert_to_openai_tool(tool) for tool in tools],
         )
@@ -194,14 +219,15 @@ class RecordingLLM:
                 call_type="text",
                 duration_ms=round((perf_counter() - started) * 1000, 3),
                 input_tokens=estimate_input_tokens(messages, self.tool_schemas),
-                output_tokens=0,
+                output_tokens=None,
+                total_tokens=None,
                 token_source="estimated",
                 selected_tools=[],
                 failure_code="llm_provider_error",
                 error_type=type(exc).__name__,
             )
             raise
-        input_tokens, output_tokens, token_source = _token_counts(
+        input_tokens, output_tokens, total_tokens, token_source = _token_counts(
             response, messages, self.tool_schemas
         )
         self.call_log.record(
@@ -210,6 +236,7 @@ class RecordingLLM:
             duration_ms=round((perf_counter() - started) * 1000, 3),
             input_tokens=input_tokens,
             output_tokens=output_tokens,
+            total_tokens=total_tokens,
             token_source=token_source,
             selected_tools=[str(call.get("name", "")) for call in getattr(response, "tool_calls", [])],
         )
@@ -232,20 +259,22 @@ class RecordingStructuredLLM:
                 call_type="structured",
                 duration_ms=round((perf_counter() - started) * 1000, 3),
                 input_tokens=estimate_input_tokens(messages),
-                output_tokens=0,
+                output_tokens=None,
+                total_tokens=None,
                 token_source="estimated",
                 selected_tools=[],
                 failure_code="llm_provider_error",
                 error_type=type(exc).__name__,
             )
             raise
-        input_tokens, output_tokens, token_source = _token_counts(response, messages, [])
+        input_tokens, output_tokens, total_tokens, token_source = _token_counts(response, messages, [])
         self.call_log.record(
             "llm_invocation",
             call_type="structured",
             duration_ms=round((perf_counter() - started) * 1000, 3),
             input_tokens=input_tokens,
             output_tokens=output_tokens,
+            total_tokens=total_tokens,
             token_source=token_source,
             selected_tools=[],
         )
@@ -256,23 +285,28 @@ def _token_counts(
     response: Any,
     messages: Any,
     tool_schemas: list[dict[str, Any]],
-) -> tuple[int, int, str]:
-    usage = getattr(response, "usage_metadata", None)
-    metadata = getattr(response, "response_metadata", None)
+) -> tuple[int | None, int | None, int | None, str]:
+    raw_response = response.get("raw") if isinstance(response, dict) else response
+    usage = getattr(raw_response, "usage_metadata", None)
+    metadata = getattr(raw_response, "response_metadata", None)
     if not isinstance(usage, dict) and isinstance(metadata, dict):
         usage = metadata.get("token_usage") or metadata.get("usage")
     if isinstance(usage, dict):
         input_tokens = usage.get("input_tokens", usage.get("prompt_tokens"))
         output_tokens = usage.get("output_tokens", usage.get("completion_tokens"))
-        if isinstance(input_tokens, int) and isinstance(output_tokens, int):
-            return input_tokens, output_tokens, "actual"
+        total_tokens = usage.get("total_tokens")
+        valid_input = input_tokens if isinstance(input_tokens, int) and not isinstance(input_tokens, bool) and input_tokens >= 0 else None
+        valid_output = output_tokens if isinstance(output_tokens, int) and not isinstance(output_tokens, bool) and output_tokens >= 0 else None
+        valid_total = total_tokens if isinstance(total_tokens, int) and not isinstance(total_tokens, bool) and total_tokens >= 0 else None
+        if any(value is not None for value in (valid_input, valid_output, valid_total)):
+            return valid_input, valid_output, valid_total, "actual"
     input_tokens = estimate_input_tokens(messages, tool_schemas)
     output_tokens = estimate_tokens(json.dumps(
         response.model_dump() if hasattr(response, "model_dump") else response,
         ensure_ascii=False,
         default=str,
     ))
-    return input_tokens, output_tokens, "estimated"
+    return input_tokens, output_tokens, input_tokens + output_tokens, "estimated"
 
 
 class QueuedBoundary:

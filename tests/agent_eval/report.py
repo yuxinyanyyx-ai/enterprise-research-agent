@@ -37,6 +37,8 @@ def _payload(result: CaseResult, model: str) -> dict[str, Any]:
         "turns": [
             {
                 "turn": turn.index + 1,
+                "request_id": turn.state.get("request_id"),
+                "trace_id": turn.state.get("trace_id"),
                 "executed_nodes": turn.executed_nodes,
                 "pending_nodes": turn.pending_nodes,
                 "interrupted": turn.interrupted,
@@ -133,8 +135,11 @@ def write_summary_report(
         f"{metrics['latency_ms']['request_p95']} ms",
         f"- LLM latency P50/P95: {metrics['latency_ms']['llm_p50']}/"
         f"{metrics['latency_ms']['llm_p95']} ms",
-        f"- Tokens (input/output/total): {metrics['token_consumption']['input']}/"
-        f"{metrics['token_consumption']['output']}/{metrics['token_consumption']['total']}",
+        f"- Actual tokens (input/output/total): {metrics['token_consumption']['actual']['input']}/"
+        f"{metrics['token_consumption']['actual']['output']}/{metrics['token_consumption']['actual']['total']}",
+        f"- Estimated tokens (input/output/total): {metrics['token_consumption']['estimated']['input']}/"
+        f"{metrics['token_consumption']['estimated']['output']}/{metrics['token_consumption']['estimated']['total']}",
+        f"- Missing usage calls: {metrics['token_consumption']['missing_usage_calls']}",
         f"- Token usage sources: {metrics['token_consumption']['sources']}",
         f"- Tool calls: {metrics['tool_call_counts']}",
         f"- Failure reasons: {metrics['failure_reasons']}",

@@ -9,6 +9,7 @@ from langgraph.graph import END, START, StateGraph
 from src.agent import nodes
 from src.agent.context_budget import ContextBudgetExceeded, build_structured_messages
 from src.agent.state import ResearchState
+from src.llm.apollo import invoke_with_gateway_retries
 from src.schemas.domain_intent import DocumentIntent, WatchlistIntent
 from src.schemas.intent import ResearchIntent
 from src.schemas.workflow import WorkflowResult
@@ -29,7 +30,7 @@ class WorkflowState(ResearchState, total=False):
     conversation: list[dict[str, str]]
 
 
-COMMON_INPUTS = {"user_query", "request_id", "user_id", "pending_intent", "conversation"}
+COMMON_INPUTS = {"user_query", "request_id", "trace_id", "root_span_id", "user_id", "pending_intent", "conversation"}
 DOCUMENT_FIELDS = {"document_artifacts", "document_extractions", "document_errors", "merged_document_query"}
 WATCHLIST_FIELDS = {"dmf_results", "operation_ledger"}
 
@@ -78,7 +79,21 @@ def _parse(state: WorkflowState, domain: str) -> dict[str, Any]:
                 "user_query": query,
             }
             messages = build_structured_messages(context, prompt, schema)
-            intent = nodes.create_apollo_llm().with_structured_output(schema).invoke(messages)
+            response = invoke_with_gateway_retries(
+                nodes.create_apollo_llm().with_structured_output(schema, include_raw=True),
+                messages,
+                retries=2,
+                operation_name="llm.workflow_intent",
+                component="agent.workflow",
+                request_id=state.get("request_id"),
+                trace_id=state.get("trace_id"),
+                parent_span_id=state.get("root_span_id"),
+            )
+            if response.get("parsing_error") is not None:
+                raise response["parsing_error"]
+            intent = response.get("parsed")
+            if intent is None:
+                raise ValueError("structured LLM response has no parsed intent")
             intent = schema.model_validate(intent.model_dump() if hasattr(intent, "model_dump") else intent)
         validated = nodes._validate_intent(ResearchIntent(data_source=domain, **intent.model_dump()), state)
         return validated

@@ -27,7 +27,7 @@ def test_query_then_analysis_uses_outer_llm_and_does_not_query_again(monkeypatch
     result = graph.invoke({"user_query": "分析刚才结果"}, config)
     assert result["final_answer"] == "已有结果分析"
     assert len(calls) == 1
-    assert '"dmf_no": "123"' in seen[-1][-1].content
+    assert '"dmf_no": "123"' in seen[-1][1].content
 
 
 def test_same_thread_retains_twelve_conversation_rounds():

@@ -149,11 +149,11 @@ def test_result_eval_exports_complete_fitting_result_or_stops(cross_turn, record
         return
     from src.agent.context_budget import filter_sensitive_fields
     followup = [event for event in result.turns[0].call_log if event["boundary"] == "llm"][1]["messages"]
-    assert "active_result" not in json.loads(followup[-1].content.split("\n", 1)[1])
+    assert "active_result" not in json.loads(followup[1].content.split("\n", 1)[1])
     assert json.loads(next(message.content for message in followup if isinstance(message, ToolMessage)))["results"] == filter_sensitive_fields(data)["results"]
     if cross_turn:
         new_events = result.turns[1].call_log[len(result.turns[0].call_log):]
-        restored = next(event for event in new_events if event["boundary"] == "llm")["messages"][-1]
+        restored = next(event for event in new_events if event["boundary"] == "llm")["messages"][1]
         assert json.loads(restored.content.split("\n", 1)[1])["active_result"] == filter_sensitive_fields(data)
     export_event = next(event for event in result.turns[-1].call_log if event["boundary"] == "export")
     assert export_event["result"] == DMFSearchResult.model_validate(data).model_dump(mode="json")

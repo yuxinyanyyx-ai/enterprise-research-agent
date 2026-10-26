@@ -28,8 +28,11 @@ class FakeLlm:
     def __init__(self, responses: list[AIMessage]) -> None:
         self.responses = responses
 
-    def bind_tools(self, tools):
+    def bind_tools(self, tools, *, tool_choice=None):
         return FakeBoundModel(self.responses)
+
+    def invoke(self, messages):
+        return FakeBoundModel(self.responses).invoke(messages)
 
 
 def _call(name: str, call_id: str = "call-1") -> dict:

@@ -133,6 +133,30 @@ class WatchlistRunView(BaseModel):
     warnings: list[str] = Field(default_factory=list)
 
 
+class WatchlistMonitoringSummary(BaseModel):
+    generated_at: datetime
+    active_watchlists: int
+    paused_watchlists: int
+    due_watchlists: int
+    unread_events: int
+    running_runs: int
+    successful_runs_7d: int
+    failed_runs_7d: int
+    success_rate_7d: float | None
+    p50_latency_ms_7d: float | None
+    p95_latency_ms_7d: float | None
+    pending_notifications: int
+    sending_notifications: int
+    failed_notifications: int
+    latest_run_status: WatchlistRunStatus | None
+    latest_run_started_at: datetime | None
+
+    @field_validator("generated_at", "latest_run_started_at", mode="before")
+    @classmethod
+    def normalize_datetimes(cls, value):
+        return _as_utc(value)
+
+
 class WatchlistEventView(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

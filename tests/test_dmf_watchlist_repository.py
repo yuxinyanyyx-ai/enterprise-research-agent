@@ -1,4 +1,6 @@
 from datetime import datetime, timedelta, timezone
+from concurrent.futures import ThreadPoolExecutor
+from threading import Barrier
 
 import pytest
 from sqlalchemy import create_engine
@@ -57,6 +59,23 @@ def test_due_claim_is_exclusive(tmp_path) -> None:
 
     assert len(first) == 1
     assert second == []
+
+
+def test_concurrent_due_claims_are_exclusive(tmp_path) -> None:
+    repository = make_repository(tmp_path)
+    second_repository = DMFWatchlistRepository(repository.engine)
+    now = datetime(2026, 9, 3, tzinfo=timezone.utc)
+    repository.create_or_restore("DMF-001", 24, now=now)
+    barrier = Barrier(2)
+
+    def claim(repo):
+        barrier.wait(timeout=5)
+        return repo.claim_due(now=now)
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        results = list(pool.map(claim, (repository, second_repository)))
+
+    assert sum(len(claims) for claims in results) == 1
 
 
 def test_manual_runs_count_absence_and_ack_is_idempotent(tmp_path) -> None:

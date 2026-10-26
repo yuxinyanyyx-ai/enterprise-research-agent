@@ -196,7 +196,7 @@ async def upload_sources(
     normalized = _scope(folder)
     if not 1 <= len(files) <= MAX_BATCH_FILES:
         raise HTTPException(status_code=400, detail="单次上传需为 1 至 2000 个文件")
-    limit = get_settings().max_file_size_bytes
+    limit = get_settings(require_token=False).max_file_size_bytes
     for upload in files:
         name = upload.filename or ""
         if (

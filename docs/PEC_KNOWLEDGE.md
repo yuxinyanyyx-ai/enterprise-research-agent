@@ -26,7 +26,6 @@ Agent 根据用户问题自主判断是否需要 PEC 检索，加载 Knowledge S
 - `APOLLO_RERANK_URL`：可选覆盖；默认使用 `${APOLLO_BASE_URL}/rerank`
 - `APOLLO_VERIFY_SSL`：`true`、`false` 或 CA bundle 路径
 - `PEC_KNOWLEDGE_ROOT`：默认 `data/pec`
-- `PEC_TOPICS_DB`：默认 `<PEC_KNOWLEDGE_ROOT>/index/pec_topics.db`
 - `PREVIEW_ON_INDEX`：默认开启；预览失败不阻断文本索引
 - `RERANK_MIN_SCORE`：默认 `0.4`
 
@@ -48,7 +47,19 @@ PEC 知识库 `/knowledge` 仅接受 PPTX、DOCX、PDF、XLSX。文档正文和�
 
 Agent 会话上传 PNG、JPG、JPEG 时，图片本身会单独调用 Apollo Vision，提取可读文字及有业务含义的视觉关系，并将结果保存为该会话的 Markdown 解析产物。该调用只发生在图片文件上传解析时，不会因 PPTX/PDF 页面含图、预览渲染或更新知识库索引而触发。图片解析失败会明确返回错误，不会伪装为成功解析。
 
-## 构建 Topics 结构化检索
+## 统一索引中的 Topic
+
+Agent 查询只调用已发布索引的 `search_chunks` 链路，使用向量召回、关键词
+召回、融合和 Rerank。不再并行查询独立 SQLite Topics 数据库，也不会因为
+缺少 `pec_topics.db` 显示检索降级。已发布索引中的 Topic、原始 Chunk 及其
+证据关联保持不变，不需要重新入库或构建另一份数据库。
+
+为兼容现有调用方，结果保留 `topics` 字段，但明确返回
+`enabled: false`、`hit_count: 0`；这只表示独立分支已关闭，不表示统一索引
+没有 Topic。`available_sources` 仅列出实际执行的 `chunks` 链路；
+成功无命中时仍返回空证据，失败时明确报错，不再从独立数据库兜底。
+
+## 旧版离线 Topics 工具（不参与 Agent 查询）
 
 Topics 是轻量结构化补充，不需要人工审核或额外治理流程。先完成 chunk 索引，再从现有 `chunks.jsonl` 按文件分组调用 Apollo LLM 抽取会议主题、决策和行动项，经过 Pydantic 校验后直接生成 SQLite。
 
@@ -68,4 +79,5 @@ Topics 数据库默认位置为 `data/pec/index/pec_topics.db`，可用 `PEC_TOP
 	"TENACITY 的中国试验和 CDE 沟通有哪些决策"
 ```
 
-Agent 查询时会并行执行 chunk 向量检索和 Topics 结构化检索。Topics 数据库不存在或不可用时，会自动降级为 chunk-only，不影响基础检索。
+以上 SQLite 构建和独立搜索命令仅作为旧版离线工具保留；`PEC_TOPICS_DB`
+只影响这些工具，不再是 Agent PEC 查询的依赖。

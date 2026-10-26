@@ -1,0 +1,98 @@
+name: enterprise-research-agent
+
+services:
+  db:
+    image: ${POSTGRES_IMAGE:-postgres:17-alpine}
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: research
+      POSTGRES_USER: research
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?请设置数据库密码}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    logging: &logging
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  app:
+    image: enterprise-research-agent-app:latest
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.web
+      args:
+        PYTHON_IMAGE: ${PYTHON_IMAGE:-python:3.12-slim-bookworm}
+    restart: unless-stopped
+    init: true
+    env_file:
+      - path: ./docker/deployment.env
+        required: false
+    environment:
+      PYTHON_DOTENV_DISABLED: "1"
+      DATABASE_URL: postgresql+psycopg://research:${POSTGRES_PASSWORD:?请设置数据库密码}@db:5432/research
+      AGENT_CHECKPOINT_ENABLED: "true"
+      AGENT_MEMORY_ENABLED: "false"
+      AGENT_TRUST_PROXY_IDENTITY: "false"
+      KNOWLEDGE_ROOT: /app/data/pec
+    expose:
+      - "8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - app_storage:/app/src/storage
+      - app_data:/app/data
+      - app_outputs:/app/outputs
+      - app_logs:/app/logs
+      - app_pdf:/app/PDF
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import json, urllib.request; r = urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3); assert json.load(r)['status'] == 'ok'"
+      interval: 30s
+      timeout: 5s
+      start_period: 60s
+      retries: 3
+    stop_grace_period: 60s
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    logging: *logging
+
+  proxy:
+    image: ${CADDY_IMAGE:-caddy:2-alpine}
+    restart: unless-stopped
+    environment:
+      SITE_ADDRESS: "${SITE_ADDRESS:-:80}"
+      APP_USERNAME: ${APP_USERNAME:-research}
+      APP_PASSWORD_HASH: ${APP_PASSWORD_HASH:?请设置网站访问密码的哈希}
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${HTTP_PORT:-8080}:80"
+      - "${BIND_ADDRESS:-127.0.0.1}:${HTTPS_PORT:-8443}:443"
+    volumes:
+      - ./docker/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      app:
+        condition: service_healthy
+    logging: *logging
+
+volumes:
+  postgres_data:
+  app_storage:
+  app_data:
+  app_outputs:
+  app_logs:
+  app_pdf:
+  caddy_data:
+  caddy_config:

@@ -88,3 +88,22 @@ History 的全局 baseline 与 Watchlist 游标相互独立。`SUCCESS_EMPTY` �
 - 日期为空、占位或无法严格解析时不判断为过期，本次 Watchlist run 会返回 warning。
 - 有效日期变化仍会产生 `field_changed`；从过期恢复为有效不额外产生恢复事件。
 - 手动执行和定时执行使用相同的过期判断及去重游标。
+
+## 可靠性与验收记录 — 2026-10-22
+
+- 新增端到端测试覆盖“真实 History/Watchlist 持久化 → 保存快照 → 检测字段变化和新增记录 → 生成 Watchlist 事件 → 写入通知 outbox → fake 邮件发送 → 确认事件”。测试不调用真实 FDA 或 SMTP。
+- 故障与状态边界覆盖：网络异常、验证码/上游失败、部分结果、未执行查询均不能推进 Watchlist baseline 或把记录误判为消失；重复 DMF 身份进入 `identity_ambiguous` 且不生成告警；完整空结果仍按连续两次观察确认消失。
+- Worker 故障注入在 outbox 写入时失败，验证事务回滚、锁释放、重启后复用同一个运行记录并成功重试，最终仅生成一条业务事件和一条通知。并发测试验证同一到期 Watchlist 只能被一个 worker claim；通知 dispatcher 另有并发 claim、重试、租约过期和失败终态测试。
+- 标注变更检测集位于 `tests/dmf_change_labels.json`，包含 6 组人工标注的合成前后快照，涵盖新增、消失、多字段变化、规范化后无变化、重复身份和缺少身份。测得 **TP=4、FP=0、FN=0，Precision=1.000、Recall=1.000**。样本是小规模合成集，不代表真实 FDA 数据上的泛化准确率；空查询排除 baseline 比较由 History 状态测试单独验证。
+- 运行状态接口 `GET /api/watchlists/status` 汇总活跃/暂停关注项、到期与运行中的任务、近 7 天成功率和 P50/P95 执行耗时、未确认事件及通知队列状态；Watchlist 页面展示汇总、每项下次检查时间和连续失败次数。成功率以 `changed`/`no_change` 为成功，以查询失败、历史失败和身份歧义为失败；运行中任务不进入成功率分母。
+- 回归结果：DMF、History、Watchlist、通知和 Workflow 相关测试 **75 passed**；`tests/test_agent_watchlist.py` 单独运行 **11 passed**。前端 `app.js` 通过 `node --check`。测试有一条 Starlette/httpx 弃用警告。
+- 将这两组测试放在同一个 pytest 进程时，出现过一个 Agent 日志捕获断言失败（`caplog` 未捕获日志）；该 Agent 测试文件单独运行 11 项通过。此测试顺序交互尚未定位，故仍应分组运行并保留此记录。
+- 状态摘要基于持久化运行和通知记录，不是 worker 进程心跳；页面能显示积压到期任务和最近运行情况，但不能单独证明 worker 进程当前存活。
+
+可重复运行：
+
+```powershell
+C:\BITrusted\work\python.exe -m pytest tests\test_dmf_collection_status.py tests\test_dmf_history_repository.py tests\test_dmf_query_history.py tests\test_dmf_query_service.py tests\test_dmf_schemas.py tests\test_dmf_watchlist_repository.py tests\test_dmf_watchlist_service.py tests\test_dmf_watchlist_settings.py tests\test_dmf_watchlist_state.py tests\test_dmf_watchlist_web_routes.py tests\test_dmf_monitoring_e2e.py tests\test_dmf_change_detection_metrics.py tests\test_notification_dispatcher.py tests\test_notification_migration.py tests\test_notification_worker.py tests\test_watchlist_workflow.py -q
+C:\BITrusted\work\python.exe -m pytest tests\test_agent_watchlist.py -q
+node --check src\web\static\app.js
+```

@@ -7,7 +7,7 @@ import math
 import os
 import ssl
 import time
-from collections.abc import Callable, Sequence
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
@@ -15,9 +15,11 @@ import httpx
 import requests
 import urllib3
 from dotenv import load_dotenv
-from langchain_core.messages import BaseMessage, HumanMessage
+from langchain_core.messages import HumanMessage
 from langchain_openai import ChatOpenAI
 from openai import APIConnectionError, APIStatusError
+
+from src.observability.tracing import TraceSpan, trace_span
 
 
 # src/llm/apollo.py
@@ -152,8 +154,7 @@ def create_apollo_llm(
         options["max_tokens"] = max_tokens
     if timeout is not None:
         options["timeout"] = timeout
-    if max_retries is not None:
-        options["max_retries"] = max_retries
+    options["max_retries"] = 0 if max_retries is None else max_retries
     return ChatOpenAI(
         **options,
     )
@@ -172,28 +173,98 @@ def ingest_llm_timeout() -> float:
 
 
 def invoke_with_gateway_retries(
-    client: ChatOpenAI,
-    messages: Sequence[BaseMessage],
+    client: Any,
+    messages: Any,
     *,
     retries: int = 2,
     on_retry: Callable[[int, int, Exception], None] | None = None,
-) -> BaseMessage:
+    operation_name: str = "llm.invoke",
+    component: str = "apollo.llm",
+    trace_model_name: str | None = None,
+    request_id: str | None = None,
+    trace_id: str | None = None,
+    parent_span_id: str | None = None,
+    metadata: dict[str, Any] | None = None,
+) -> Any:
     """Retry only transient gateway, connection, and timeout failures."""
-    if isinstance(retries, bool) or retries < 0:
+    if isinstance(retries, bool) or not isinstance(retries, int) or retries < 0:
         raise ValueError("retries 必须是非负整数")
-    for attempt in range(retries + 1):
-        try:
-            return client.invoke(messages)
-        except (APIConnectionError, APIStatusError) as exc:
-            retryable = isinstance(exc, APIConnectionError) or (
-                exc.status_code in {408, 409, 429} or exc.status_code >= 500
-            )
-            if not retryable or attempt == retries:
-                raise
-            if on_retry is not None:
-                on_retry(attempt + 1, retries, exc)
-            time.sleep(min(2**attempt, 8))
-    raise RuntimeError("Apollo 调用重试状态异常")
+    resolved_model = trace_model_name or getattr(client, "model_name", None)
+    if not resolved_model:
+        resolved_model = getattr(client, "model", None) or model_name()
+    with trace_span(
+        operation_name,
+        component,
+        request_id=request_id,
+        trace_id=trace_id,
+        parent_span_id=parent_span_id,
+        model_name=str(resolved_model),
+        metadata=metadata,
+    ) as span:
+        for attempt in range(retries + 1):
+            span.metadata["attempt_count"] = attempt + 1
+            try:
+                response = client.invoke(messages)
+                _record_llm_usage(span, response)
+                return response
+            except (APIConnectionError, APIStatusError) as exc:
+                if isinstance(exc, APIStatusError):
+                    span.metadata["http_status"] = exc.status_code
+                    span.metadata.pop("provider_error_code", None)
+                    if isinstance(exc.code, str) and exc.code in {
+                        "context_length_exceeded", "invalid_request_error",
+                        "invalid_parameter", "invalid_value", "unsupported_parameter",
+                        "invalid_tool_call", "tool_use_failed", "rate_limit_exceeded",
+                    }:
+                        span.metadata["provider_error_code"] = exc.code
+                retryable = isinstance(exc, APIConnectionError) or (
+                    exc.status_code in {408, 409, 429} or exc.status_code >= 500
+                )
+                if not retryable or attempt == retries:
+                    raise
+                span.retry_count += 1
+                if on_retry is not None:
+                    on_retry(attempt + 1, retries, exc)
+                time.sleep(min(2**attempt, 8))
+        raise RuntimeError("Apollo 调用重试状态异常")
+
+
+def _usage_number(source: Any, *keys: str) -> int | None:
+    if not isinstance(source, dict):
+        return None
+    for key in keys:
+        value = source.get(key)
+        if isinstance(value, int) and not isinstance(value, bool) and value >= 0:
+            return value
+    return None
+
+
+def _record_llm_usage(span: TraceSpan, response: Any) -> None:
+    raw_response = response.get("raw") if isinstance(response, dict) else response
+    usage = getattr(raw_response, "usage_metadata", None)
+    if not isinstance(usage, dict):
+        response_metadata = getattr(raw_response, "response_metadata", None)
+        usage = (
+            response_metadata.get("token_usage", response_metadata.get("usage"))
+            if isinstance(response_metadata, dict)
+            else None
+        )
+    input_tokens = _usage_number(usage, "input_tokens", "prompt_tokens")
+    output_tokens = _usage_number(usage, "output_tokens", "completion_tokens")
+    total_tokens = _usage_number(usage, "total_tokens")
+    if (
+        output_tokens is None
+        and total_tokens is not None
+        and input_tokens is not None
+        and total_tokens >= input_tokens
+    ):
+        output_tokens = total_tokens - input_tokens
+    span.set_usage(
+        input_tokens=input_tokens,
+        output_tokens=output_tokens,
+        total_tokens=total_tokens,
+        source="actual",
+    )
 
 
 def _bearer_headers(access_token: str) -> dict[str, str]:
@@ -233,39 +304,55 @@ def embed_texts(
         return []
     if any(not isinstance(text, str) or not text.strip() for text in texts):
         raise ValueError("embedding 输入必须是非空字符串")
-    token = access_token or get_access_token()
-    payload = _post_json(
-        _endpoint(_required_env("APOLLO_BASE_URL"), "embeddings"),
-        {"model": _required_env("APOLLO_EMBEDDING_MODEL"), "input": texts},
-        token,
-    )
-    rows = payload.get("data")
-    if not isinstance(rows, list) or len(rows) != len(texts):
-        raise RuntimeError("Apollo embedding 返回数量与输入不一致")
-    ordered: list[list[float] | None] = [None] * len(texts)
-    dimension: int | None = None
-    for position, row in enumerate(rows):
-        if not isinstance(row, dict):
-            raise RuntimeError("Apollo embedding 返回项格式错误")
-        index = row.get("index", position)
-        vector = row.get("embedding")
-        if isinstance(index, bool) or not isinstance(index, int) or not 0 <= index < len(texts):
-            raise RuntimeError("Apollo embedding 返回非法 index")
-        if ordered[index] is not None or not isinstance(vector, list) or not vector:
-            raise RuntimeError("Apollo embedding 返回重复 index 或空向量")
-        try:
-            normalized = [float(value) for value in vector]
-        except (TypeError, ValueError) as exc:
-            raise RuntimeError("Apollo embedding 向量包含非数值") from exc
-        if any(not math.isfinite(value) for value in normalized):
-            raise RuntimeError("Apollo embedding 向量包含非有限值")
-        dimension = dimension or len(normalized)
-        if len(normalized) != dimension:
-            raise RuntimeError("Apollo embedding 向量维度不一致")
-        ordered[index] = normalized
-    if any(vector is None for vector in ordered):
-        raise RuntimeError("Apollo embedding 返回缺失 index")
-    return [vector for vector in ordered if vector is not None]
+    model = _required_env("APOLLO_EMBEDDING_MODEL")
+    with trace_span(
+        "embedding.embed",
+        "apollo.embedding",
+        model_name=model,
+        metadata={"input_count": len(texts)},
+    ) as span:
+        token = access_token or get_access_token()
+        payload = _post_json(
+            _endpoint(_required_env("APOLLO_BASE_URL"), "embeddings"),
+            {"model": model, "input": texts},
+            token,
+        )
+        _record_embedding_usage(span, payload)
+        rows = payload.get("data")
+        if not isinstance(rows, list) or len(rows) != len(texts):
+            raise RuntimeError("Apollo embedding 返回数量与输入不一致")
+        ordered: list[list[float] | None] = [None] * len(texts)
+        dimension: int | None = None
+        for position, row in enumerate(rows):
+            if not isinstance(row, dict):
+                raise RuntimeError("Apollo embedding 返回项格式错误")
+            index = row.get("index", position)
+            vector = row.get("embedding")
+            if isinstance(index, bool) or not isinstance(index, int) or not 0 <= index < len(texts):
+                raise RuntimeError("Apollo embedding 返回非法 index")
+            if ordered[index] is not None or not isinstance(vector, list) or not vector:
+                raise RuntimeError("Apollo embedding 返回重复 index 或空向量")
+            try:
+                normalized = [float(value) for value in vector]
+            except (TypeError, ValueError) as exc:
+                raise RuntimeError("Apollo embedding 向量包含非数值") from exc
+            if any(not math.isfinite(value) for value in normalized):
+                raise RuntimeError("Apollo embedding 向量包含非有限值")
+            dimension = dimension or len(normalized)
+            if len(normalized) != dimension:
+                raise RuntimeError("Apollo embedding 向量维度不一致")
+            ordered[index] = normalized
+        if any(vector is None for vector in ordered):
+            raise RuntimeError("Apollo embedding 返回缺失 index")
+        span.metadata["vector_dimension"] = dimension
+        return [vector for vector in ordered if vector is not None]
+
+
+def _record_embedding_usage(span: TraceSpan, payload: dict[str, Any]) -> None:
+    usage = payload.get("usage")
+    input_tokens = _usage_number(usage, "input_tokens", "prompt_tokens")
+    total_tokens = _usage_number(usage, "total_tokens")
+    span.set_usage(input_tokens=input_tokens, total_tokens=total_tokens, source="actual")
 
 
 def rerank_documents(
@@ -282,45 +369,54 @@ def rerank_documents(
         raise ValueError("rerank query 不能为空")
     if top_n < 1:
         raise ValueError("top_n 必须为正整数")
-    token = access_token or get_access_token()
-    rerank_url = (os.getenv("APOLLO_RERANK_URL") or "").strip() or _endpoint(
-        _required_env("APOLLO_BASE_URL"),
-        "rerank",
-    )
-    payload = _post_json(
-        rerank_url,
-        {
-            "model": _required_env("APOLLO_RERANK_MODEL"),
-            "query": query,
-            "documents": documents,
-            "top_n": min(top_n, len(documents)),
-        },
-        token,
-    )
-    rows = payload.get("results", payload.get("data"))
-    if not isinstance(rows, list):
-        raise RuntimeError("Apollo rerank 响应缺少 results")
-    normalized: list[dict[str, float | int]] = []
-    seen: set[int] = set()
-    for row in rows:
-        if not isinstance(row, dict):
-            raise RuntimeError("Apollo rerank 返回项格式错误")
-        index = row.get("index")
-        score = row.get("relevance_score", row.get("score"))
-        if isinstance(index, bool) or not isinstance(index, int) or not 0 <= index < len(documents):
-            raise RuntimeError("Apollo rerank 返回非法 index")
-        if index in seen:
-            raise RuntimeError("Apollo rerank 返回重复 index")
-        try:
-            relevance = float(score)
-        except (TypeError, ValueError) as exc:
-            raise RuntimeError("Apollo rerank 返回非法分数") from exc
-        if not math.isfinite(relevance):
-            raise RuntimeError("Apollo rerank 返回非有限分数")
-        seen.add(index)
-        normalized.append({"index": index, "relevance_score": relevance})
-    normalized.sort(key=lambda item: float(item["relevance_score"]), reverse=True)
-    return normalized[: min(top_n, len(documents))]
+    model = _required_env("APOLLO_RERANK_MODEL")
+    with trace_span(
+        "rerank.documents",
+        "apollo.rerank",
+        model_name=model,
+        metadata={"input_count": len(documents), "top_n": min(top_n, len(documents))},
+    ) as span:
+        token = access_token or get_access_token()
+        rerank_url = (os.getenv("APOLLO_RERANK_URL") or "").strip() or _endpoint(
+            _required_env("APOLLO_BASE_URL"),
+            "rerank",
+        )
+        payload = _post_json(
+            rerank_url,
+            {
+                "model": model,
+                "query": query,
+                "documents": documents,
+                "top_n": min(top_n, len(documents)),
+            },
+            token,
+        )
+        _record_embedding_usage(span, payload)
+        rows = payload.get("results", payload.get("data"))
+        if not isinstance(rows, list):
+            raise RuntimeError("Apollo rerank 响应缺少 results")
+        normalized: list[dict[str, float | int]] = []
+        seen: set[int] = set()
+        for row in rows:
+            if not isinstance(row, dict):
+                raise RuntimeError("Apollo rerank 返回项格式错误")
+            index = row.get("index")
+            score = row.get("relevance_score", row.get("score"))
+            if isinstance(index, bool) or not isinstance(index, int) or not 0 <= index < len(documents):
+                raise RuntimeError("Apollo rerank 返回非法 index")
+            if index in seen:
+                raise RuntimeError("Apollo rerank 返回重复 index")
+            try:
+                relevance = float(score)
+            except (TypeError, ValueError) as exc:
+                raise RuntimeError("Apollo rerank 返回非法分数") from exc
+            if not math.isfinite(relevance):
+                raise RuntimeError("Apollo rerank 返回非有限分数")
+            seen.add(index)
+            normalized.append({"index": index, "relevance_score": relevance})
+        normalized.sort(key=lambda item: float(item["relevance_score"]), reverse=True)
+        span.metadata["result_count"] = len(normalized)
+        return normalized[: min(top_n, len(documents))]
 
 
 def describe_image(
@@ -342,7 +438,7 @@ def describe_image(
             or model_name()
         ).strip(),
     )
-    response = llm.invoke([
+    response = invoke_with_gateway_retries(llm, [
         HumanMessage(content=[
             {
                 "type": "text",
@@ -368,7 +464,8 @@ def describe_image(
                 ),
             },
             {"type": "image_url", "image_url": {"url": data_url}},
-        ])
+        ], retries=2, operation_name="vision.describe_image", component="apollo.vision",
+           trace_model_name=(os.getenv("APOLLO_VISION_MODEL") or model_name()).strip())
     ])
     content = response.content
     if isinstance(content, str):

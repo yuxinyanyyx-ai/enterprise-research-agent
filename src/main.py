@@ -1,19 +1,21 @@
 """DMF Research Agent Web service entry point."""
 
 from contextlib import asynccontextmanager
+import logging
 from typing import AsyncIterator
 
-from fastapi import FastAPI
-from fastapi.responses import FileResponse
+from fastapi import FastAPI, Request
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
+from src.llm.apollo import ApolloConfigurationError
 from src.mineru.routes.convert import router as convert_router
-from src.settings import get_settings
+from src.settings import ConfigurationError, get_settings
 from src.web.routes.agent import router as agent_router
 from src.web.routes.knowledge import router as knowledge_router
 from src.web.routes.watchlist import router as watchlist_router
 
 # 读取项目配置
-settings = get_settings()
+settings = get_settings(require_token=False)
 
 
 # StaticFiles在挂载时要求目录已经存在
@@ -49,6 +51,18 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan,
 )
+
+
+@app.exception_handler(ConfigurationError)
+@app.exception_handler(ApolloConfigurationError)
+async def configuration_error(
+    request: Request, exc: ConfigurationError | ApolloConfigurationError,
+) -> JSONResponse:
+    logging.getLogger(__name__).warning("Service configuration unavailable: %s", type(exc).__name__)
+    return JSONResponse(
+        status_code=503,
+        content={"detail": "所需外部服务尚未配置，请联系管理员完成配置后重试。"},
+    )
 
 
 # 挂载CSS和JavaScript静态资源

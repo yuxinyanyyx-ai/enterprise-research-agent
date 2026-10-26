@@ -23,7 +23,10 @@ class SearchSequence:
         self.results = iter(results)
 
     def __call__(self, **kwargs):
-        return next(self.results).model_dump()
+        result = next(self.results)
+        if isinstance(result, Exception):
+            raise result
+        return result.model_dump()
 
 
 def search_result(records, snapshot_id, status=DMFCollectionStatus.SUCCESS_NONEMPTY):
@@ -134,6 +137,65 @@ def test_manual_empty_observations_confirm_absence_on_second_run(tmp_path) -> No
     assert current.consecutive_absent_count == 2
     assert current.absence_alerted is True
     assert repository.list_events(watchlist.id)[0].event_type == "absent_confirmed"
+
+
+@pytest.mark.parametrize(
+    "failed_result",
+    [
+        TimeoutError("network timeout"),
+        search_result([], "captcha-failed", DMFCollectionStatus.FAILED),
+        search_result([], "partial", DMFCollectionStatus.PARTIAL),
+        search_result([], "not-executed", DMFCollectionStatus.NOT_EXECUTED),
+    ],
+    ids=["network-error", "captcha-or-upstream-failure", "partial", "not-executed"],
+)
+def test_failed_or_incomplete_query_never_counts_as_absence(
+    tmp_path, failed_result
+) -> None:
+    baseline = DMFRecord(dmf_no="DMF-001", applicant_name="Company A")
+    repository, service = make_service(
+        tmp_path,
+        [
+            search_result([baseline], "baseline"),
+            failed_result,
+        ],
+    )
+    watchlist = repository.create_or_restore("DMF-001", 24)
+    service.run_manual(watchlist.id, idempotency_key="baseline")
+
+    failed = service.run_manual(watchlist.id, idempotency_key="failed-observation")
+
+    current = repository.get(watchlist.id)
+    assert failed.status == WatchlistRunStatus.QUERY_FAILED.value
+    assert current.baseline_payload == baseline.model_dump()
+    assert current.consecutive_absent_count == 0
+    assert current.absence_alerted is False
+    assert repository.list_events(watchlist.id) == []
+
+
+def test_duplicate_identity_does_not_advance_watchlist_baseline(tmp_path) -> None:
+    baseline = DMFRecord(dmf_no="DMF-001", applicant_name="Company A")
+    duplicates = [
+        DMFRecord(dmf_no="DMF-001", applicant_name="Company B"),
+        DMFRecord(dmf_no="dmf-001", applicant_name="Company C"),
+    ]
+    repository, service = make_service(
+        tmp_path,
+        [
+            search_result([baseline], "baseline"),
+            search_result(duplicates, "duplicate"),
+        ],
+    )
+    watchlist = repository.create_or_restore("DMF-001", 24)
+    service.run_manual(watchlist.id, idempotency_key="baseline")
+
+    ambiguous = service.run_manual(watchlist.id, idempotency_key="duplicate")
+
+    current = repository.get(watchlist.id)
+    assert ambiguous.status == WatchlistRunStatus.IDENTITY_AMBIGUOUS.value
+    assert current.baseline_payload == baseline.model_dump()
+    assert current.consecutive_absent_count == 0
+    assert repository.list_events(watchlist.id) == []
 
 
 def test_repeated_manual_idempotency_key_does_not_count_twice(tmp_path) -> None:

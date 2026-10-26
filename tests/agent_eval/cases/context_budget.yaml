@@ -37,7 +37,7 @@ cases:
       tool_decisions: [[]]
       llm_inputs:
       - max_estimated_tokens: 11904
-        message_types: [system, human, system]
+        message_types: [system, system, human]
         current_query_verbatim: true
         tool_pairs: true
         contains: [active-result, '12345', HIDDEN-RECORD-11, HIDDEN-RECORD-12]
@@ -75,7 +75,7 @@ cases:
       - call_index: 1
         current_query_verbatim: true
         tool_pairs: true
-        message_types: [system, human, ai, tool, system]
+        message_types: [system, system, human, ai, tool]
   - user_query: Analyse the previous result
     scripted_llm: [analysis]
     expected:
@@ -89,7 +89,7 @@ cases:
       - max_estimated_tokens: 11904
         current_query_verbatim: true
         tool_pairs: true
-        message_types: [system, human, ai, human, system]
+        message_types: [system, system, human, ai, human]
         contains: [Historical, '67890']
         not_contains: [CTX-old-tool]
       call_deltas: {llm: 1, dmf: 0, export: 0}

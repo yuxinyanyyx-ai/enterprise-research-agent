@@ -298,8 +298,7 @@ def load_settings(
 	)
 
 
-@lru_cache(maxsize=1)
-def get_settings() -> Settings:
+@lru_cache(maxsize=2)
+def get_settings(*, require_token: bool = True) -> Settings:
 	"""返回进程内缓存的配置对象。"""
-	return load_settings()
-
+	return load_settings(require_token=require_token)

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from contextvars import copy_context
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
@@ -250,6 +251,13 @@ def execute_tools(state: ResearchState, *, registry: ToolRegistry | None = None)
         with trace_operation(state, call=call) as outcome:
             message, artifact = _execute_one(definition, call, state)
             result = artifact.get("result")
+            if isinstance(result, list):
+                outcome["result_count"] = len(result)
+            elif isinstance(result, dict):
+                for result_key in ("results", "hits", "items"):
+                    if isinstance(result.get(result_key), list):
+                        outcome["result_count"] = len(result[result_key])
+                        break
             if message.status == "error":
                 outcome["status"] = "error"
                 if isinstance(result, dict) and result.get("error_type"):
@@ -267,7 +275,12 @@ def execute_tools(state: ResearchState, *, registry: ToolRegistry | None = None)
     )
     if parallel:
         with ThreadPoolExecutor(max_workers=len(executable)) as executor:
-            executed.update(executor.map(run, executable))
+            contexts = [copy_context() for _ in executable]
+            futures = [
+                executor.submit(context.run, run, item)
+                for context, item in zip(contexts, executable)
+            ]
+            executed.update(future.result() for future in futures)
     else:
         executed.update(run(item) for item in executable)
 

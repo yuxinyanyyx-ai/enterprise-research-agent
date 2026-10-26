@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from langchain_core.messages import HumanMessage, SystemMessage
-from src.llm.apollo import create_apollo_llm, get_access_token, load_env
+from src.llm.apollo import create_apollo_llm, get_access_token, invoke_with_gateway_retries, load_env
 from src.pec.knowledge.paths import CHUNKS_FILE, source_in_scope
 from src.pec.search_api.config import INDICATION_LIST, TA_LIST, VALID_CATEGORIES
 from src.pec.topics.schema import TopicRecord, validate_topic_enums
@@ -64,7 +64,13 @@ def _extract_window(window: list[dict[str, Any]], llm: Any) -> list[TopicRecord]
         f"chunk_id: {item['chunk_id']}\nsource: {item.get('loc', '')}\ntext:\n{item.get('text', '')}"
         for item in window
     )
-    response = llm.invoke([SystemMessage(content=_PROMPT), HumanMessage(content=f"source_file: {source_file}\n\n{body}")])
+    response = invoke_with_gateway_retries(
+        llm,
+        [SystemMessage(content=_PROMPT), HumanMessage(content=f"source_file: {source_file}\n\n{body}")],
+        retries=2,
+        operation_name="llm.topic_extraction",
+        component="pec.topics",
+    )
     payload = _parse_json(response.content)
     topics: list[TopicRecord] = []
     valid_chunk_ids = {str(item["chunk_id"]) for item in window}

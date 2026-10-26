@@ -22,6 +22,7 @@ from src.mineru.routes.convert import save_uploaded_files
 from src.services.document_dmf_service import DocumentDMFError, DocumentDMFService
 from src.agent_memory.repository import MemoryRepository
 from src.agent_session.repository import AgentSessionRepository
+from src.observability.tracing import trace_span
 from src.settings import load_settings
 
 
@@ -162,20 +163,28 @@ class AgentWebService:
                     status_code=status.HTTP_409_CONFLICT,
                     detail="当前操作正在等待确认，请先确认或拒绝",
                 )
-            result = self.graph.invoke(
-                {
-                    "user_query": message.strip(),
-                    "request_id": uuid4().hex,
-                    "agent_session_id": session.session_id,
-                    "document_artifacts": dict(session.documents),
-                    "warnings": [],
-                    "memory_scope": {
-                        "user_id": session.user_id,
-                        "tenant_id": session.tenant_id,
+            request_id = uuid4().hex
+            with trace_span(
+                "agent.request",
+                "agent",
+                request_id=request_id,
+            ) as request_span:
+                result = self.graph.invoke(
+                    {
+                        "user_query": message.strip(),
+                        "request_id": request_id,
+                        "trace_id": request_span.trace_id,
+                        "root_span_id": request_span.span_id,
+                        "agent_session_id": session.session_id,
+                        "document_artifacts": dict(session.documents),
+                        "warnings": [],
+                        "memory_scope": {
+                            "user_id": session.user_id,
+                            "tenant_id": session.tenant_id,
+                        },
                     },
-                },
-                config=self._config(session),
-            )
+                    config=self._config(session),
+                )
             return self._response(session, result)
 
     def invalidate_document_state(self, session: WebSession) -> None:
@@ -215,10 +224,21 @@ class AgentWebService:
             payload: dict[str, Any] = {"action": request.action}
             if request.query is not None:
                 payload["query"] = request.query
-            result = self.graph.invoke(
-                Command(resume=payload),
-                config=self._config(session),
-            )
+            config = self._config(session)
+            current = self.graph.get_state(config).values
+            trace_id = str(current.get("trace_id") or uuid4().hex)
+            request_id = str(current.get("request_id") or uuid4().hex)
+            with trace_span(
+                "agent.request.resume",
+                "agent",
+                request_id=request_id,
+                trace_id=trace_id,
+                parent_span_id=current.get("root_span_id"),
+            ) as request_span:
+                result = self.graph.invoke(
+                    Command(resume=payload),
+                    config=config,
+                )
             return self._response(session, result)
 
     def _response(self, session: WebSession, result: dict[str, Any]) -> dict[str, Any]:

@@ -11,7 +11,7 @@ from pathlib import Path
 
 from pptx import Presentation
 
-from src.llm.apollo import create_apollo_llm
+from src.llm.apollo import create_apollo_llm, invoke_with_gateway_retries
 from src.settings import load_settings
 from src.tools.project_slide_tool.fill import run_fill
 from src.tools.project_slide_tool.lpt import extract_bottom_tables
@@ -308,7 +308,10 @@ JSON schema:
 }}"""
 
     llm = _setup_apollo_llm()
-    response = llm.invoke(prompt)
+    response = invoke_with_gateway_retries(
+        llm, prompt, retries=2,
+        operation_name="llm.slide_generation", component="slide_generator",
+    )
     content = response.content if hasattr(response, "content") else str(response)
     if isinstance(content, list):
         content = "\n".join(

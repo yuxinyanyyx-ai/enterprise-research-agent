@@ -56,12 +56,12 @@ cases:
         call_type: text
         max_estimated_tokens: 11904
         current_query_verbatim: true
-        message_types: [system, human, system]
+        message_types: [system, system, human]
       - call_index: 1
         max_estimated_tokens: 11904
         current_query_verbatim: true
         tool_pairs: true
-        message_types: [system, human, ai, tool, system]
+        message_types: [system, system, human, ai, tool]
         contains: [context_source, search_dmf, '12345']
       route: execute_function_tools
       interrupt: false

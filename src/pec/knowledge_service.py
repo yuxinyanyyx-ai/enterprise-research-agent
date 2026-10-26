@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from concurrent.futures import ThreadPoolExecutor
+import logging
 
 from src.pec.knowledge.chunk_index import (
     format_update_result,
@@ -15,11 +15,7 @@ from src.pec.knowledge.paths import (
     SOURCES_DIR,
     ensure_dirs,
 )
-from src.pec.search_api.engine import (
-    search_topics,
-)
-
-
+logger = logging.getLogger(__name__)
 DEFAULT_CHUNK_TOP_N = 5
 MAX_INLINE_RESULT_BYTES = 20_000
 
@@ -51,39 +47,8 @@ def _chunk_evidence(hit) -> dict:
     }
 
 
-def _topic_evidence(hit: dict, field: str, evidence_type: str) -> dict | None:
-    text = str(hit.get(field) or "").strip()
-    if not text:
-        return None
-    return {
-        "kind": "topic",
-        "evidence_type": evidence_type,
-        "source_file": hit.get("source_file", ""),
-        "location": hit.get("source", ""),
-        "title": hit.get("title", ""),
-        "text": text,
-        "evidence_chunk_ids": hit.get("evidence_chunk_ids", "[]"),
-        "provenance": "topic_extraction",
-        "complete": True,
-        "truncated": False,
-    }
-
-
-def _build_evidence(chunk_hits: list, topic_hits: list[dict]) -> list[dict]:
-    evidence: list[dict] = []
-    for hit in topic_hits:
-        for field, evidence_type in (
-            ("decision", "decision"),
-            ("follow_up", "follow_up"),
-            ("for_endorsement", "recommendation"),
-            ("background", "background"),
-            ("raw_text", "source_text"),
-        ):
-            item = _topic_evidence(hit, field, evidence_type)
-            if item:
-                evidence.append(item)
-    evidence.extend(_chunk_evidence(hit) for hit in chunk_hits)
-    return evidence
+def _build_evidence(chunk_hits: list) -> list[dict]:
+    return [_chunk_evidence(hit) for hit in chunk_hits]
 
 
 def _inline_size(result: dict) -> int:
@@ -206,75 +171,39 @@ def search_pec_knowledge_service(
     query: str,
     folder: str = "",
 ) -> dict:
-    """并行检索 PEC chunk 向量库和 topics 结构化库。"""
+    """检索已发布的 PEC 统一索引，不查询独立 Topics SQLite 库。"""
 
     query = query.strip()
 
     if not query:
         return {"success": False, "message": "PEC 检索失败：query 不能为空。"}
 
-    chunk_err: str | None = None
-    topic_err: str | None = None
-
-    def run_chunks() -> tuple[list, str | None]:
-        try:
-            hits = search_chunks(
-                query,
-                top_n=DEFAULT_CHUNK_TOP_N,
-                folder=folder.strip(),
-            )
-
-            return hits, None
-        except Exception:
-            return [], "chunk 检索不可用。"
-
-    def run_topics() -> tuple[list[dict], str | None]:
-        try:
-            result = search_topics(query)
-
-            hits = result.get("hits") or []
-
-            return hits, "topics 检索不可用。" if result.get("error") else None
-        except Exception:
-            return [], "topics 检索不可用。"
-
     try:
-        # 两套知识库并行查询
-        with ThreadPoolExecutor(max_workers=2) as pool:
-            chunk_future = pool.submit(run_chunks)
-            topic_future = pool.submit(run_topics)
-
-            chunk_hits, chunk_err = (
-                chunk_future.result()
-            )
-
-            topic_hits, topic_err = (
-                topic_future.result()
-            )
-
-        available_sources = [
-            name for name, error in (("chunks", chunk_err), ("topics", topic_err)) if not error
-        ]
-        success = bool(available_sources)
-        evidence = _build_evidence(chunk_hits, topic_hits)
+        chunk_hits = search_chunks(
+            query,
+            top_n=DEFAULT_CHUNK_TOP_N,
+            folder=folder.strip(),
+        )
+        evidence = _build_evidence(chunk_hits)
         return _bounded_result({
-            "success": success,
-            "message": (
-                "PEC 知识检索完成。"
-                if success
-                else "PEC chunk 与 topics 检索均不可用，请检查索引和模型配置。"
-            ),
+            "success": True,
+            "message": "PEC 知识检索完成。",
             "decision_found": any(
                 item["evidence_type"] == "decision" for item in evidence
             ),
-            "available_sources": available_sources,
-            "partial": success and len(available_sources) < 2,
-            "chunk": {"hit_count": len(chunk_hits), "error": chunk_err or ""},
-            "topics": {"hit_count": len(topic_hits), "error": topic_err or ""},
+            "available_sources": ["chunks"],
+            "partial": False,
+            "chunk": {"hit_count": len(chunk_hits), "error": ""},
+            "topics": {"hit_count": 0, "error": "", "enabled": False},
         }, evidence)
 
-    except Exception:
-        return {
+    except Exception as exc:
+        logger.warning("PEC retrieval failed: %s", type(exc).__name__)
+        return _bounded_result({
             "success": False,
             "message": "PEC 检索失败，请检查索引和模型配置。",
-        }
+            "available_sources": [],
+            "partial": False,
+            "chunk": {"hit_count": 0, "error": "chunk 检索不可用。"},
+            "topics": {"hit_count": 0, "error": "", "enabled": False},
+        }, [])

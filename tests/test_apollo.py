@@ -81,6 +81,22 @@ def test_create_llm_uses_same_ssl_setting_for_http_clients(monkeypatch) -> None:
     assert model_settings["max_retries"] == 1
 
 
+def test_create_llm_disables_sdk_retries_by_default(monkeypatch) -> None:
+    monkeypatch.setenv("APOLLO_BASE_URL", "https://apollo.example/llm")
+    model_settings = {}
+    monkeypatch.setattr(apollo.httpx, "Client", lambda **kwargs: object())
+    monkeypatch.setattr(apollo.httpx, "AsyncClient", lambda **kwargs: object())
+    monkeypatch.setattr(
+        apollo,
+        "ChatOpenAI",
+        lambda **kwargs: model_settings.update(kwargs) or object(),
+    )
+
+    apollo.create_apollo_llm(access_token="token")
+
+    assert model_settings["max_retries"] == 0
+
+
 def test_ingest_llm_timeout_is_configurable_and_validated(monkeypatch) -> None:
     monkeypatch.delenv("APOLLO_INGEST_TIMEOUT_SECONDS", raising=False)
     assert apollo.ingest_llm_timeout() == 300

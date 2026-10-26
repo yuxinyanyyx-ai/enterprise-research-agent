@@ -44,7 +44,7 @@ def test_knowledge_guidance_reaches_agent_without_loading_tool(monkeypatch, tmp_
     guidance = load_skill_catalog().get("knowledge").instructions
 
     class Model:
-        def bind_tools(self, tools):
+        def bind_tools(self, tools, *, tool_choice=None):
             assert {tool.name for tool in tools} <= {"search_pec_knowledge"}
             return self
 
@@ -190,7 +190,8 @@ def test_successful_pec_hit_blocks_rephrased_repeat(monkeypatch, tmp_path):
     result = build_react_graph(registry=registry, llm_factory=lambda: model).invoke({"user_query": "enrollment"})
     assert queries == ["enrollment"]
     assert "search_pec_knowledge" in model.bound_names[0]
-    assert all("search_pec_knowledge" not in names for names in model.bound_names[1:])
+    assert model.bound_choices[1:] == ["none", "none"]
+    assert all(names == {"search_pec_knowledge"} for names in model.bound_names[1:])
     assert result["final_answer"] == "Answer from existing evidence."
 
 
@@ -209,10 +210,8 @@ def test_real_service_result_reaches_model_inline_after_600_chars(monkeypatch, t
     monkeypatch.setattr(knowledge_service, "search_chunks", lambda *args, **kwargs: [
         SimpleNamespace(text=text, source_ref="meeting.pptx", loc="Slide 1"),
     ])
-    monkeypatch.setattr(knowledge_service, "search_topics", lambda query: {"hits": []})
-
     class Model:
-        def bind_tools(self, tools):
+        def bind_tools(self, tools, *, tool_choice=None):
             return self
 
         def invoke(self, messages):

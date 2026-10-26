@@ -1,0 +1,88 @@
+[
+  {
+    "id": "added-and-removed",
+    "previous": [
+      {"dmf_no": "DMF-001", "applicant_name": "Company A"},
+      {"dmf_no": "DMF-002", "applicant_name": "Company B"}
+    ],
+    "current": [
+      {"dmf_no": "DMF-001", "applicant_name": "Company A"},
+      {"dmf_no": "DMF-003", "applicant_name": "Company C"}
+    ],
+    "expected_events": [
+      {"change_type": "added", "business_key": "dmf-003", "fields": []},
+      {"change_type": "removed", "business_key": "dmf-002", "fields": []}
+    ]
+  },
+  {
+    "id": "multiple-fields-changed",
+    "previous": [
+      {
+        "dmf_no": "DMF-010",
+        "applicant_name": "Company A",
+        "ingredient": "Ibuprofen",
+        "valid_date": "2028-01-01"
+      }
+    ],
+    "current": [
+      {
+        "dmf_no": "DMF-010",
+        "applicant_name": "Company B",
+        "ingredient": "Metformin",
+        "valid_date": "2029-01-01"
+      }
+    ],
+    "expected_events": [
+      {
+        "change_type": "field_changed",
+        "business_key": "dmf-010",
+        "fields": ["applicant_name", "ingredient", "valid_date"]
+      }
+    ]
+  },
+  {
+    "id": "normalization-only-no-change",
+    "previous": [
+      {
+        "dmf_no": " DMF-020 ",
+        "applicant_name": "Company A",
+        "ingredient": "Ibuprofen"
+      }
+    ],
+    "current": [
+      {
+        "dmf_no": "dmf-020",
+        "applicant_name": " company   a ",
+        "ingredient": "IBUPROFEN"
+      }
+    ],
+    "expected_events": []
+  },
+  {
+    "id": "duplicate-current-identity",
+    "previous": [{"dmf_no": "DMF-030", "applicant_name": "Company A"}],
+    "current": [
+      {"dmf_no": "DMF-030", "applicant_name": "Company A"},
+      {"dmf_no": "dmf-030", "applicant_name": "Company B"},
+      {"dmf_no": "DMF-031", "applicant_name": "Company C"}
+    ],
+    "expected_events": [
+      {"change_type": "added", "business_key": "dmf-031", "fields": []}
+    ]
+  },
+  {
+    "id": "duplicate-previous-identity",
+    "previous": [
+      {"dmf_no": "DMF-040", "applicant_name": "Company A"},
+      {"dmf_no": "dmf-040", "applicant_name": "Company B"}
+    ],
+    "current": [{"dmf_no": "DMF-040", "applicant_name": "Company C"}],
+    "expected_events": []
+  },
+  {
+    "id": "missing-identity",
+    "previous": [{"dmf_no": null, "applicant_name": "Company A"}],
+    "current": [{"dmf_no": null, "applicant_name": "Company B"}],
+    "expected_events": []
+  }
+]

@@ -16,6 +16,7 @@ from src.dmf_watchlist.service import DMFWatchlistService
 from src.schemas.watchlist import (
     WatchlistCreate,
     WatchlistEventView,
+    WatchlistMonitoringSummary,
     WatchlistRunView,
     WatchlistUpdate,
     WatchlistView,
@@ -70,6 +71,11 @@ def create_watchlist(payload: WatchlistCreate) -> WatchlistView:
 @router.get("", response_model=list[WatchlistView])
 def list_watchlists() -> list[WatchlistView]:
     return _service().list_watchlists()
+
+
+@router.get("/status", response_model=WatchlistMonitoringSummary)
+def watchlist_monitoring_status() -> WatchlistMonitoringSummary:
+    return _service().repository.monitoring_summary()
 
 
 @router.get("/{watchlist_id}", response_model=WatchlistView)

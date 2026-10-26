@@ -7,12 +7,14 @@ import math
 import re
 import sqlite3
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from contextvars import copy_context
 from dataclasses import dataclass
 from typing import Any, Optional
 
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
 
+from src.llm.apollo import invoke_with_gateway_retries
 from src.pec.search_api.config import VALID_CATEGORIES
 from src.pec.search_api.tagger import TAGGER_SYSTEM_PROMPT
 
@@ -132,7 +134,10 @@ def tag_query(query: str, llm: ChatOpenAI) -> QueryTags:
         SystemMessage(content=TAGGER_SYSTEM_PROMPT),
         HumanMessage(content=_QUERY_TAG_USER_TEMPLATE.format(query=query)),
     ]
-    response = llm.invoke(messages)
+    response = invoke_with_gateway_retries(
+        llm, messages, retries=2,
+        operation_name="llm.query_tagging", component="pec.search_api",
+    )
     data = _parse_json(response.content)
     tags = QueryTags(
         primary_category=str(data.get("primary_category") or "").strip(),
@@ -304,7 +309,10 @@ def _judge_one_batch(
         HumanMessage(content=user_msg),
     ]
     try:
-        response = llm.invoke(messages)
+        response = invoke_with_gateway_retries(
+            llm, messages, retries=2,
+            operation_name="llm.relevance_judgement", component="pec.search_api",
+        )
         results = _parse_json(response.content)
     except Exception as e:
         logger.warning("第三层批次 %d 判断失败，跳过该批：%s", batch_idx, e)
@@ -359,8 +367,11 @@ def batch_judge_relevance(
     relevant_keys: set[tuple[str, int]] = set()
     with ThreadPoolExecutor(max_workers=workers) as executor:
         futures = {
-            executor.submit(_judge_one_batch, query, batch, llm, idx): idx
+            executor.submit(
+                context.run, _judge_one_batch, query, batch, llm, idx
+            ): idx
             for idx, batch in enumerate(batches)
+            for context in [copy_context()]
         }
         for future in as_completed(futures):
             relevant_keys |= future.result()

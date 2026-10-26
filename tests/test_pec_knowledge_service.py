@@ -42,34 +42,27 @@ def test_chunk_evidence_preserves_extraction_provenance(
 
 
 @pytest.mark.parametrize(
-    "chunk_error,topic_error,success,partial",
+    "chunk_error,success",
     [
-        (None, None, True, False),
-        ("chunk down", None, True, True),
-        (None, "topics down", True, True),
-        ("chunk down", "topics down", False, False),
+        (None, True),
+        ("chunk down", False),
     ],
-    ids=["both", "topics-only", "chunks-only", "failed"],
+    ids=["published-index", "failed"],
 )
 def test_search_service_reports_backend_availability(
-    monkeypatch, chunk_error, topic_error, success, partial,
+    monkeypatch, chunk_error, success,
 ) -> None:
     def chunks(*args, **kwargs):
         if chunk_error:
             raise RuntimeError(chunk_error)
         return [object()]
 
-    def topics(query):
-        return {
-            "hits": [] if topic_error else [{"topic_id": 1}],
-            **({"error": topic_error} if topic_error else {}),
-        }
-
     monkeypatch.setattr(knowledge_service, "search_chunks", chunks)
-    monkeypatch.setattr(knowledge_service, "search_topics", topics)
     result = knowledge_service.search_pec_knowledge_service("decision")
     assert result["success"] is success
-    assert result.get("partial", False) is partial
+    assert result["partial"] is False
+    assert result["available_sources"] == (["chunks"] if success else [])
+    assert result["topics"] == {"hit_count": 0, "error": "", "enabled": False}
     assert "context" not in result
     assert "# 回答要求" not in result["context_summary"]
 
@@ -91,11 +84,6 @@ def test_search_service_separates_summary_and_bounded_evidence(monkeypatch) -> N
         for index in range(10)
     ]
     monkeypatch.setattr(knowledge_service, "search_chunks", lambda *args, **kwargs: hits)
-    monkeypatch.setattr(
-        knowledge_service,
-        "search_topics",
-        lambda query: {"hits": [], "error": None},
-    )
 
     result = knowledge_service.search_pec_knowledge_service("decision")
 
@@ -115,7 +103,6 @@ def _search_result(monkeypatch, texts, **hit_fields):
         **{"source_ref": "meeting.pptx", "loc": f"Slide {index}", **hit_fields},
     ) for index, text in enumerate(texts)]
     monkeypatch.setattr(knowledge_service, "search_chunks", lambda *args, **kwargs: hits)
-    monkeypatch.setattr(knowledge_service, "search_topics", lambda query: {"hits": []})
     return knowledge_service.search_pec_knowledge_service("private-query" * 10000)
 
 
@@ -175,30 +162,45 @@ def test_oversize_source_is_omitted_not_rewritten(monkeypatch):
     assert _byte_size(result) <= 20000
 
 
-@pytest.mark.parametrize("mode", ["empty", "chunks", "topics", "both", "unexpected", "blank"])
+@pytest.mark.parametrize("mode", ["empty", "chunks", "unexpected", "blank"])
 def test_all_service_paths_are_bounded_without_backend_details(monkeypatch, mode):
     private = "private-path-and-error" * 10000
 
     def chunks(*args, **kwargs):
-        if mode in {"chunks", "both"}:
+        if mode == "chunks":
             raise RuntimeError(private)
         return []
-
-    def topics(query):
-        return {"hits": [], "error": private if mode in {"topics", "both"} else None}
 
     def broken_evidence(*args):
         raise RuntimeError(private)
 
     monkeypatch.setattr(knowledge_service, "search_chunks", chunks)
-    monkeypatch.setattr(knowledge_service, "search_topics", topics)
     if mode == "unexpected":
         monkeypatch.setattr(knowledge_service, "_build_evidence", broken_evidence)
     result = knowledge_service.search_pec_knowledge_service(" " if mode == "blank" else private)
     assert _byte_size(result) <= 20000
     assert "private-path" not in json.dumps(result)
     assert "context" not in result and "query" not in result
-    assert result["success"] is (mode not in {"both", "unexpected", "blank"})
+    assert result["success"] is (mode not in {"chunks", "unexpected", "blank"})
+
+
+def test_search_uses_published_topics_without_independent_database(monkeypatch):
+    def chunks(query, **kwargs):
+        assert query == "decision"
+        assert kwargs == {"top_n": 5, "folder": "PEC1"}
+        return [SimpleNamespace(
+            chunk_id="topic-1", method="topic", source_ref="PEC1/meeting.pptx",
+            loc="Slide 3", text="Published topic decision.",
+        )]
+
+    monkeypatch.setattr(knowledge_service, "search_chunks", chunks)
+    assert not hasattr(knowledge_service, "search_topics")
+    result = knowledge_service.search_pec_knowledge_service(" decision ", " PEC1 ")
+    assert result["success"] is True
+    assert result["topics"]["enabled"] is False
+    assert result["evidence"][0]["chunk_id"] == "topic-1"
+    assert result["evidence"][0]["text"] == "Published topic decision."
+    assert result["evidence"][0]["location"] == "Slide 3"
 
 
 def test_inline_fields_preserve_evidence_provenance_without_large_metadata(monkeypatch):

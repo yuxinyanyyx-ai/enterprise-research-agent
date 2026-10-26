@@ -5,7 +5,7 @@ from pathlib import Path
 
 from pptx import Presentation
 
-from src.llm.apollo import create_apollo_llm
+from src.llm.apollo import create_apollo_llm, invoke_with_gateway_retries
 from .models import BottomTables
 from .pptx_utils import normalize_text
 
@@ -195,7 +195,10 @@ Slide data:
         llm = create_apollo_llm()
         llm.streaming = False
         llm.temperature = 0
-        response = llm.invoke(prompt)
+        response = invoke_with_gateway_retries(
+            llm, prompt, retries=2,
+            operation_name="llm.project_slide_extraction", component="project_slide",
+        )
         content = response.content if hasattr(response, "content") else str(response)
         if isinstance(content, list):
             content = "\n".join(

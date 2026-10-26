@@ -4,9 +4,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
+from math import ceil
 from uuid import uuid4
 
-from sqlalchemy import Engine, or_, select, update
+from sqlalchemy import Engine, func, or_, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker
 
@@ -19,10 +20,16 @@ from src.schemas.watchlist import (
     WatchlistRunStatus,
     WatchlistRunTrigger,
     WatchlistNotificationMode,
+    WatchlistMonitoringSummary,
     WatchlistStatus,
 )
 
-from .models import DMFWatchlist, DMFWatchlistEvent, DMFWatchlistRun
+from .models import (
+    DMFNotificationDelivery,
+    DMFWatchlist,
+    DMFWatchlistEvent,
+    DMFWatchlistRun,
+)
 from .notification_outbox import enqueue_delivery, event_payload, invalidate_notifications
 
 
@@ -446,6 +453,102 @@ class DMFWatchlistRepository:
                 )
             )
 
+    def monitoring_summary(
+        self, *, now: datetime | None = None
+    ) -> WatchlistMonitoringSummary:
+        observed_at = _utc(now)
+        window_start = observed_at - timedelta(days=7)
+        with self.session_factory() as session:
+            watchlist_counts = dict(
+                session.execute(
+                    select(DMFWatchlist.status, func.count())
+                    .where(DMFWatchlist.status != WatchlistStatus.DELETED.value)
+                    .group_by(DMFWatchlist.status)
+                ).all()
+            )
+            due_watchlists = session.scalar(
+                select(func.count())
+                .select_from(DMFWatchlist)
+                .where(
+                    DMFWatchlist.status == WatchlistStatus.ACTIVE.value,
+                    DMFWatchlist.next_run_at <= observed_at,
+                    or_(
+                        DMFWatchlist.locked_until.is_(None),
+                        DMFWatchlist.locked_until < observed_at,
+                    ),
+                )
+            ) or 0
+            unread_events = session.scalar(
+                select(func.count())
+                .select_from(DMFWatchlistEvent)
+                .where(DMFWatchlistEvent.status == WatchlistEventStatus.UNREAD.value)
+            ) or 0
+            notification_counts = dict(
+                session.execute(
+                    select(DMFNotificationDelivery.status, func.count())
+                    .group_by(DMFNotificationDelivery.status)
+                ).all()
+            )
+            running_runs = session.scalar(
+                select(func.count())
+                .select_from(DMFWatchlistRun)
+                .where(DMFWatchlistRun.status == WatchlistRunStatus.RUNNING.value)
+            ) or 0
+            recent_runs = list(
+                session.scalars(
+                    select(DMFWatchlistRun)
+                    .where(DMFWatchlistRun.started_at >= window_start)
+                    .order_by(DMFWatchlistRun.started_at.desc())
+                )
+            )
+            latest_run = session.scalar(
+                select(DMFWatchlistRun)
+                .order_by(DMFWatchlistRun.started_at.desc())
+                .limit(1)
+            )
+
+        successful_runs = sum(
+            run.status
+            in {WatchlistRunStatus.NO_CHANGE.value, WatchlistRunStatus.CHANGED.value}
+            for run in recent_runs
+        )
+        failed_runs = sum(
+            run.status
+            in {
+                WatchlistRunStatus.QUERY_FAILED.value,
+                WatchlistRunStatus.HISTORY_FAILED.value,
+                WatchlistRunStatus.IDENTITY_AMBIGUOUS.value,
+            }
+            for run in recent_runs
+        )
+        terminal_runs = successful_runs + failed_runs
+        durations = sorted(
+            (_utc(run.ended_at) - _utc(run.started_at)).total_seconds() * 1000
+            for run in recent_runs
+            if run.ended_at is not None
+            and _utc(run.ended_at) >= _utc(run.started_at)
+        )
+        return WatchlistMonitoringSummary(
+            generated_at=observed_at,
+            active_watchlists=watchlist_counts.get(WatchlistStatus.ACTIVE.value, 0),
+            paused_watchlists=watchlist_counts.get(WatchlistStatus.PAUSED.value, 0),
+            due_watchlists=due_watchlists,
+            unread_events=unread_events,
+            running_runs=running_runs,
+            successful_runs_7d=successful_runs,
+            failed_runs_7d=failed_runs,
+            success_rate_7d=(
+                successful_runs / terminal_runs if terminal_runs else None
+            ),
+            p50_latency_ms_7d=_percentile(durations, 0.50),
+            p95_latency_ms_7d=_percentile(durations, 0.95),
+            pending_notifications=notification_counts.get("pending", 0),
+            sending_notifications=notification_counts.get("sending", 0),
+            failed_notifications=notification_counts.get("failed", 0),
+            latest_run_status=latest_run.status if latest_run else None,
+            latest_run_started_at=latest_run.started_at if latest_run else None,
+        )
+
     def acknowledge_event(
         self, watchlist_id: str, event_id: str, *, now: datetime | None = None
     ) -> DMFWatchlistEvent:
@@ -468,3 +571,10 @@ def _utc(value: datetime | None) -> datetime:
 def _validate_notification_config(enabled: bool, emails: list[str] | None) -> None:
     if enabled and not emails:
         raise ValueError("开启通知时必须指定至少一个接收邮箱")
+
+
+def _percentile(values: list[float], percentile: float) -> float | None:
+    if not values:
+        return None
+    index = max(0, min(len(values) - 1, ceil(len(values) * percentile) - 1))
+    return values[index]

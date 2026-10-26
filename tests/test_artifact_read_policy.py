@@ -98,7 +98,7 @@ def test_graph_publishes_before_read_and_recovers_after_read_failure(monkeypatch
                 assert "context_truncated" not in payload
                 assert "read_required" not in payload
                 assert payload == {"success": True, "records": [{"text": "source fact " * 2} for _ in range(50)]}
-                context = json.loads(messages[-1].content.split("\n", 1)[1])
+                context = json.loads(messages[1].content.split("\n", 1)[1])
                 assert len(context["artifact_refs"]) == 1
                 self.reference = context["artifact_refs"][0]
                 assert "request_id" not in self.reference
@@ -150,7 +150,8 @@ def test_checkpoint_clears_reader_state_for_new_request(monkeypatch, tmp_path):
     assert second["artifact_read_disabled"] is False
     assert second["published_artifact_refs"] == {}
     assert second["artifact_reads"] == []
-    assert all("read_tool_artifact" not in names for names in model.bound_names)
+    assert all("read_tool_artifact" not in names for names in model.selectable_names)
+    assert model.bound_choices == [None, "none", "none", None]
 
 
 @pytest.mark.parametrize("exception", [ArtifactNotFound("secret-id"), ArtifactAccessError("secret-path"), OSError("private-path"), ValueError("invalid-id")])
@@ -218,7 +219,7 @@ def test_publication_requires_current_authentic_source_body(monkeypatch, tmp_pat
             return self
 
         def invoke(self, messages):
-            context = json.loads(messages[-1].content.split("\n", 1)[1])
+            context = json.loads(messages[1].content.split("\n", 1)[1])
             assert ("artifact_refs" in context) is (mode == "current")
             if mode == "current":
                 assert context["artifact_refs"][0]["artifact_id"] == reference["artifact_id"]

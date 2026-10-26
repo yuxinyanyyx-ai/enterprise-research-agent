@@ -38,7 +38,18 @@ def summarize_results(results: Sequence[CaseResult]) -> dict[str, Any]:
     call_counts: Counter[str] = Counter()
     request_latencies: list[float] = []
     llm_latencies: list[float] = []
-    token_totals: Counter[str] = Counter()
+    token_usage = {
+        source: {
+            "calls": 0,
+            "input_calls": 0,
+            "input": 0,
+            "output_calls": 0,
+            "output": 0,
+            "total_calls": 0,
+            "total": 0,
+        }
+        for source in ("actual", "estimated", "missing")
+    }
     token_sources: Counter[str] = Counter()
     failures: Counter[str] = Counter()
     for result in results:
@@ -51,9 +62,43 @@ def summarize_results(results: Sequence[CaseResult]) -> dict[str, Any]:
                     call_counts[name] += count
                 for metric in turn.llm_metrics:
                     llm_latencies.append(float(metric.get("duration_ms", 0)))
-                    token_totals["input"] += int(metric.get("input_tokens", 0))
-                    token_totals["output"] += int(metric.get("output_tokens", 0))
-                    token_sources[str(metric.get("token_source", "unknown"))] += 1
+                    source = str(metric.get("token_source", "missing"))
+                    if source not in token_usage:
+                        source = "missing"
+                    bucket = token_usage[source]
+                    bucket["calls"] += 1
+                    input_tokens = metric.get("input_tokens")
+                    output_tokens = metric.get("output_tokens")
+                    total_tokens = metric.get("total_tokens")
+                    if isinstance(input_tokens, int) and not isinstance(input_tokens, bool) and input_tokens >= 0:
+                        bucket["input"] += input_tokens
+                        bucket["input_calls"] += 1
+                    else:
+                        input_tokens = None
+                    if isinstance(output_tokens, int) and not isinstance(output_tokens, bool) and output_tokens >= 0:
+                        bucket["output"] += output_tokens
+                        bucket["output_calls"] += 1
+                    else:
+                        output_tokens = None
+                    if isinstance(total_tokens, int) and not isinstance(total_tokens, bool) and total_tokens >= 0:
+                        bucket["total"] += total_tokens
+                        bucket["total_calls"] += 1
+                    elif input_tokens is not None and output_tokens is not None:
+                        bucket["total"] += input_tokens + output_tokens
+                        bucket["total_calls"] += 1
+                    token_sources[source] += 1
+
+    serialized_usage = {}
+    for source, bucket in token_usage.items():
+        serialized_usage[source] = {
+            "calls": bucket["calls"],
+            "input": bucket["input"] if bucket["input_calls"] else None,
+            "input_calls": bucket["input_calls"],
+            "output": bucket["output"] if bucket["output_calls"] else None,
+            "output_calls": bucket["output_calls"],
+            "total": bucket["total"] if bucket["total_calls"] else None,
+            "total_calls": bucket["total_calls"],
+        }
 
     return {
         "case_count": len(results),
@@ -73,9 +118,8 @@ def summarize_results(results: Sequence[CaseResult]) -> dict[str, Any]:
             "llm_p95": _percentile(llm_latencies, 95),
         },
         "token_consumption": {
-            "input": token_totals["input"],
-            "output": token_totals["output"],
-            "total": token_totals["input"] + token_totals["output"],
+            **serialized_usage,
+            "missing_usage_calls": token_usage["missing"]["calls"],
             "sources": dict(sorted(token_sources.items())),
         },
         "failure_reasons": dict(sorted(failures.items())),

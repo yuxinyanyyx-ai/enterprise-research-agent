@@ -15,6 +15,8 @@ from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.types import Command
 
 from src.agent.react_graph import build_react_graph
+from src.observability import tracing
+from src.observability.tracing import trace_span
 from src.services.document_dmf_service import DocumentDMFService
 from src.settings import get_settings
 from tests.agent_eval.fakes import (
@@ -89,6 +91,12 @@ class AgentEvalRunner:
                     audit_log._handler.close()
                 audit_log._handler = None
                 audit_log._handler_path = None
+        with tracing._lock:
+            if tracing._handler_path and tracing._handler_path.is_relative_to(self.output_dir):
+                if tracing._handler is not None:
+                    tracing._handler.close()
+                tracing._handler = None
+                tracing._handler_path = None
         self._temporary_directory.cleanup()
 
     def __enter__(self) -> "AgentEvalRunner":
@@ -167,6 +175,7 @@ class AgentEvalRunner:
             stack.enter_context(patch("src.agent.nodes.DocumentDMFService", document_service_factory))
             stack.enter_context(patch("src.tools.export_tools.export_multi_query_result", self.exporter))
             stack.enter_context(patch("src.agent.audit_log.LOG_DIR", self.output_dir / "agent-logs"))
+            stack.enter_context(patch("src.observability.tracing.TRACE_DIR", self.output_dir / "traces"))
             stack.enter_context(
                 patch("src.agent.nodes.create_watchlist_service", lambda: self.watchlist)
             )
@@ -185,12 +194,19 @@ class AgentEvalRunner:
                     )
                 }
                 event_start = len(self.call_log.events)
-                if turn.resume is not None:
+                is_resume = turn.resume is not None
+                previous_state = graph.get_state(config).values if is_resume else {}
+                request_id = str(
+                    previous_state.get("request_id")
+                    or f"{case.id}-turn-{index + 1}"
+                )
+                trace_id = str(previous_state.get("trace_id") or uuid4().hex)
+                parent_span_id = previous_state.get("root_span_id") if is_resume else None
+                if is_resume:
                     graph_input: Any = Command(resume=turn.resume)
                 else:
                     graph_input = {
                         "user_query": turn.user_query,
-                        "request_id": f"{case.id}-turn-{index + 1}",
                         "warnings": [],
                     }
                     if index == 0:
@@ -198,8 +214,21 @@ class AgentEvalRunner:
                         if case.documents:
                             graph_input["document_artifacts"] = self._document_state(case)
 
-                started = perf_counter()
-                updates = list(graph.stream(graph_input, config=config, stream_mode="updates"))
+                with trace_span(
+                    "agent.request.eval",
+                    "agent.eval",
+                    request_id=request_id,
+                    trace_id=trace_id,
+                    parent_span_id=parent_span_id,
+                ) as request_span:
+                    if not is_resume:
+                        graph_input.update({
+                            "request_id": request_id,
+                            "trace_id": trace_id,
+                            "root_span_id": request_span.span_id,
+                        })
+                    started = perf_counter()
+                    updates = list(graph.stream(graph_input, config=config, stream_mode="updates"))
                 duration_ms = round((perf_counter() - started) * 1000, 3)
                 executed_nodes = [
                     node
@@ -217,7 +246,7 @@ class AgentEvalRunner:
                 turn_events = self.call_log.events[event_start:]
                 llm_metrics = [
                     {key: event[key] for key in (
-                        "call_type", "duration_ms", "input_tokens", "output_tokens",
+                        "call_type", "duration_ms", "input_tokens", "output_tokens", "total_tokens",
                         "token_source", "failure_code", "error_type",
                     ) if key in event}
                     for event in turn_events

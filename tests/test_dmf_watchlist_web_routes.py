@@ -172,6 +172,39 @@ def test_expired_event_and_invalid_date_warning_are_exposed(tmp_path, monkeypatc
     assert "无法解析" in invalid_run.json()["warnings"][0]
 
 
+def test_monitoring_status_endpoint_reports_recent_runs_and_queue_counts(
+    tmp_path, monkeypatch
+) -> None:
+    client = make_client(tmp_path, monkeypatch)
+    watchlist_id = client.post(
+        "/api/watchlists",
+        json={
+            "dmf_no": "DMF-001",
+            "notification_enabled": True,
+            "notification_emails": ["ops@example.com"],
+        },
+    ).json()["id"]
+
+    client.post(f"/api/watchlists/{watchlist_id}/runs")
+    run = client.post(f"/api/watchlists/{watchlist_id}/runs")
+    response = client.get("/api/watchlists/status")
+
+    assert response.status_code == 200
+    summary = response.json()
+    assert summary["active_watchlists"] == 1
+    assert summary["paused_watchlists"] == 0
+    assert summary["successful_runs_7d"] == 2
+    assert summary["failed_runs_7d"] == 0
+    assert summary["success_rate_7d"] == 1.0
+    assert summary["latest_run_status"] == run.json()["status"] == "changed"
+    assert summary["latest_run_started_at"] is not None
+    assert summary["p50_latency_ms_7d"] is not None
+    assert summary["p95_latency_ms_7d"] is not None
+    assert summary["pending_notifications"] == 1
+    assert summary["failed_notifications"] == 0
+    assert summary["unread_events"] == 1
+
+
 def test_watchlist_notification_config_web_routes(tmp_path, monkeypatch) -> None:
     client = make_client(tmp_path, monkeypatch)
 

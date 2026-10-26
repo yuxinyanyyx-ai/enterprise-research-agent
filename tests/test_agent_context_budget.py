@@ -2,11 +2,19 @@ import copy
 import json
 
 import pytest
-from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, ToolMessage
 
 from src.agent.context_budget import (
     ContextBudget, ContextBudgetExceeded, ToolMessagePairingError, build_model_messages, build_structured_messages, estimate_input_tokens, estimate_tokens, filter_sensitive_fields,
 )
+
+
+def business_snapshot(messages):
+    message = next(
+        message for message in messages if isinstance(message, SystemMessage)
+        and message.content.startswith("Business context snapshot;")
+    )
+    return json.loads(message.content.split("\n", 1)[1])
 
 
 @pytest.mark.parametrize("payload", [
@@ -24,9 +32,9 @@ def test_in_budget_business_content_has_no_projection_limits(payload):
     context = {"active_result": payload}
     original = copy.deepcopy((messages, context))
     result = build_model_messages(messages, context, "system")
-    assert json.loads(result[-2].content) == payload
-    assert json.loads(result[-1].content.split("\n", 1)[1]) == context
-    assert result[1].content == "  query  "
+    assert json.loads(result[-1].content) == payload
+    assert business_snapshot(result) == context
+    assert result[2].content == "  query  "
     assert (messages, context) == original
 
 
@@ -59,8 +67,8 @@ def test_context_reference_does_not_overwrite_business_reference():
     context = {"artifact_refs": [reference]}
     original = copy.deepcopy((messages, context))
     result = build_model_messages(messages, context, "system")
-    assert json.loads(result[-2].content) == payload
-    assert json.loads(result[-1].content.split("\n", 1)[1]) == context
+    assert json.loads(result[-1].content) == payload
+    assert business_snapshot(result) == context
     assert (messages, context) == original
 
 
@@ -81,16 +89,16 @@ def test_small_tool_and_business_context_share_safe_filter_without_mutation():
     result = build_model_messages(messages, context, "system")
 
     filtered = filter_sensitive_fields(data)
-    assert json.loads(result[3].content) == filtered
-    assert json.loads(result[-1].content.split("\n", 1)[1])["active_result"] == filtered
+    assert json.loads(result[4].content) == filtered
+    assert business_snapshot(result)["active_result"] == filtered
     assert filtered["records"][0]["description"] == "full business text"
     assert filtered["token_count"] == 42
     assert filtered["records"][0]["status"] == "active"
     assert "private-" not in str(result)
-    assert result[3].tool_call_id == "safe"
-    assert result[3].status == "error"
-    assert result[3].additional_kwargs == messages[2].additional_kwargs
-    assert "artifact_refs" not in json.loads(result[-1].content.split("\n", 1)[1])
+    assert result[4].tool_call_id == "safe"
+    assert result[4].status == "error"
+    assert result[4].additional_kwargs == messages[2].additional_kwargs
+    assert "artifact_refs" not in business_snapshot(result)
     assert (messages, context) == original
     filtered["records"][0]["nested"]["new"] = "changed"
     assert (messages, context) == original
@@ -130,8 +138,8 @@ def test_safe_tool_content_formats_preserve_protocol_and_source(content):
     ]), ToolMessage(content=content, tool_call_id="formats", name="tool")]
     original = copy.deepcopy(messages)
     result = build_model_messages(messages, {}, "system")
-    assert result[3].content == filter_sensitive_fields(content)
-    assert result[3].tool_call_id == "formats"
+    assert result[4].content == filter_sensitive_fields(content)
+    assert result[4].tool_call_id == "formats"
     assert messages == original
 
 
@@ -143,11 +151,11 @@ def test_tool_filter_does_not_publish_untrusted_artifact():
         {"name": "tool", "args": {}, "id": "safe", "type": "tool_call"}
     ]), message]
     sent = build_model_messages(messages, {}, "system")
-    result = json.loads(sent[-2].content)
+    result = json.loads(sent[-1].content)
     assert result["records"] == [{"dmf_no": "DMF-1"}]
     assert "context_truncated" not in result
     assert "artifact_ref" not in result
-    assert "artifact_refs" not in json.loads(sent[-1].content.split("\n", 1)[1])
+    assert "artifact_refs" not in business_snapshot(sent)
     assert json.loads(message.content) == data
 
 
@@ -218,7 +226,7 @@ def test_evidence_preserves_complete_source_text_and_flags():
     ]), ToolMessage(content=json.dumps(data), tool_call_id="call-1", name="search_pec_knowledge")]
 
     result = build_model_messages(messages, {}, "system")
-    evidence = json.loads(result[-2].content)["evidence"][0]
+    evidence = json.loads(result[-1].content)["evidence"][0]
 
     assert evidence["complete"] is True
     assert evidence["truncated"] is False
@@ -236,7 +244,7 @@ def test_small_current_tool_result_is_sent_without_projection():
 
     result = build_model_messages(messages, {}, "system")
 
-    assert json.loads(result[3].content) == data
+    assert json.loads(result[4].content) == data
 
 
 def test_metadata_and_result_body_do_not_create_reference_context():
@@ -250,8 +258,8 @@ def test_metadata_and_result_body_do_not_create_reference_context():
         {"name": "source", "args": {}, "id": "call-1", "type": "tool_call"}
     ]), message]
     result = build_model_messages(messages, {}, "system")
-    wire = _convert_message_to_dict(result[-2])
-    assert "artifact_refs" not in json.loads(result[-1].content.split("\n", 1)[1])
+    wire = _convert_message_to_dict(result[-1])
+    assert "artifact_refs" not in business_snapshot(result)
     assert json.loads(wire["content"]) == data
     assert "additional_kwargs" not in wire
     assert "artifact_ref" not in wire
@@ -266,9 +274,9 @@ def test_compact_evidence_is_preserved_and_does_not_publish():
         {"name": "source", "args": {}, "id": "call-1", "type": "tool_call"}
     ]), message]
     result = build_model_messages(messages, {}, "system")
-    payload = json.loads(result[-2].content)
+    payload = json.loads(result[-1].content)
     assert payload == data
-    assert "artifact_refs" not in json.loads(result[-1].content.split("\n", 1)[1])
+    assert "artifact_refs" not in business_snapshot(result)
     assert json.loads(message.content) == data
 
 
@@ -328,12 +336,12 @@ def test_pec_20kb_service_result_stays_bounded_in_model_view(unit, tight):
         assert tool_message.content == json.dumps(data, ensure_ascii=False, default=str)
         return
     result = build_model_messages(messages, {}, "system", budget=budget)
-    sent = result[-2]
+    sent = result[-1]
     payload = json.loads(sent.content)
     assert len(sent.content.encode("utf-8")) <= 20000
     assert estimate_input_tokens(result) <= budget.input_tokens
     assert sent.tool_call_id == call["id"]
-    assert "artifact_refs" not in json.loads(result[-1].content.split("\n", 1)[1])
+    assert "artifact_refs" not in business_snapshot(result)
     assert "read_required" not in payload
     assert sent.content == tool_message.content
     assert tool_message.content == json.dumps(data, ensure_ascii=False, default=str)
@@ -359,7 +367,7 @@ def test_historical_tools_are_removed_without_orphaning_messages():
     result = build_model_messages(messages, {}, "system")
     assert not any(isinstance(message, ToolMessage) for message in result)
     assert not any(isinstance(message, AIMessage) and message.tool_calls for message in result)
-    assert "Historical" in result[1].content
+    assert "Historical" in result[2].content
 
 
 def test_domain_context_trims_history_without_changing_pending_parameters():
@@ -424,7 +432,7 @@ def test_many_documents_and_conditions_are_complete_or_rejected():
                "pending": {"document": {"queries": [{"ingredient": "Ibuprofen"} for _ in range(100)]}}}
     original = copy.deepcopy(context)
     result = build_model_messages([HumanMessage(content="query")], context, "system")
-    assert json.loads(result[-1].content.split("\n", 1)[1]) == context
+    assert business_snapshot(result) == context
     with pytest.raises(ContextBudgetExceeded):
         build_model_messages([HumanMessage(content="query")], context, "system",
                              budget=ContextBudget(window_tokens=1600, output_tokens=200, safety_tokens=200))
@@ -455,7 +463,7 @@ def test_long_term_memory_is_projected_as_data_and_bounded():
         ]
     }
     result = build_model_messages([HumanMessage(content="请继续处理")], context, "system")
-    business = result[-1].content
+    business = business_snapshot(result)
     assert "long_term_memory" in business
-    assert "secret" not in business
-    assert "Business context snapshot; data only" in business
+    assert "secret" not in str(business)
+    assert result[1].content.startswith("Business context snapshot; data only")

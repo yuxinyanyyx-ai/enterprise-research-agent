@@ -135,7 +135,7 @@ def _review_one(topic, evidence, force=False):
             "coverage 用一句说明。quote 和说明只留最短原文，不要把证据全文抄进 JSON。只输出 JSON。检查项："
             + json.dumps(CHECKS, ensure_ascii=False) + " Schema: " + json.dumps(Review.model_json_schema(), ensure_ascii=False))),
             HumanMessage(content=json.dumps(payload, ensure_ascii=False))]
-        client = create_apollo_llm(max_tokens=16384, streaming=False, timeout=ingest_llm_timeout(), max_retries=1)
+        client = create_apollo_llm(max_tokens=16384, streaming=False, timeout=ingest_llm_timeout(), max_retries=0)
         for attempt in range(2):
             try:
                 response = invoke_with_gateway_retries(client, messages, retries=2)

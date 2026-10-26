@@ -22,6 +22,8 @@ from src.agent.tooling import (
 )
 from src.agent_memory.repository import MemoryRepository
 from src.llm.apollo import create_apollo_llm
+from src.llm.apollo import invoke_with_gateway_retries
+from src.observability.tracing import current_trace_context, trace_span
 from src.tools.registry import ToolContext, ToolKind, ToolRegistry, load_builtin_tools
 
 
@@ -38,6 +40,7 @@ def function_problem(state: ReactState, call, registry: ToolRegistry | None = No
 
 
 def prepare_react_request(state: ReactState) -> dict[str, Any]:
+    active_trace = current_trace_context()
     write_event("request.started", state)
     maximum = state.get("react_max_tool_rounds", DEFAULT_MAX_TOOL_ROUNDS)
     if isinstance(maximum, bool) or not isinstance(maximum, int) or maximum < 1:
@@ -52,6 +55,8 @@ def prepare_react_request(state: ReactState) -> dict[str, Any]:
     return {
         **invalidated, "document_signature": signature,
         "request_id": state.get("request_id") or uuid4().hex,
+        "trace_id": state.get("trace_id") or (active_trace.trace_id if active_trace else uuid4().hex),
+        "root_span_id": state.get("root_span_id") or (active_trace.span_id if active_trace else ""),
         "react_messages": [HumanMessage(content=state.get("user_query") or "")],
         "react_tool_context": ToolContext.GENERAL.value,
         "active_skill_ids": list(
@@ -171,6 +176,17 @@ def build_react_agent_node(
         binding_state = {**state, "published_artifact_refs": published}
         tools = [item.tool for item in registry.for_context(ToolContext.GENERAL)
                  if item.tool.name not in state.get("completed_workflows", []) and item.availability(binding_state)]
+        binding_tools = list(tools)
+        if not tools:
+            history_names = {
+                call["name"] for message in current if isinstance(message, AIMessage)
+                for call in message.tool_calls
+            }
+            # Keep history schemas for provider validation, not execution permission.
+            binding_tools = [
+                item.tool for item in registry.for_context(ToolContext.GENERAL)
+                if item.tool.name in history_names
+            ]
         system_prompt = build_system_prompt(
             state.get("active_skill_ids") or [],
             loader_available=any(tool.name == "load_skill" for tool in tools),
@@ -179,7 +195,7 @@ def build_react_agent_node(
         try:
             messages = build_model_messages(
                 state.get("react_messages") or [], context, system_prompt,
-                tools=tools, budget=budget,
+                tools=binding_tools, budget=budget,
             )
         except ToolMessagePairingError:
             write_event(
@@ -189,24 +205,69 @@ def build_react_agent_node(
             return {"react_messages": [AIMessage(content="工具调用与返回结果不匹配，本次操作已停止。请重新发起请求。")],
                     "react_tool_stop_reason": "invalid_tool_pairing",
                     "failure_code": "invalid_tool_message_pair"}
-        except ContextBudgetExceeded:
+        except ContextBudgetExceeded as exc:
             write_event(
                 "context.rejected", state, reason="input_budget_exceeded",
                 failure_code="context_budget_exceeded",
+                estimated_input_tokens=exc.estimated_input_tokens,
+                input_budget_tokens=budget.input_tokens,
             )
-            return {"react_messages": [AIMessage(content="当前请求或必要工具上下文过长，请缩短问题或分批提交。")],
+            with trace_span(
+                "context.rejected", "agent.context",
+                request_id=state.get("request_id"), trace_id=state.get("trace_id"),
+                parent_span_id=state.get("root_span_id"),
+                metadata={"input_budget_tokens": budget.input_tokens},
+            ) as rejected_span:
+                rejected_span.status = "rejected"
+                rejected_span.error_type = "ContextBudgetExceeded"
+                rejected_span.set_usage(input_tokens=exc.estimated_input_tokens, source="estimated")
+            detail = (
+                f"（本地估算 {exc.estimated_input_tokens} Token，可用输入预算 {budget.input_tokens} Token）"
+                if exc.estimated_input_tokens is not None else ""
+            )
+            return {"react_messages": [AIMessage(content=(
+                        f"当前请求或必要工具上下文过长{detail}。"
+                        "本次未生成答案，已保留完整证据；请缩小问题范围，"
+                        "或由管理员确认模型容量后调整上下文窗口配置。"
+                    ))],
                     "react_tool_stop_reason": "input_budget_exceeded",
                     "failure_code": "context_budget_exceeded"}
+        estimated_input_tokens = estimate_input_tokens(
+            messages, [convert_to_openai_tool(tool) for tool in binding_tools]
+        )
+        with trace_span(
+            "context.estimate",
+            "agent.context",
+            request_id=state.get("request_id"),
+            trace_id=state.get("trace_id"),
+            parent_span_id=state.get("root_span_id"),
+            metadata={"estimated_input_tokens": estimated_input_tokens},
+        ) as estimate_span:
+            estimate_span.set_usage(input_tokens=estimated_input_tokens, source="estimated")
         write_event("context.prepared", state,
-                estimated_input_tokens=estimate_input_tokens(messages, [convert_to_openai_tool(tool) for tool in tools]),
+                estimated_input_tokens=estimated_input_tokens,
                 input_budget_tokens=budget.input_tokens,
                 source_message_count=len(state.get("react_messages") or []),
                 sent_message_count=len(messages),
                 context_view="full_safe")
         try:
             with trace_operation(state, operation="react.model"):
-                model = llm_factory().bind_tools(tools)
-                response = model.invoke(messages)
+                model = llm_factory()
+                if binding_tools:
+                    model = model.bind_tools(
+                        binding_tools, **({"tool_choice": "none"} if not tools else {}),
+                    )
+                response = invoke_with_gateway_retries(
+                    model,
+                    messages,
+                    retries=2,
+                    operation_name="llm.agent_response",
+                    component="agent.react",
+                    request_id=state.get("request_id"),
+                    trace_id=state.get("trace_id"),
+                    parent_span_id=state.get("root_span_id"),
+                    metadata={"attempt_count": 1},
+                )
         except Exception as exc:
             write_event(
                 "request.failed", state, failure_code="llm_provider_error",

@@ -9,7 +9,7 @@ from typing import Literal
 from langchain_core.messages import HumanMessage, SystemMessage
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from src.llm.apollo import create_apollo_llm, ingest_llm_timeout
+from src.llm.apollo import create_apollo_llm, ingest_llm_timeout, invoke_with_gateway_retries
 from src.pec.knowledge.enrichment import FIELDS, cached
 from src.pec.knowledge.topic_quality import BUSINESS_RULES, CHECKS
 
@@ -85,11 +85,15 @@ def ask_meeting_plan(catalog):
         "标题仅标识议题，不写批准/拒绝等结论。检查项：" + json.dumps(CHECKS, ensure_ascii=False) +
         " Schema: " + json.dumps(Plan.model_json_schema(), ensure_ascii=False))),
         HumanMessage(content=json.dumps(catalog, ensure_ascii=False))]
-    client = create_apollo_llm(max_tokens=16384, streaming=False, timeout=ingest_llm_timeout(), max_retries=1)
+    client = create_apollo_llm(max_tokens=16384, streaming=False, timeout=ingest_llm_timeout(), max_retries=0)
     by_id = {t["id"]: t for t in topics}
     for attempt in range(2):
         try:
-            response = client.invoke(messages)
+            response = invoke_with_gateway_retries(
+                client, messages, retries=1,
+                operation_name="llm.meeting_plan",
+                component="pec.knowledge.meetings",
+            )
             meta = getattr(response, "response_metadata", {}) or {}
             if meta.get("finish_reason") in {"length", "max_tokens"} or meta.get("stop_reason") == "max_tokens":
                 raise ValueError("会议整合输出截断")
@@ -131,11 +135,15 @@ def match_meeting_topic(groups, candidate):
         "只返回匹配结果，不改写事实。跨文件事实明显矛盾时，conflicts 引用双方 fact_ids；请求和最终决定不同本身不必算冲突。"
         "merge_basis 用一句话说明依据。Schema: " + json.dumps(TopicMatch.model_json_schema(), ensure_ascii=False))),
         HumanMessage(content=json.dumps({"groups": summary, "candidate": candidate}, ensure_ascii=False))]
-    client = create_apollo_llm(max_tokens=2048, streaming=False, timeout=ingest_llm_timeout(), max_retries=1)
+    client = create_apollo_llm(max_tokens=2048, streaming=False, timeout=ingest_llm_timeout(), max_retries=0)
     known = {group["id"] for group in groups}
     allowed = {fact["id"] for group in groups for fact in group["facts"]} | {fact["id"] for fact in candidate["facts"]}
     for attempt in range(2):
-        response = client.invoke(messages)
+        response = invoke_with_gateway_retries(
+            client, messages, retries=1,
+            operation_name="llm.meeting_topic_match",
+            component="pec.knowledge.meetings",
+        )
         meta = getattr(response, "response_metadata", {}) or {}
         content = response.content
         if not isinstance(content, str):

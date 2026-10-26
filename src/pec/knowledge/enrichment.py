@@ -242,7 +242,7 @@ def _ask_topics(batch, report=None):
         + json.dumps(TopicResponse.model_json_schema(), ensure_ascii=False) + "\n" + BUSINESS_RULES)),
         HumanMessage(content=("输入范围：文档片段\n\n" if any(c.get("document_fragment") for c in batch)
                               else "输入范围：完整文档\n\n") + evidence_markdown(compact))]
-    client = create_apollo_llm(max_tokens=16384, streaming=False, timeout=ingest_llm_timeout(), max_retries=1)
+    client = create_apollo_llm(max_tokens=16384, streaming=False, timeout=ingest_llm_timeout(), max_retries=0)
     shape = None
     first_kept = None
 
@@ -353,7 +353,7 @@ def _merge_document_topics(candidates, evidence, digest, force=False):
             "同名不足以证明同一议题。每个候选 ID 必须且只能出现一次，不能遗漏、增加或重复。"
             "不确定关联的候选单独成组。只返回组标题和成员 ID，不改写事实。Schema: "
             + json.dumps(DocumentGroups.model_json_schema(), ensure_ascii=False))), HumanMessage(content=payload)]
-        client = create_apollo_llm(max_tokens=16384, streaming=False, timeout=ingest_llm_timeout(), max_retries=1)
+        client = create_apollo_llm(max_tokens=16384, streaming=False, timeout=ingest_llm_timeout(), max_retries=0)
         for attempt in range(2):
             response = invoke_with_gateway_retries(client, messages, retries=2)
             metadata = getattr(response, "response_metadata", {}) or {}
