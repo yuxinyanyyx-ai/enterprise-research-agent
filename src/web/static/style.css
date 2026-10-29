@@ -174,3 +174,10 @@ dialog { max-height:85dvh;overflow-y:auto; }dialog pre { white-space:pre-wrap;ov
     .sidebar-collapsed .session-row span:last-child { width:0;overflow:hidden;font-size:0; }
     .sidebar-collapsed .environment-badge { display:none; }
 }
+.mobile-materials { display:inline-flex;color:#626a76;background:#fff;border:1px solid #e1e4e9;border-radius:9px; }
+.mobile-materials:hover { color:#303742;background:#f1f2f4; }
+@media (min-width:1001px) {
+    .chat-layout { transition:grid-template-columns .22s ease; }
+    .chat-layout.context-collapsed { grid-template-columns:minmax(0,1fr) 0px; }
+    .chat-layout.context-collapsed .context-panel { display:none; }
+}

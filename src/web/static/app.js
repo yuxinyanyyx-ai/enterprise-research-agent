@@ -1,6 +1,6 @@
 const state = { sessionId: "", busy: false, awaiting: false, documents: [], projectSlideFiles: [], selectedPptId: "", artifacts: [], thinking: null, dragDepth: 0, view: "chat", conversations: new Map(), sources: [], topics: [], topicTotal: 0, topicOffset: 0, topicRequestId: 0, knowledgeTimer: null, knowledgeLoading: false, activityTimer: null, activityStartedAt: 0, sourceSearchTimer: null };
 const elements = {
-    appShell: document.querySelector(".app-shell"), sidebar: document.getElementById("sidebar"), menu: document.getElementById("menuButton"), conversation: document.getElementById("conversation"), welcome: document.getElementById("welcome"),
+    appShell: document.querySelector(".app-shell"), sidebar: document.getElementById("sidebar"), menu: document.getElementById("menuButton"), chatView: document.getElementById("chatView"), contextPanel: document.getElementById("contextPanel"), materialsToggle: document.getElementById("materialsToggle"), conversation: document.getElementById("conversation"), welcome: document.getElementById("welcome"),
     form: document.getElementById("messageForm"), input: document.getElementById("messageInput"), send: document.getElementById("sendButton"), attach: document.getElementById("attachButton"),
     file: document.getElementById("fileInput"), upload: document.getElementById("uploadButton"), clear: document.getElementById("clearDocumentButton"), documentList: document.getElementById("documentList"),
     documentCount: document.getElementById("documentCount"), sessionStatus: document.getElementById("sessionStatus"), statusDot: document.getElementById("statusDot"), activity: document.getElementById("activityText"), activityElapsed: document.getElementById("activityElapsed"),
@@ -33,7 +33,10 @@ document.getElementById("sidebarCloseButton").addEventListener("click", () => {
     elements.sidebar.classList.remove("open");
     syncSidebarToggle();
 });
-window.addEventListener("resize", syncSidebarToggle);
+window.addEventListener("resize", () => {
+    syncSidebarToggle();
+    syncContextToggle();
+});
 const welcomeTemplate = elements.welcome.cloneNode(true);
 elements.conversation.addEventListener("click", event => {
     const button = event.target.closest(".suggestion");
@@ -46,7 +49,11 @@ document.getElementById("recentConversationList").addEventListener("click", even
     if (button) switchConversation(button.dataset.session);
 });
 document.querySelectorAll("[data-view]").forEach(button => button.addEventListener("click", () => setView(button.dataset.view)));
-document.getElementById("materialsToggle").addEventListener("click", () => document.getElementById("contextPanel").classList.toggle("open"));
+elements.materialsToggle.addEventListener("click", () => {
+    if (window.matchMedia("(max-width: 1000px)").matches) elements.contextPanel.classList.toggle("open");
+    else elements.chatView.classList.toggle("context-collapsed");
+    syncContextToggle();
+});
 document.getElementById("pptSourceSelect").addEventListener("change", event => { state.selectedPptId = event.target.value; renderDocumentState(); });
 document.getElementById("knowledgeRefresh").addEventListener("click", refreshKnowledge);
 document.getElementById("sourceSearch").addEventListener("input", () => {
@@ -107,6 +114,20 @@ function syncSidebarToggle() {
     elements.menu.title = label;
 }
 
+function syncContextToggle() {
+    const mobile = window.matchMedia("(max-width: 1000px)").matches;
+    if (!mobile) elements.contextPanel.classList.remove("open");
+    const expanded = mobile
+        ? elements.contextPanel.classList.contains("open")
+        : !elements.chatView.classList.contains("context-collapsed");
+    const label = mobile
+        ? expanded ? "关闭当前资料与结果" : "打开当前资料与结果"
+        : expanded ? "收起资料面板" : "展开资料面板";
+    elements.materialsToggle.setAttribute("aria-expanded", String(expanded));
+    elements.materialsToggle.setAttribute("aria-label", label);
+    elements.materialsToggle.title = label;
+}
+
 function handleDragEnter(event) {
     if (!hasDraggedFiles(event)) return;
     event.preventDefault();
@@ -152,6 +173,7 @@ function hideDropOverlay() {
 
 async function initialize() {
     syncSidebarToggle();
+    syncContextToggle();
     if (state.busy) return;
     setBusy(true, "正在建立会话");
     refreshIcons();
@@ -588,9 +610,10 @@ function setView(view) {
     ["chat", "knowledge", "watchlists"].forEach(name => document.getElementById(`${name}View`).classList.toggle("hidden", name !== view));
     document.querySelectorAll("[data-view]").forEach(button => button.classList.toggle("active", button.dataset.view === view));
     document.getElementById("pageTitle").textContent = { chat: "对话助手", knowledge: "会议知识库", watchlists: "DMF 关注清单" }[view];
-    document.getElementById("materialsToggle").classList.toggle("hidden", view !== "chat");
+    elements.materialsToggle.classList.toggle("hidden", view !== "chat");
     elements.sidebar.classList.remove("open");
     syncSidebarToggle();
+    syncContextToggle();
     clearTimeout(state.knowledgeTimer);
     if (view === "knowledge") refreshKnowledge();
     if (view === "watchlists") refreshWatchlists();
