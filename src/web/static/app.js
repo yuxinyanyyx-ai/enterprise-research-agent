@@ -1,9 +1,9 @@
-const state = { sessionId: "", busy: false, awaiting: false, documents: [], projectSlideFiles: [], selectedPptId: "", artifacts: [], thinking: null, dragDepth: 0, view: "chat", conversations: new Map(), sources: [], topics: [], topicTotal: 0, topicOffset: 0, topicRequestId: 0, knowledgeTimer: null, knowledgeLoading: false };
+const state = { sessionId: "", busy: false, awaiting: false, documents: [], projectSlideFiles: [], selectedPptId: "", artifacts: [], thinking: null, dragDepth: 0, view: "chat", conversations: new Map(), sources: [], topics: [], topicTotal: 0, topicOffset: 0, topicRequestId: 0, knowledgeTimer: null, knowledgeLoading: false, activityTimer: null, activityStartedAt: 0, sourceSearchTimer: null };
 const elements = {
-    sidebar: document.getElementById("sidebar"), menu: document.getElementById("menuButton"), conversation: document.getElementById("conversation"), welcome: document.getElementById("welcome"),
+    appShell: document.querySelector(".app-shell"), sidebar: document.getElementById("sidebar"), menu: document.getElementById("menuButton"), conversation: document.getElementById("conversation"), welcome: document.getElementById("welcome"),
     form: document.getElementById("messageForm"), input: document.getElementById("messageInput"), send: document.getElementById("sendButton"), attach: document.getElementById("attachButton"),
     file: document.getElementById("fileInput"), upload: document.getElementById("uploadButton"), clear: document.getElementById("clearDocumentButton"), documentList: document.getElementById("documentList"),
-    documentCount: document.getElementById("documentCount"), sessionStatus: document.getElementById("sessionStatus"), statusDot: document.getElementById("statusDot"), activity: document.getElementById("activityText"),
+    documentCount: document.getElementById("documentCount"), sessionStatus: document.getElementById("sessionStatus"), statusDot: document.getElementById("statusDot"), activity: document.getElementById("activityText"), activityElapsed: document.getElementById("activityElapsed"),
     progress: document.getElementById("uploadProgress"), progressText: document.getElementById("uploadProgressText"), chars: document.getElementById("charCount"), toasts: document.getElementById("toastRegion"),
     dropOverlay: document.getElementById("dropOverlay")
 };
@@ -24,8 +24,16 @@ elements.documentList.addEventListener("click", event => {
     const button = event.target.closest("[data-document-id]");
     if (button) deleteDocument(button.dataset.documentId);
 });
-elements.menu.addEventListener("click", () => elements.sidebar.classList.toggle("open"));
-document.getElementById("sidebarCloseButton").addEventListener("click", () => elements.sidebar.classList.remove("open"));
+elements.menu.addEventListener("click", () => {
+    if (window.matchMedia("(max-width: 850px)").matches) elements.sidebar.classList.toggle("open");
+    else elements.appShell.classList.toggle("sidebar-collapsed");
+    syncSidebarToggle();
+});
+document.getElementById("sidebarCloseButton").addEventListener("click", () => {
+    elements.sidebar.classList.remove("open");
+    syncSidebarToggle();
+});
+window.addEventListener("resize", syncSidebarToggle);
 const welcomeTemplate = elements.welcome.cloneNode(true);
 elements.conversation.addEventListener("click", event => {
     const button = event.target.closest(".suggestion");
@@ -41,11 +49,32 @@ document.querySelectorAll("[data-view]").forEach(button => button.addEventListen
 document.getElementById("materialsToggle").addEventListener("click", () => document.getElementById("contextPanel").classList.toggle("open"));
 document.getElementById("pptSourceSelect").addEventListener("change", event => { state.selectedPptId = event.target.value; renderDocumentState(); });
 document.getElementById("knowledgeRefresh").addEventListener("click", refreshKnowledge);
-document.getElementById("sourceSearch").addEventListener("input", renderSources);
-document.getElementById("sourceScope").addEventListener("change", () => { renderSources(); refreshTopics(true); });
+document.getElementById("sourceSearch").addEventListener("input", () => {
+    clearTimeout(state.sourceSearchTimer);
+    state.sourceSearchTimer = setTimeout(renderSources, 150);
+});
+document.getElementById("sourceScope").addEventListener("change", () => {
+    clearTimeout(state.sourceSearchTimer);
+    renderSources();
+    refreshTopics(true);
+});
 document.getElementById("topicLevel").addEventListener("change", () => refreshTopics(true));
 document.getElementById("topicsLoadMore").addEventListener("click", () => refreshTopics(false));
-document.querySelectorAll("[data-knowledge-tab]").forEach(button => button.addEventListener("click", () => setKnowledgeTab(button.dataset.knowledgeTab)));
+document.querySelectorAll("[data-knowledge-tab]").forEach(button => {
+    button.addEventListener("click", () => setKnowledgeTab(button.dataset.knowledgeTab));
+    button.addEventListener("keydown", event => {
+        const tabs = [...document.querySelectorAll("[data-knowledge-tab]")];
+        const currentIndex = tabs.indexOf(button);
+        const nextIndex = event.key === "ArrowRight" ? (currentIndex + 1) % tabs.length
+            : event.key === "ArrowLeft" ? (currentIndex - 1 + tabs.length) % tabs.length
+                : event.key === "Home" ? 0
+                    : event.key === "End" ? tabs.length - 1 : -1;
+        if (nextIndex < 0) return;
+        event.preventDefault();
+        tabs[nextIndex].focus();
+        tabs[nextIndex].click();
+    });
+});
 document.getElementById("knowledgeUploadButton").addEventListener("click", () => document.getElementById("knowledgeUploadForm").classList.remove("hidden"));
 document.getElementById("knowledgeUploadCancel").addEventListener("click", () => document.getElementById("knowledgeUploadForm").classList.add("hidden"));
 document.getElementById("knowledgeUploadForm").addEventListener("submit", uploadKnowledge);
@@ -62,6 +91,20 @@ document.getElementById("watchlistForm").addEventListener("submit", createWatchl
 
 function hasDraggedFiles(event) {
     return Array.from(event.dataTransfer?.types || []).includes("Files");
+}
+
+function syncSidebarToggle() {
+    const mobile = window.matchMedia("(max-width: 850px)").matches;
+    if (!mobile) elements.sidebar.classList.remove("open");
+    const expanded = mobile
+        ? elements.sidebar.classList.contains("open")
+        : !elements.appShell.classList.contains("sidebar-collapsed");
+    const label = mobile
+        ? expanded ? "关闭导航" : "打开导航"
+        : expanded ? "折叠导航" : "展开导航";
+    elements.menu.setAttribute("aria-expanded", String(expanded));
+    elements.menu.setAttribute("aria-label", label);
+    elements.menu.title = label;
 }
 
 function handleDragEnter(event) {
@@ -108,6 +151,7 @@ function hideDropOverlay() {
 }
 
 async function initialize() {
+    syncSidebarToggle();
     if (state.busy) return;
     setBusy(true, "正在建立会话");
     refreshIcons();
@@ -455,9 +499,25 @@ function splitTableRow(line) { return line.trim().replace(/^\||\|$/g, "").split(
 function createActions() { const actions = document.createElement("div"); actions.className = "interrupt-actions"; return actions; }
 function actionButton(label, kind, handler) { const button = document.createElement("button"); button.type = "button"; button.className = `action-button ${kind}`; button.textContent = label; button.addEventListener("click", handler); return button; }
 function disablePanel(panel) { panel.querySelectorAll("button,input").forEach(control => { control.disabled = true; }); panel.style.opacity = ".65"; }
-function showThinking() { removeThinking(); const row = createAgentRow(); row.classList.add("thinking-row"); row.querySelector(".agent-content").innerHTML = '<div class="thinking"><span></span><span></span><span></span></div>'; row.querySelector(".message-time").remove(); elements.conversation.appendChild(row); state.thinking = row; scrollConversation(); }
+function showThinking() { removeThinking(); const row = createAgentRow(); row.classList.add("thinking-row"); row.setAttribute("aria-hidden", "true"); row.querySelector(".agent-content").innerHTML = '<div class="thinking"><span></span><span></span><span></span></div>'; row.querySelector(".message-time").remove(); elements.conversation.appendChild(row); state.thinking = row; scrollConversation(); }
 function removeThinking() { if (state.thinking) state.thinking.remove(); state.thinking = null; }
-function setBusy(busy, activity = "就绪") { state.busy = busy; elements.activity.textContent = state.awaiting && !busy ? "等待确认" : activity; updateControls(); }
+function setBusy(busy, activity = "就绪") {
+    state.busy = busy;
+    clearInterval(state.activityTimer);
+    state.activityTimer = null;
+    elements.activity.textContent = state.awaiting && !busy ? "等待确认" : activity;
+    elements.activityElapsed.textContent = "";
+    if (busy) {
+        state.activityStartedAt = Date.now();
+        state.activityTimer = setInterval(() => {
+            const elapsed = Math.floor((Date.now() - state.activityStartedAt) / 1000);
+            const minutes = Math.floor(elapsed / 60);
+            const seconds = elapsed % 60;
+            elements.activityElapsed.textContent = minutes ? `· ${minutes}分${seconds}秒` : `· ${seconds}秒`;
+        }, 1000);
+    }
+    updateControls();
+}
 function updateControls() { const disabled = state.busy || state.awaiting || !state.sessionId; elements.send.disabled = disabled; elements.attach.disabled = disabled; elements.upload.disabled = disabled; elements.clear.disabled = disabled; elements.input.disabled = state.awaiting; document.getElementById("newConversationButton").disabled = state.busy; document.getElementById("pptSourceSelect").disabled = disabled; }
 function resizeComposer() { elements.input.style.height = "auto"; elements.input.style.height = `${Math.min(elements.input.scrollHeight, 150)}px`; elements.chars.textContent = `${elements.input.value.length} / 10000`; }
 function hideWelcome() { elements.conversation.querySelector(".welcome")?.remove(); }
@@ -530,6 +590,7 @@ function setView(view) {
     document.getElementById("pageTitle").textContent = { chat: "对话助手", knowledge: "会议知识库", watchlists: "DMF 关注清单" }[view];
     document.getElementById("materialsToggle").classList.toggle("hidden", view !== "chat");
     elements.sidebar.classList.remove("open");
+    syncSidebarToggle();
     clearTimeout(state.knowledgeTimer);
     if (view === "knowledge") refreshKnowledge();
     if (view === "watchlists") refreshWatchlists();
@@ -537,7 +598,12 @@ function setView(view) {
 function showError(id, message = "") { const node = document.getElementById(id); node.textContent = message; node.classList.toggle("hidden", !message); }
 function setKnowledgeTab(tab) {
     ["sources", "jobs", "overview"].forEach(name => document.getElementById(`${name}Tab`).classList.toggle("hidden", name !== tab));
-    document.querySelectorAll("[data-knowledge-tab]").forEach(button => { const active = button.dataset.knowledgeTab === tab; button.classList.toggle("active", active); button.setAttribute("aria-selected", String(active)); });
+    document.querySelectorAll("[data-knowledge-tab]").forEach(button => {
+        const active = button.dataset.knowledgeTab === tab;
+        button.classList.toggle("active", active);
+        button.setAttribute("aria-selected", String(active));
+        button.tabIndex = active ? 0 : -1;
+    });
 }
 async function refreshKnowledge() {
     if (state.knowledgeLoading) return;
@@ -683,12 +749,25 @@ function renderTopics() {
 }
 async function uploadKnowledge(event) {
     event.preventDefault();
-    const files = [...document.getElementById("knowledgeFileInput").files]; if (!files.length) { toast("请选择知识库资料", true); return; }
-    const button = event.target.querySelector('[type="submit"]'); button.disabled = true;
+    const form = event.target;
+    const filesInput = document.getElementById("knowledgeFileInput");
+    const files = [...filesInput.files]; if (!files.length) { toast("请选择知识库资料", true); return; }
+    const button = form.querySelector('[type="submit"]');
+    const status = document.getElementById("knowledgeUploadStatus");
+    button.disabled = true;
+    filesInput.disabled = true;
+    document.getElementById("knowledgeUploadCancel").disabled = true;
+    form.setAttribute("aria-busy", "true");
+    status.textContent = `正在上传 ${files.length} 份资料…`;
     const data = new FormData(); data.append("folder", document.getElementById("knowledgeFolder").value.trim()); files.forEach(file => data.append("files", file));
-    try { const result = await api("/api/knowledge/sources", { method: "POST", body: data }); toast(`已上传 ${result.uploaded.length} 份资料，等待入库`); event.target.reset(); event.target.classList.add("hidden"); await refreshKnowledge(); }
-    catch (error) { showError("knowledgeError", error.message); }
-    finally { button.disabled = false; }
+    try { const result = await api("/api/knowledge/sources", { method: "POST", body: data }); toast(`已上传 ${result.uploaded.length} 份资料，等待入库`); form.reset(); status.textContent = ""; form.classList.add("hidden"); await refreshKnowledge(); }
+    catch (error) { showError("knowledgeError", error.message); status.textContent = "上传失败，可重试"; }
+    finally {
+        button.disabled = false;
+        filesInput.disabled = false;
+        document.getElementById("knowledgeUploadCancel").disabled = false;
+        form.setAttribute("aria-busy", "false");
+    }
 }
 async function startKnowledgeJob(kind, scope = document.getElementById("sourceScope").value) {
     document.getElementById("parseCheckButton").disabled = true; document.getElementById("startIndexButton").disabled = true;
