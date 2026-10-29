@@ -4,7 +4,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from src.pec.knowledge import chunk_index, chunk_ingest, paths
+from src.pec.knowledge import chunk_index, chunk_ingest, paths, storage
 from src.pec.knowledge.chunk_ingest import ChunkDraft
 
 
@@ -17,12 +17,31 @@ def _configure_index(tmp_path: Path, monkeypatch) -> tuple[Path, Path]:
     monkeypatch.setenv("PREVIEW_ON_INDEX", "0")
     monkeypatch.setattr(paths, "SOURCES_DIR", sources)
     monkeypatch.setattr(paths, "INDEX_DIR", index)
+    monkeypatch.setattr(storage, "INDEX_DIR", index)
     monkeypatch.setattr(chunk_ingest, "SOURCES_DIR", sources, raising=False)
     monkeypatch.setattr(chunk_index, "SOURCES_DIR", sources)
     monkeypatch.setattr(chunk_index, "MANIFEST_FILE", index / "manifest.json")
     monkeypatch.setattr(chunk_index, "CHUNKS_FILE", index / "chunks.jsonl")
     monkeypatch.setattr(chunk_index, "EMBEDDINGS_FILE", index / "embeddings.npy")
     return sources, index
+
+
+def test_publish_assigns_matching_generation_without_mutating_input(
+    tmp_path, monkeypatch
+) -> None:
+    index = tmp_path / "index"
+    index.mkdir()
+    monkeypatch.setattr(storage, "INDEX_DIR", index)
+    manifest = {"generation": "previous-generation"}
+
+    storage.publish(manifest, [], np.empty((0, 0), dtype=np.float32))
+
+    active = storage.active_dir()
+    published_manifest = json.loads(
+        (active / "manifest.json").read_text(encoding="utf-8")
+    )
+    assert active.name == published_manifest["generation"]
+    assert manifest["generation"] == "previous-generation"
 
 
 def _draft(path: Path) -> ChunkDraft:

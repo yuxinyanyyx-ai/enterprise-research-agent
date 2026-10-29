@@ -37,15 +37,24 @@ def render_markdown(payload: dict[str, Any]) -> str:
         "",
         "## Strategy results",
         "",
-        "| Strategy | Cases | Recall@5 | Recall@10 | MRR | Hit rate | P50 ms | P95 ms | LLM calls | Embeddings | Reranks |",
-        "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
+        "| Strategy | Cases | Recall cases | Answer eval cases | Recall@5 | Recall@10 | MRR | Hit rate | P50 ms | P95 ms | LLM calls | Embeddings | Reranks |",
+        "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
     ]
     strategies = payload.get("strategies", {})
     for name, summary in strategies.items():
         retrieval = summary.get("retrieval", {})
         calls = summary.get("calls", {})
+        recall_cases = summary.get(
+            "retrieval_metric_case_count",
+            summary.get("successful_case_count", 0),
+        )
+        answer_cases = summary.get(
+            "answer_evaluated_case_count",
+            sum(bool(row.get("answer_evaluation")) for row in summary.get("cases", [])),
+        )
         lines.append(
             f"| {name} | {summary.get('case_count', 0)} | "
+            f"{recall_cases} | {answer_cases} | "
             f"{_display(retrieval.get('recall_at_5'))} | "
             f"{_display(retrieval.get('recall_at_10'))} | "
             f"{_display(retrieval.get('mrr'))} | "

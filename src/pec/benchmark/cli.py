@@ -52,6 +52,14 @@ def _preflight(args: argparse.Namespace) -> int:
         "rerank": {"status": "not_run"},
         "llm": {"status": "not_run"},
     }
+    if statuses["index"]["generation_metadata_mismatch"]:
+        for name in ("oauth", "embedding", "rerank", "llm"):
+            statuses[name] = {
+                "status": "skipped",
+                "reason": "index_generation_mismatch",
+            }
+        print(json.dumps(statuses, ensure_ascii=False, indent=2))
+        return 1
     token = apollo.get_access_token()
     statuses["oauth"] = {"status": "ok"}
     failures = []

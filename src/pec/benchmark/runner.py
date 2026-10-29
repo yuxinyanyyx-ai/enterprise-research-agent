@@ -13,10 +13,15 @@ import numpy as np
 
 from src.llm import apollo
 from src.pec.benchmark.dataset import approved_cases, dataset_version
-from src.pec.benchmark.metrics import retrieval_case_metrics, summarize_strategy
+from src.pec.benchmark.metrics import (
+    retrieval_case_metrics,
+    retrieval_evidence_metrics,
+    summarize_strategy,
+)
 from src.pec.benchmark.retrieval import (
     STRATEGIES,
     BenchmarkRetriever,
+    BenchmarkResponseError,
     CallBudget,
 )
 from src.pec.benchmark.reports import write_report
@@ -44,6 +49,8 @@ def _git_commit() -> str:
 
 
 def _safe_error(exc: Exception) -> str:
+    if isinstance(exc, BenchmarkResponseError):
+        return f"{type(exc).__name__} ({exc.code})"
     response = getattr(exc, "response", None)
     if response is not None:
         return f"{type(exc).__name__} (HTTP {response.status_code})"
@@ -80,9 +87,10 @@ def _case_result(
 ) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     start = dict(retriever.budget.snapshot())
     stage = "retrieval"
+    row: dict[str, Any] | None = None
     try:
         retrieved = retriever.retrieve(case["question"], strategy)
-        row: dict[str, Any] = {
+        row = {
             "case_id": case["case_id"],
             "question": case["question"],
             "question_type": case["question_type"],
@@ -92,9 +100,12 @@ def _case_result(
             "reference_answer": case["reference_answer"],
             "reviewer": case.get("reviewer"),
             "status": "ok",
+            "retrieval_status": "ok",
+            "answer_status": "pending" if answer_mode else "not_requested",
             "hits": retrieved["hits"],
             "hit_sources": list(dict.fromkeys(hit["source_ref"] for hit in retrieved["hits"])),
             "ranked_evidence_ids": retrieved["ranked_evidence_ids"],
+            "ranked_evidence_groups": retrieved["ranked_evidence_groups"],
             "topic_ablation_raw_only": retrieved["topic_ablation_raw_only"],
             "topic_ablation_raw_only_metrics": retrieval_case_metrics(
                 [
@@ -103,8 +114,8 @@ def _case_result(
                 ],
                 case["expected_evidence_ids"],
             ),
-            "retrieval_metrics": retrieval_case_metrics(
-                retrieved["ranked_evidence_ids"], case["expected_evidence_ids"]
+            "retrieval_metrics": retrieval_evidence_metrics(
+                retrieved["ranked_evidence_groups"], case["expected_evidence_ids"]
             ),
             "latency_ms": retrieved["latency_ms"],
             "answer_evaluation": None,
@@ -116,10 +127,11 @@ def _case_result(
         if answer_mode:
             stage = "answer_generation"
             generated = retriever.answer(case, retrieved["hits"])
+            row["answer"] = generated
             stage = "answer_judging"
             judged = retriever.judge(case, generated, retrieved["hits"])
-            row["answer"] = generated
             row["answer_evaluation"] = judged
+            row["answer_status"] = "evaluated"
         now = retriever.budget.snapshot()
         row["calls"] = {
             key: int(now[key] or 0) - int(start[key] or 0)
@@ -128,36 +140,53 @@ def _case_result(
         return row, []
     except Exception as exc:
         now = retriever.budget.snapshot()
-        row = {
-            "case_id": case["case_id"],
-            "question": case["question"],
-            "question_type": case["question_type"],
-            "answerability": case["answerability"],
-            "expected_source_files": case["expected_source_files"],
-            "expected_evidence_ids": case["expected_evidence_ids"],
-            "reference_answer": case["reference_answer"],
-            "reviewer": case.get("reviewer"),
-            "status": "error",
-            "error_stage": stage,
-            "error": _safe_error(exc),
-            "hits": [],
-            "hit_sources": [],
-            "ranked_evidence_ids": [],
-            "topic_ablation_raw_only": [],
-            "topic_ablation_raw_only_metrics": retrieval_case_metrics(
-                [], case["expected_evidence_ids"]
-            ),
-            "retrieval_metrics": retrieval_case_metrics([], case["expected_evidence_ids"]),
-            "latency_ms": None,
-            "answer_evaluation": None,
-            "answer": None,
-            "warnings": [],
-            "calls": {
-                key: int(now[key] or 0) - int(start[key] or 0)
-                for key in ("llm", "embedding", "rerank", "input_tokens", "output_tokens")
-            },
-            "human_evaluation": None,
-        }
+        if row is None:
+            row = {
+                "case_id": case["case_id"],
+                "question": case["question"],
+                "question_type": case["question_type"],
+                "answerability": case["answerability"],
+                "expected_source_files": case["expected_source_files"],
+                "expected_evidence_ids": case["expected_evidence_ids"],
+                "reference_answer": case["reference_answer"],
+                "reviewer": case.get("reviewer"),
+                "hits": [],
+                "hit_sources": [],
+                "ranked_evidence_ids": [],
+                "topic_ablation_raw_only": [],
+                "topic_ablation_raw_only_metrics": {
+                    "recall_at_5": None,
+                    "recall_at_10": None,
+                    "mrr": None,
+                    "hit_rate": None,
+                },
+                "retrieval_metrics": {
+                    "recall_at_5": None,
+                    "recall_at_10": None,
+                    "mrr": None,
+                    "hit_rate": None,
+                },
+                "latency_ms": None,
+                "answer_evaluation": None,
+                "answer": None,
+                "warnings": [],
+                "human_evaluation": None,
+                "retrieval_status": "error",
+                "answer_status": "not_started",
+            }
+        else:
+            row["answer_status"] = "error"
+        row.update(
+            {
+                "status": "error",
+                "error_stage": stage,
+                "error": _safe_error(exc),
+                "calls": {
+                    key: int(now[key] or 0) - int(start[key] or 0)
+                    for key in ("llm", "embedding", "rerank", "input_tokens", "output_tokens")
+                },
+            }
+        )
         return row, [
             {
                 "case_id": case["case_id"],
@@ -179,6 +208,10 @@ def run_benchmark(
     top_n: int = 10,
 ) -> Path:
     directory, manifest, chunks, matrix = _load_index()
+    if manifest.get("generation") != directory.name:
+        raise RuntimeError(
+            "active PEC index directory and manifest generations do not match"
+        )
     if not selected_cases:
         raise ValueError("no approved cases selected for evaluation")
     evidence_by_id = _index_evidence(chunks, manifest)

@@ -13,13 +13,22 @@ from src.pec.benchmark.candidates import (
     _validate_candidates,
 )
 from src.pec.benchmark.dataset import approved_cases, read_jsonl, update_review, write_jsonl
-from src.pec.benchmark.metrics import retrieval_case_metrics, summarize_strategy
+from src.pec.benchmark.metrics import (
+    retrieval_case_metrics,
+    retrieval_evidence_metrics,
+    summarize_strategy,
+)
 from src.pec.benchmark.reports import (
     compare_reports,
     record_human_audit,
     render_markdown,
 )
-from src.pec.benchmark.retrieval import BenchmarkRetriever, CallBudget
+from src.pec.benchmark.retrieval import (
+    BenchmarkResponseError,
+    BenchmarkRetriever,
+    CallBudget,
+)
+from src.pec.benchmark.runner import _case_result, run_benchmark
 
 pytestmark = pytest.mark.rag_benchmark
 
@@ -77,6 +86,24 @@ def _retriever(*, llm_content='{"queries": []}'):
         def invoke(self, messages):
             calls["llm"] += 1
             return Response()
+
+        def with_structured_output(self, schema, *, include_raw=False):
+            llm = self
+
+            class StructuredLLM:
+                def invoke(self, messages):
+                    raw = llm.invoke(messages)
+                    try:
+                        parsed = schema.model_validate_json(raw.content)
+                    except Exception as exc:
+                        return {
+                            "raw": raw,
+                            "parsed": None,
+                            "parsing_error": exc,
+                        }
+                    return {"raw": raw, "parsed": parsed, "parsing_error": None}
+
+            return StructuredLLM()
 
     return (
         BenchmarkRetriever(
@@ -248,6 +275,215 @@ def test_retrieval_metrics_measure_ranked_evidence_and_no_answer_as_not_applicab
         "hit_rate": 1.0,
     }
     assert retrieval_case_metrics([], [])["recall_at_5"] is None
+
+
+def test_retrieval_evidence_metrics_expand_all_evidence_at_each_hit_rank():
+    scores = retrieval_evidence_metrics(
+        [["chunk-1", "chunk-2"], ["unrelated"]],
+        ["chunk-1", "chunk-2"],
+    )
+
+    assert scores == {
+        "recall_at_5": 1.0,
+        "recall_at_10": 1.0,
+        "mrr": 1.0,
+        "hit_rate": 1.0,
+    }
+    assert retrieval_evidence_metrics([], [])["recall_at_5"] is None
+
+
+def test_topic_retrieval_exposes_its_linked_raw_evidence():
+    chunks = [
+        {
+            "chunk_id": "topic-1",
+            "source_ref": "meeting.docx",
+            "loc": "Topic 1",
+            "text": "Project Alpha topic",
+            "method": "topic",
+            "evidence_ids": ["chunk-1", "chunk-2"],
+        },
+        {
+            "chunk_id": "chunk-1",
+            "source_ref": "meeting.docx",
+            "loc": "Page 1",
+            "text": "Project Alpha first evidence",
+            "method": "text",
+        },
+        {
+            "chunk_id": "chunk-2",
+            "source_ref": "meeting.docx",
+            "loc": "Page 2",
+            "text": "Project Alpha second evidence",
+            "method": "text",
+        },
+    ]
+    retriever = BenchmarkRetriever(
+        chunks=chunks,
+        embeddings=np.asarray([[1.0, 0.0], [0.8, 0.2], [0.0, 1.0]], dtype=np.float32),
+        manifest={"files": {}},
+        embedding_model="test-embedding",
+        rerank_model="test-rerank",
+        token="test-token",
+        budget=CallBudget(maximum=2),
+        candidate_k=3,
+        top_n=1,
+        llm_factory=lambda *args, **kwargs: None,
+        embed=lambda texts, access_token=None: [[1.0, 0.0] for _ in texts],
+        rerank=lambda *args, **kwargs: pytest.fail("Vector strategy must not rerank"),
+    )
+
+    result = retriever.retrieve("Project Alpha", "vector")
+
+    assert result["ranked_evidence_ids"] == ["topic-1"]
+    assert result["ranked_evidence_groups"] == [["chunk-1", "chunk-2"]]
+
+
+def test_answer_uses_structured_output_and_accounts_for_raw_usage():
+    retriever, calls = _retriever(
+        llm_content=json.dumps(
+            {
+                "answer": "Project Alpha was discussed.",
+                "cited_evidence_ids": ["chunk-1"],
+                "abstained": False,
+                "conflict_identified": False,
+            }
+        )
+    )
+    result = retriever.answer(
+        _case(),
+        [
+            {
+                "chunk_id": "chunk-1",
+                "source_ref": "meeting.docx",
+                "loc": "Page 1",
+                "text": "Project Alpha evaluation was planned for 2026.",
+            }
+        ],
+    )
+
+    assert result["answer"] == "Project Alpha was discussed."
+    assert result["cited_evidence_ids"] == ["chunk-1"]
+    assert retriever.budget.input_tokens == 10
+    assert calls["llm"] == 1
+
+
+def test_answer_parse_failure_has_a_safe_diagnostic_code():
+    retriever, _ = _retriever(llm_content="not JSON")
+
+    with pytest.raises(BenchmarkResponseError, match="structured_answer_parse_failed"):
+        retriever.answer(_case(), [])
+
+
+def test_case_result_preserves_retrieval_when_answer_generation_fails(monkeypatch):
+    retriever, _ = _retriever()
+
+    def fail_answer(case, hits):
+        raise BenchmarkResponseError("structured_answer_parse_failed")
+
+    monkeypatch.setattr(retriever, "answer", fail_answer)
+    row, failures = _case_result(
+        case=_case(),
+        strategy="vector",
+        retriever=retriever,
+        answer_mode=True,
+    )
+
+    assert row["status"] == "error"
+    assert row["retrieval_status"] == "ok"
+    assert row["answer_status"] == "error"
+    assert row["ranked_evidence_ids"][0] == "chunk-1"
+    assert row["retrieval_metrics"]["recall_at_5"] == 1.0
+    assert failures[0]["error"] == (
+        "BenchmarkResponseError (structured_answer_parse_failed)"
+    )
+
+
+def test_strategy_summary_includes_retrieval_from_answer_failures():
+    summary = summarize_strategy(
+        [
+            {
+                "status": "ok",
+                "retrieval_status": "ok",
+                "latency_ms": 10,
+                "retrieval_metrics": {"recall_at_5": 0.5},
+                "answer_evaluation": {"answer_correctness": 1.0},
+            },
+            {
+                "status": "error",
+                "retrieval_status": "ok",
+                "answer_status": "error",
+                "latency_ms": 20,
+                "retrieval_metrics": {"recall_at_5": 1.0},
+            },
+            {
+                "status": "error",
+                "retrieval_status": "error",
+                "retrieval_metrics": {"recall_at_5": None},
+            },
+        ]
+    )
+
+    assert summary["retrieval"]["recall_at_5"] == 0.75
+    assert summary["retrieval_metric_case_count"] == 2
+    assert summary["retrieval_successful_case_count"] == 2
+    assert summary["answer_evaluated_case_count"] == 1
+    assert summary["successful_case_count"] == 1
+
+
+def test_benchmark_rejects_mismatched_index_generation(monkeypatch, tmp_path):
+    import src.pec.benchmark.runner as runner
+
+    monkeypatch.setattr(
+        runner,
+        "_load_index",
+        lambda: (
+            tmp_path / "active-generation",
+            {"generation": "manifest-generation"},
+            [],
+            np.empty((0, 0), dtype=np.float32),
+        ),
+    )
+
+    with pytest.raises(RuntimeError, match="generations do not match"):
+        run_benchmark(
+            dataset_path=tmp_path / "cases.jsonl",
+            output_root=tmp_path / "reports",
+            selected_cases=[],
+            max_calls=0,
+            answer_mode=False,
+        )
+
+
+def test_preflight_stops_before_apollo_for_mismatched_index(
+    monkeypatch, tmp_path, capsys
+):
+    import argparse
+
+    import src.pec.benchmark.cli as cli
+
+    monkeypatch.setattr(
+        cli,
+        "_load_index",
+        lambda: (
+            tmp_path / "active-generation",
+            {"generation": "manifest-generation"},
+            [],
+            np.empty((0, 0), dtype=np.float32),
+        ),
+    )
+    monkeypatch.setattr(
+        cli.apollo,
+        "get_access_token",
+        lambda: pytest.fail("preflight must not call Apollo for a mismatched index"),
+    )
+
+    assert cli._preflight(argparse.Namespace(live=True, max_calls=3)) == 1
+    statuses = json.loads(capsys.readouterr().out)
+    assert statuses["index"]["generation_metadata_mismatch"] is True
+    assert statuses["embedding"] == {
+        "status": "skipped",
+        "reason": "index_generation_mismatch",
+    }
 
 
 @pytest.mark.parametrize(

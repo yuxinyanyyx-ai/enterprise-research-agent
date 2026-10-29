@@ -18,9 +18,10 @@ C:\BITrusted\work\python.exe -m src.pec.benchmark preflight --live --max-calls 3
 
 All API calls in this module require the explicit `--live` option. If embedding, rerank, or LLM
 preflight fails, do not interpret a partial run as a successful ablation. A published index must
-contain embeddings made by the configured embedding model. The report records both the `CURRENT`
-generation directory (the immutable index identity) and the manifest's generation field; a
-mismatch is surfaced in the report rather than silently reconciled.
+contain embeddings made by the configured embedding model. Preflight reports both the `CURRENT`
+generation directory (the immutable index identity) and the manifest's generation field; if they
+differ, it stops before calling Apollo. Formal benchmark runs also refuse a mismatched index rather
+than producing a result whose index identity cannot be verified.
 
 ## Generate and review candidate cases
 
@@ -138,9 +139,11 @@ C:\BITrusted\work\python.exe -m src.pec.benchmark run `
 are written under `outputs\pec-rag-benchmark\<run-id>\report.json` and `report.md`. Each report
 contains the commit, dataset digest, immutable index generation, model names, retrieval budget,
 per-case source/evidence hits, automatic answer evaluations, call counts, token usage where
-reported by Apollo, latency, and sanitized failure types. Embedding/Rerank token use and price are
-`null` when the gateway does not expose them; the evaluator does not estimate them. Human evaluation
-is a separate field and starts as `not_started`.
+reported by Apollo, latency, and sanitized failure types. Retrieval metrics are retained when
+answer generation or judging fails after a successful retrieval; report tables show the retrieval
+and answer-evaluation case counts separately. Embedding/Rerank token use and price are `null` when
+the gateway does not expose them; the evaluator does not estimate them. Human evaluation is a
+separate field and starts as `not_started`.
 
 Record human answer audits separately from the automatic judge:
 
@@ -168,10 +171,13 @@ cases or present an unreviewed candidate dataset as benchmark results.
 
 ## Metrics and interpretation
 
-Retrieval Recall@5/10 counts expected evidence IDs retrieved divided by all expected IDs;
-unanswerable cases have retrieval metrics `null` and are evaluated by refusal behavior. MRR is the
-reciprocal rank of the first expected evidence ID, and Hit Rate indicates whether any expected
-evidence was returned. P50/P95 use nearest-rank percentiles across successful case searches.
+Retrieval Recall@5/10 measures expected source evidence available from the top five/ten ranked
+results, divided by all expected evidence IDs. When a ranked Topic chunk links to raw evidence IDs,
+those linked IDs count as available at that Topic result's rank, matching the evidence context
+provided by production retrieval. Unanswerable cases have retrieval metrics `null` and are evaluated
+by refusal behavior. MRR is the reciprocal rank of the first expected evidence ID, and Hit Rate
+indicates whether any expected evidence was returned. P50/P95 use nearest-rank percentiles across
+successful case searches.
 
 Answer Correctness, Faithfulness, Citation Precision, refusal, and conflict recognition are
 reported as **automatic LLM-judge** results. They are not human scores. Inspect citations and

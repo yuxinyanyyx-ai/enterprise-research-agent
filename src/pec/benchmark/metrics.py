@@ -33,10 +33,54 @@ def retrieval_case_metrics(
     }
 
 
+def retrieval_evidence_metrics(
+    ranked_evidence_groups: list[list[str]], expected_ids: list[str]
+) -> dict[str, float | None]:
+    if not expected_ids:
+        return {
+            "recall_at_5": None,
+            "recall_at_10": None,
+            "mrr": None,
+            "hit_rate": None,
+        }
+    expected = set(expected_ids)
+    positions: dict[str, int] = {}
+    for rank, group in enumerate(ranked_evidence_groups, 1):
+        for evidence_id in group:
+            positions.setdefault(evidence_id, rank)
+    reciprocal_rank = (
+        1 / min(positions[evidence_id] for evidence_id in expected if evidence_id in positions)
+        if expected.intersection(positions)
+        else 0.0
+    )
+
+    def recall_at(limit: int) -> float:
+        retrieved = {
+            evidence_id
+            for group in ranked_evidence_groups[:limit]
+            for evidence_id in group
+        }
+        return len(expected.intersection(retrieved)) / len(expected)
+
+    return {
+        "recall_at_5": recall_at(5),
+        "recall_at_10": recall_at(10),
+        "mrr": reciprocal_rank,
+        "hit_rate": float(bool(expected.intersection(positions))),
+    }
+
+
 def summarize_strategy(results: list[dict[str, Any]]) -> dict[str, Any]:
     valid = [row for row in results if row.get("status") == "ok"]
     retrieval_rows = [
-        row for row in valid if row.get("retrieval_metrics", {}).get("recall_at_5") is not None
+        row
+        for row in results
+        if row.get(
+            "retrieval_status",
+            "ok" if row.get("status") == "ok" else "error",
+        )
+        == "ok"
+        and row.get("retrieval_metrics", {}).get("recall_at_5") is not None
     ]
     answer_rows = [row for row in valid if row.get("answer_evaluation")]
 
@@ -48,7 +92,11 @@ def summarize_strategy(results: list[dict[str, Any]]) -> dict[str, Any]:
         ]
         return round(sum(values) / len(values), 4) if values else None
 
-    latency = [float(row["latency_ms"]) for row in valid]
+    latency = [
+        float(row["latency_ms"])
+        for row in retrieval_rows
+        if row.get("latency_ms") is not None
+    ]
     answers = [row["answer_evaluation"] for row in answer_rows]
     human_rows = [
         row for row in valid if isinstance(row.get("human_evaluation"), dict)
@@ -74,6 +122,16 @@ def summarize_strategy(results: list[dict[str, Any]]) -> dict[str, Any]:
         "case_count": len(results),
         "successful_case_count": len(valid),
         "failed_case_count": len(results) - len(valid),
+        "retrieval_successful_case_count": sum(
+            row.get(
+                "retrieval_status",
+                "ok" if row.get("status") == "ok" else "error",
+            )
+            == "ok"
+            for row in results
+        ),
+        "retrieval_metric_case_count": len(retrieval_rows),
+        "answer_evaluated_case_count": len(answer_rows),
         "retrieval": {
             "recall_at_5": mean("recall_at_5"),
             "recall_at_10": mean("recall_at_10"),

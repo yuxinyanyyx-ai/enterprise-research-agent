@@ -40,14 +40,15 @@ def publish(manifest: dict, chunks: list[dict], matrix: np.ndarray, topics: list
     if topics is not None and any(not set(t["evidence_ids"]).issubset(evidence_ids) for t in topics):
         raise ValueError("topic 引用不属于本次索引版本，未发布索引")
     name = uuid.uuid4().hex
+    published_manifest = {**manifest, "generation": name}
     target = INDEX_DIR / "generations" / name
     target.mkdir(parents=True)
-    (target / "manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
+    (target / "manifest.json").write_text(json.dumps(published_manifest, ensure_ascii=False, indent=2), encoding="utf-8")
     (target / "chunks.jsonl").write_text("".join(json.dumps(c, ensure_ascii=False) + "\n" for c in chunks), encoding="utf-8")
     if topics is not None:
         (target / "topics.json").write_text(json.dumps(topics, ensure_ascii=False, indent=2), encoding="utf-8")
         from src.pec.knowledge.meetings import meeting_topics
-        meetings = meeting_topics(topics, manifest)
+        meetings = meeting_topics(topics, published_manifest)
         if any(not set(t["evidence_ids"]).issubset(evidence_ids) for t in meetings):
             raise ValueError("会议 topic 引用不属于本次索引版本，未发布")
         (target / "meeting_topics.json").write_text(json.dumps(meetings, ensure_ascii=False, indent=2), encoding="utf-8")
